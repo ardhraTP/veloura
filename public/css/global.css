@@ -1,0 +1,32 @@
+:root {
+    --primary-red: #5c1e28;
+    --bg-beige: #efece5;
+    --box-beige: #f4f1ec;
+    --text-dark: #2c2c2c;
+    --text-light: #666666;
+    --white: #ffffff;
+    --border-color: #e8e4df;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-dark);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .logo {
+    font-family: 'Playfair Display', serif;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    body {
+        font-size: 14px;
+    }
+}

@@ -1,0 +1,19 @@
+<aside class="sidebar">
+    <div class="profile-section">
+        <div class="profile-avatar">
+            <i class="fas fa-user"></i>
+        </div>
+        <div class="profile-name"><%= typeof user !== 'undefined' ? user.name : 'User' %></div>
+    </div>
+
+    <ul class="sidebar-menu">
+        <li><a href="/profile" class="<%= typeof activeTab !== 'undefined' && activeTab === 'profile' ? 'active' : '' %>"><i class="far fa-user-circle"></i> Account Overview</a></li>
+        <li><a href="/profile/orders" class="<%= typeof activeTab !== 'undefined' && activeTab === 'orders' ? 'active' : '' %>"><i class="fas fa-box"></i> My Orders</a></li>
+        <li><a href="/profile/addresses" class="<%= typeof activeTab !== 'undefined' && activeTab === 'addresses' ? 'active' : '' %>"><i class="fas fa-map-marker-alt"></i> Manage Addresses</a></li>
+        <li><a href="/profile/wallet" class="<%= typeof activeTab !== 'undefined' && activeTab === 'wallet' ? 'active' : '' %>"><i class="fas fa-wallet"></i> Wallet</a></li>
+        <li><a href="/profile/password" class="<%= typeof activeTab !== 'undefined' && activeTab === 'password' ? 'active' : '' %>"><i class="fas fa-lock"></i> Password</a></li>
+        <li><a href="/wishlist" class="<%= typeof activeTab !== 'undefined' && activeTab === 'wishlist' ? 'active' : '' %>"><i class="far fa-heart"></i> Wishlist</a></li>
+    </ul>
+
+    <button class="logout-btn" onclick="window.location.href='/logout'">Log Out</button>
+</aside>

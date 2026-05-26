@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veloura - Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/home.css">
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">The Art of the Lip</h1>
+            <p class="hero-description">
+                Experience a collection where heritage meets haute couture. Pigment as rich as history, textures as soft as velvet.
+            </p>
+            <button class="shop-btn" onclick="window.location.href='/products'">Discover the Collection</button>
+        </div>
+        <div class="hero-image-container">
+            <img src="/images/hero_bg.png" alt="Hero Lipstick">
+        </div>
+    </section>
+
+    <!-- Premium Category Section -->
+    <section class="premium-section">
+        <div class="section-header">
+            <p class="section-subtitle">CURATED EXCELLENCE</p>
+            <h2 class="section-title">The Premium category</h2>
+        </div>
+
+        <div class="product-grid">
+            <div class="product-card">
+                <div class="product-image-wrapper">
+                    <img src="/images/mac_product.png" alt="Mac Cosmetics">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-brand">Mac Cosmetics</h3>
+                    <p class="product-category">RETRO VELVET FINISH</p>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-image-wrapper">
+                    <img src="/images/maybelline_product.png" alt="Maybelline">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-brand">Maybelline</h3>
+                    <p class="product-category">LUSTRE SHINE FOCUS</p>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-image-wrapper">
+                    <img src="/images/lakme_product.png" alt="Lakme">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-brand">Lakme</h3>
+                    <p class="product-category">SHEER HYDRATION</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination">
+            <div class="pagination-line-container">
+                <div class="pagination-line-active"></div>
+            </div>
+            <span class="pagination-text">01 / 03</span>
+        </div>
+    </section>
+
+    <!-- New Collection Banner -->
+    <section class="collection-banner">
+        <div class="banner-content">
+            <p class="banner-subtitle">LIMITED EDITION RELEASE</p>
+            <h2 class="banner-title">Shop the New Collection</h2>
+            <p class="banner-description">
+                The Gilded Series: A harmonious blend of Macaroon artisanal waxcraft and contemporary pigment science.
+            </p>
+            <button class="explore-btn" onclick="window.location.href='/products'">EXPLORE NOW</button>
+        </div>
+    </section>
+
+    <%- include('../partials/footer', { showSocialLinks: true }) %>
+</body>
+</html>

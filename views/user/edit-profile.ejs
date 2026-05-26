@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - Veloura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-red: #5c1e28;
+            --bg-beige: #fdfbf9; /* Lighter beige for the overall page */
+            --box-beige: #f4f1ec; /* Slightly darker beige for cards */
+            --text-dark: #2c2c2c;
+            --text-light: #666666;
+            --white: #ffffff;
+            --border-color: #e8e4df;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--bg-beige);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Header */
+        header {
+            background: transparent;
+            padding: 30px 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--primary-red);
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+
+        .header-center {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .header-center a {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: color 0.3s ease;
+        }
+
+        .header-center a:hover {
+            color: var(--primary-red);
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .header-icons a {
+            color: var(--text-dark);
+            font-size: 16px;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .header-icons a:hover {
+            color: var(--primary-red);
+        }
+
+        /* Main Container */
+        .main-container {
+            display: flex;
+            max-width: 1300px;
+            margin: 20px auto 80px;
+            gap: 60px;
+            padding: 0 80px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            height: fit-content;
+            background: var(--white);
+            border-radius: 20px;
+            padding: 30px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        }
+
+        .profile-section {
+            text-align: center;
+            padding-bottom: 25px;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            background: #e8e4df;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+        }
+
+        .profile-avatar i {
+            font-size: 32px;
+            color: #a09d98;
+        }
+
+        .profile-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--primary-red);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 15px 0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 25px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-menu a i {
+            width: 20px;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .sidebar-menu a:hover {
+            color: var(--primary-red);
+            background-color: #fcfcfc;
+        }
+
+        .sidebar-menu a:hover i {
+            color: var(--primary-red);
+        }
+
+        .sidebar-menu a.active {
+            background-color: var(--primary-red);
+            color: var(--white);
+        }
+
+        .sidebar-menu a.active i {
+            color: var(--white);
+        }
+
+        .logout-btn {
+            margin: 20px 25px 0 25px;
+            padding: 12px;
+            background-color: #d32f2f;
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            width: calc(100% - 50px);
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #b71c1c;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            background: var(--white);
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 500;
+            color: var(--primary-red);
+            margin-bottom: 40px;
+            letter-spacing: -0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+        }
+
+        .form-group input:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        /* Profile Image Upload Section */
+        .profile-image-section {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 35px;
+            padding: 25px;
+            background-color: var(--box-beige);
+            border-radius: 12px;
+        }
+
+        .profile-image-preview {
+            position: relative;
+        }
+
+        .profile-image-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #e8e4df;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 3px solid var(--primary-red);
+        }
+
+        .profile-image-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-image-circle i {
+            font-size: 48px;
+            color: #a09d98;
+        }
+
+        .profile-image-info {
+            flex: 1;
+        }
+
+        .profile-image-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .profile-image-info p {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 15px;
+        }
+
+        .profile-image-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-upload {
+            padding: 10px 20px;
+            background-color: var(--primary-red);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-upload:hover {
+            background-color: #40131b;
+        }
+
+        .btn-remove {
+            padding: 10px 20px;
+            background-color: transparent;
+            color: #d32f2f;
+            border: 1px solid #d32f2f;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-remove:hover {
+            background-color: #d32f2f;
+            color: var(--white);
+        }
+
+        #profileImageInput {
+            display: none;
+        }
+
+        .email-field {
+            position: relative;
+        }
+
+        .change-email-link {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-red);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .change-email-link:hover {
+            text-decoration: underline;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-red);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: #40131b;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Modal/Popup */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 35px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--primary-red);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--text-dark);
+        }
+
+        .modal-body {
+            margin-bottom: 25px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--box-beige);
+            padding: 60px 80px 40px;
+            margin-top: 80px;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            max-width: 100%;
+        }
+
+        .footer-about {
+            flex: 0 0 30%;
+        }
+
+        .footer-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--primary-red);
+            margin-bottom: 25px;
+        }
+
+        .footer-links-container {
+            display: flex;
+            gap: 100px;
+        }
+
+        .footer-column h4 {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            color: var(--primary-red);
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 15px;
+        }
+
+        .footer-column ul li a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 12px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-column ul li a:hover {
+            color: var(--primary-red);
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .main-container {
+                flex-direction: column;
+                padding: 0 40px;
+            }
+            .sidebar {
+                width: 100%;
+            }
+            header {
+                padding: 20px 40px;
+            }
+            .footer-content {
+                flex-direction: column;
+                gap: 50px;
+            }
+            .footer-links-container {
+                flex-wrap: wrap;
+                gap: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <a href="/home" class="logo">Veloura</a>
+        <div class="header-center">
+            <a href="/home">Home</a>
+            <a href="/products">Collections</a>
+            <a href="/about">About</a>
+            <a href="/contact">Contact</a>
+        </div>
+        <div class="header-icons">
+            <a href="/wishlist" title="Wishlist"><i class="far fa-heart"></i></a>
+            <a href="/cart" title="Cart"><i class="fas fa-shopping-bag"></i></a>
+            <a href="/profile" title="Profile"><i class="far fa-user"></i></a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="profile-section">
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="profile-name"><%= user.name %></div>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li><a href="/profile" class="active"><i class="far fa-user-circle"></i> Account Overview</a></li>
+                <li><a href="/profile/orders"><i class="fas fa-box"></i> My Orders</a></li>
+                <li><a href="/profile/addresses"><i class="fas fa-map-marker-alt"></i> Manage Addresses</a></li>
+                <li><a href="/profile/wallet"><i class="fas fa-wallet"></i> Wallet</a></li>
+                <li><a href="/profile/password"><i class="fas fa-lock"></i> Password</a></li>
+                <li><a href="/wishlist"><i class="far fa-heart"></i> Wishlist</a></li>
+            </ul>
+
+            <button class="logout-btn" onclick="window.location.href='/logout'">Log Out</button>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content-area">
+            <h2 class="section-title">Edit Your Profile</h2>
+
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="error-message" style="background-color: #fee; color: #c33; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; border-left: 3px solid #c33;">
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="success-message" style="background-color: #efe; color: #2a7c2a; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; border-left: 3px solid #2a7c2a;">
+                    <%= success %>
+                </div>
+            <% } %>
+
+            <form action="/profile/update" method="POST" id="profileForm" enctype="multipart/form-data">
+                <!-- Profile Image Section -->
+                <div class="profile-image-section">
+                    <div class="profile-image-preview">
+                        <div class="profile-image-circle" id="profileImageCircle">
+                            <i class="far fa-user"></i>
+                        </div>
+                    </div>
+                    <div class="profile-image-info">
+                        <h3>Profile Picture</h3>
+                        <p>Upload a profile picture. Recommended size: 400x400px. Max file size: 2MB.</p>
+                        <div class="profile-image-actions">
+                            <button type="button" class="btn-upload" onclick="document.getElementById('profileImageInput').click()">
+                                <i class="fas fa-upload"></i> Upload Photo
+                            </button>
+                            <button type="button" class="btn-remove" onclick="removeProfileImage()">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                        <input type="file" id="profileImageInput" name="profileImage" accept="image/*" onchange="previewProfileImage(event)">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fullName">Full Name *</label>
+                    <input type="text" id="fullName" name="name" value="<%= user.name %>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <div class="email-field">
+                        <input type="email" id="email" name="email" value="<%= user.email %>" disabled>
+                        <a class="change-email-link" onclick="openEmailModal()">Change</a>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number *</label>
+                    <input type="tel" id="phone" name="phone" value="<%= user.phone %>" pattern="[0-9]{10}" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="window.location.href='/profile'">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <!-- Email Change Modal -->
+    <div class="modal" id="emailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Change Email Address</h3>
+                <button class="close-modal" onclick="closeEmailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="emailChangeForm">
+                    <div class="form-group">
+                        <label for="currentEmail">Current Email *</label>
+                        <input type="email" id="currentEmail" value="<%= user.email %>" disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newEmail">New Email *</label>
+                        <input type="email" id="newEmail" name="newEmail" placeholder="Enter new email address"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmEmail">Confirm New Email *</label>
+                        <input type="email" id="confirmEmail" name="confirmEmail"
+                            placeholder="Re-enter new email address" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEmailModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="changeEmail()">Update Email</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-about">
+                <div class="footer-brand">Veloura</div>
+            </div>
+
+            <div class="footer-links-container">
+                <div class="footer-column">
+                    <h4>Brands</h4>
+                    <ul>
+                        <li><a href="#">MAC Cosmetics</a></li>
+                        <li><a href="#">Maybelline</a></li>
+                        <li><a href="#">Lakme</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Track Order</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>Account</h4>
+                    <ul>
+                        <li><a href="#">My Account</a></li>
+                        <li><a href="/login">Login / Register</a></li>
+                        <li><a href="#">Cart</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Profile Image Preview
+        function previewProfileImage(event) {
+            const file = event.target.files[0];
+            
+            if (file) {
+                // Check file size (2MB max)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('File size must be less than 2MB');
+                    event.target.value = '';
+                    return;
+                }
+
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please upload an image file');
+                    event.target.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const circle = document.getElementById('profileImageCircle');
+                    circle.innerHTML = `<img src="${e.target.result}" alt="Profile Picture">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeProfileImage() {
+            const circle = document.getElementById('profileImageCircle');
+            circle.innerHTML = '<i class="far fa-user"></i>';
+            document.getElementById('profileImageInput').value = '';
+        }
+
+        // Form validation
+        document.getElementById('profileForm').addEventListener('submit', function (e) {
+            const name = document.getElementById('fullName').value;
+            const phone = document.getElementById('phone').value;
+
+            console.log('=== CLIENT-SIDE FORM SUBMISSION DEBUG ===');
+            console.log('Form data being submitted:');
+            console.log('Name:', name);
+            console.log('Phone:', phone);
+            console.log('Form action:', this.action);
+            console.log('Form method:', this.method);
+
+            // Validate phone number (10 digits)
+            if (!/^[0-9]{10}$/.test(phone)) {
+                e.preventDefault();
+                alert('Please enter a valid 10-digit phone number');
+                return false;
+            }
+
+            // Validate name
+            if (!name || name.trim().length < 2) {
+                e.preventDefault();
+                alert('Name must be at least 2 characters long');
+                return false;
+            }
+
+            console.log('Form validation passed, submitting to server...');
+            
+            // Let's also log the FormData to see what's being sent
+            const formData = new FormData(this);
+            console.log('FormData contents:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
+            
+            return true;
+        });
+
+        function openEmailModal() {
+            document.getElementById('emailModal').classList.add('active');
+        }
+
+        function closeEmailModal() {
+            document.getElementById('emailModal').classList.remove('active');
+            document.getElementById('emailChangeForm').reset();
+        }
+
+        function changeEmail() {
+            const newEmail = document.getElementById('newEmail').value;
+            const confirmEmail = document.getElementById('confirmEmail').value;
+
+            if (!newEmail || !confirmEmail) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            if (newEmail !== confirmEmail) {
+                alert('Email addresses do not match!');
+                return;
+            }
+
+            // Email validation
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(newEmail)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+
+            // Send email change request
+            fetch('/profile/request-email-change', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ newEmail })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('OTP sent to your new email address. Please check your email and verify.');
+                    closeEmailModal();
+                    // You could redirect to an OTP verification page here
+                } else {
+                    alert(data.message || 'Failed to send OTP');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to process email change request');
+            });
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function (event) {
+            const modal = document.getElementById('emailModal');
+            if (event.target == modal) {
+                closeEmailModal();
+            }
+        }
+    </script>
+</body>
+</html>

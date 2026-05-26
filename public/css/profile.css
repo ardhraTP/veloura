@@ -1,0 +1,147 @@
+/* Profile Page Styles */
+body {
+    background-color: #fdfbf9;
+}
+
+header {
+    background: transparent;
+}
+
+/* Content Area */
+.content-area {
+    flex: 1;
+    background: var(--white);
+    border-radius: 20px;
+    padding: 50px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+}
+
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 500;
+    color: var(--primary-red);
+    margin-bottom: 40px;
+    letter-spacing: -0.5px;
+}
+
+.profile-info {
+    display: grid;
+    gap: 30px;
+}
+
+.info-row {
+    display: flex;
+    padding-bottom: 25px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-label {
+    width: 180px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.info-value {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.edit-profile-btn {
+    margin-top: 40px;
+    padding: 14px 35px;
+    background-color: var(--primary-red);
+    color: var(--white);
+    border: none;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: background-color 0.3s ease;
+}
+
+.edit-profile-btn:hover {
+    background-color: #40131b;
+}
+
+/* Footer */
+footer {
+    background-color: #f4f1ec;
+    padding: 60px 80px 40px;
+    margin-top: 80px;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    max-width: 100%;
+}
+
+.footer-about {
+    flex: 0 0 30%;
+}
+
+.footer-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--primary-red);
+    margin-bottom: 25px;
+}
+
+.footer-links-container {
+    display: flex;
+    gap: 100px;
+}
+
+.footer-column h4 {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 25px;
+    color: var(--primary-red);
+}
+
+.footer-column ul {
+    list-style: none;
+}
+
+.footer-column ul li {
+    margin-bottom: 15px;
+}
+
+.footer-column ul li a {
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 12px;
+    transition: color 0.3s ease;
+}
+
+.footer-column ul li a:hover {
+    color: var(--primary-red);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .footer-content {
+        flex-direction: column;
+        gap: 50px;
+    }
+
+    .footer-links-container {
+        flex-wrap: wrap;
+        gap: 50px;
+    }
+
+    .content-area {
+        padding: 30px;
+    }
+}

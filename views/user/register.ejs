@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Veloura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-red: #5c1e28;
+            --bg-beige: #efece5;
+            --text-dark: #2c2c2c;
+            --text-light: #666666;
+            --white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-beige);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4, .logo {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Header (Matching Home/Landing) */
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 30px 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--primary-red);
+            text-decoration: none;
+            letter-spacing: 0.5px;
+        }
+
+        .header-center {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .header-center a {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: color 0.3s ease;
+        }
+
+        .header-center a:hover {
+            color: var(--primary-red);
+        }
+
+        /* Register Container */
+        .register-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 20px 60px;
+        }
+
+        .register-wrapper {
+            display: flex;
+            background: var(--white);
+            border-radius: 20px;
+            overflow: hidden;
+            max-width: 1000px;
+            width: 100%;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+            min-height: 550px;
+        }
+
+        .image-section {
+            flex: 1;
+            background-color: var(--bg-beige);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .form-section {
+            flex: 1;
+            padding: 50px 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: var(--white);
+        }
+
+        .welcome-text {
+            font-size: 42px;
+            font-weight: 500;
+            color: var(--primary-red);
+            margin-bottom: 25px;
+            line-height: 1.1;
+            letter-spacing: -0.5px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            padding: 10px 0;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-light);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-red);
+            border-bottom-color: var(--primary-red);
+        }
+
+        .tab-btn.inactive:hover {
+            color: var(--text-dark);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 0;
+            border: none;
+            border-bottom: 1px solid #ddd;
+            background: transparent;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.3s ease;
+            border-radius: 0;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-bottom-color: var(--primary-red);
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+            font-size: 13px;
+            font-weight: 300;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #999;
+            font-size: 14px;
+            user-select: none;
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 25px;
+            margin-top: -10px;
+        }
+
+        .forgot-password a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password a:hover {
+            color: var(--primary-red);
+        }
+
+        .register-btn {
+            width: 100%;
+            padding: 16px;
+            background-color: var(--primary-red);
+            color: var(--white);
+            border: none;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 25px;
+        }
+
+        .register-btn:hover {
+            background-color: #3b1118;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 35%;
+            height: 1px;
+            background-color: #eee;
+        }
+
+        .divider::before { left: 0; }
+        .divider::after { right: 0; }
+
+        .divider span {
+            background-color: var(--white);
+            padding: 0 15px;
+            color: var(--text-light);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: transparent;
+            border: 1px solid #ddd;
+            color: var(--text-dark);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .google-btn:hover {
+            border-color: var(--primary-red);
+            background-color: #fafafa;
+        }
+
+        .google-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--white);
+            padding: 60px 100px 40px;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            max-width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .footer-about {
+            flex: 0 0 30%;
+        }
+
+        .footer-brand {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--primary-red);
+            margin-bottom: 25px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-links a {
+            width: 35px;
+            height: 35px;
+            border: 1px solid var(--text-dark);
+            border-radius: 50%;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background-color: var(--text-dark);
+            color: var(--white);
+        }
+
+        .footer-links-container {
+            display: flex;
+            gap: 100px;
+        }
+
+        .footer-column h4 {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            color: var(--primary-red);
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 15px;
+        }
+
+        .footer-column ul li a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 400;
+            transition: color 0.3s ease;
+        }
+
+        .footer-column ul li a:hover {
+            color: var(--primary-red);
+        }
+
+        .error-message {
+            background-color: #fee;
+            color: #c33;
+            padding: 12px 15px;
+            font-size: 12px;
+            margin-bottom: 25px;
+            border-left: 3px solid #c33;
+            border-radius: 4px;
+            position: relative;
+            animation: none !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+
+        .error-message::before {
+            content: "⚠️";
+            margin-right: 8px;
+        }
+
+        .error-close {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #c33;
+            cursor: pointer;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .error-close:hover {
+            background-color: rgba(204, 51, 51, 0.1);
+            border-radius: 50%;
+        }
+
+        @media (max-width: 992px) {
+            .register-wrapper {
+                flex-direction: column;
+            }
+            .image-section {
+                height: 300px;
+            }
+            .form-section {
+                padding: 50px 40px;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .footer-content {
+                flex-direction: column;
+                gap: 50px;
+            }
+            .footer-links-container {
+                flex-wrap: wrap;
+                gap: 50px;
+            }
+            header {
+                padding: 20px 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/" class="logo">Veloura</a>
+        <div class="header-center">
+            <a href="/">Home</a>
+            <a href="/products">Collections</a>
+            <a href="/about">About</a>
+            <a href="/contact">Contact</a>
+        </div>
+    </header>
+
+    <div class="register-container">
+        <div class="register-wrapper">
+            <div class="image-section">
+                <!-- Using another luxurious product image -->
+                <img src="/images/lakme_product.png" alt="Veloura Lipstick" class="product-image">
+            </div>
+
+            <div class="form-section">
+                <h1 class="welcome-text">Join Veloura</h1>
+
+                <div class="tab-buttons">
+                    <button class="tab-btn inactive" onclick="window.location.href='/login'">Login</button>
+                    <button class="tab-btn active">Register</button>
+                </div>
+
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="error-message" id="errorMessage">
+                        <%= error %>
+                        <button type="button" class="error-close" onclick="closeError()">&times;</button>
+                    </div>
+                <% } %>
+
+                <form action="/register" method="POST">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            placeholder="Enter your full name" 
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            placeholder="Enter your email address" 
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input 
+                            type="tel" 
+                            id="phone" 
+                            name="phone" 
+                            placeholder="Enter your 10-digit phone number" 
+                            pattern="[0-9]{10}"
+                            maxlength="10"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="input-wrapper">
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    name="password" 
+                                    placeholder="Create a password (min 8 characters)" 
+                                    minlength="8"
+                                    required
+                                >
+                                <span class="password-toggle" onclick="togglePassword('password')"><i class="far fa-eye"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <div class="input-wrapper">
+                                <input 
+                                    type="password" 
+                                    id="confirmPassword" 
+                                    name="confirmPassword" 
+                                    placeholder="Confirm password" 
+                                    minlength="8"
+                                    required
+                                >
+                                <span class="password-toggle" onclick="togglePassword('confirmPassword')"><i class="far fa-eye"></i></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="register-btn">Register</button>
+                </form>
+
+                <div class="divider">
+                    <span>or sign up with</span>
+                </div>
+
+                <button class="google-btn" onclick="window.location.href='/auth/google'">
+                    <svg class="google-icon" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Sign up with Google
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-about">
+                <div class="footer-brand">Veloura</div>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-links-container">
+                <div class="footer-column">
+                    <h4>BRANDS</h4>
+                    <ul>
+                        <li><a href="#">MAC Cosmetics</a></li>
+                        <li><a href="#">Maybelline</a></li>
+                        <li><a href="#">Lakme</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>SUPPORT</h4>
+                    <ul>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Track Order</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>ACCOUNT</h4>
+                    <ul>
+                        <li><a href="#">My Account</a></li>
+                        <li><a href="/login">Login/Register</a></li>
+                        <li><a href="#">Cart</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function togglePassword(fieldId) {
+            const passwordInput = document.getElementById(fieldId);
+            const toggle = passwordInput.nextElementSibling.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggle.className = 'far fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggle.className = 'far fa-eye';
+            }
+        }
+
+        function closeError() {
+            const errorMessage = document.getElementById('errorMessage');
+            if (errorMessage) {
+                errorMessage.style.display = 'none';
+            }
+        }
+
+        // Ensure error message stays visible
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorMessage = document.getElementById('errorMessage');
+            if (errorMessage) {
+                // Force the error message to stay visible
+                errorMessage.style.display = 'block';
+                errorMessage.style.opacity = '1';
+                errorMessage.style.visibility = 'visible';
+                
+                // Prevent any external scripts from hiding it
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && 
+                            (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+                            if (errorMessage.style.display === 'none' || 
+                                errorMessage.style.opacity === '0' || 
+                                errorMessage.style.visibility === 'hidden') {
+                                errorMessage.style.display = 'block';
+                                errorMessage.style.opacity = '1';
+                                errorMessage.style.visibility = 'visible';
+                            }
+                        }
+                    });
+                });
+                
+                observer.observe(errorMessage, {
+                    attributes: true,
+                    attributeFilter: ['style', 'class']
+                });
+            }
+        });
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validate name
+            if (name.length < 2) {
+                e.preventDefault();
+                alert('Name must be at least 2 characters long');
+                return;
+            }
+            
+            // Validate email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            // Validate phone
+            const phoneRegex = /^[0-9]{10}$/;
+            if (!phoneRegex.test(phone)) {
+                e.preventDefault();
+                alert('Phone number must be exactly 10 digits');
+                return;
+            }
+            
+            // Validate password
+            if (password.length < 8) {
+                e.preventDefault();
+                alert('Password must be at least 8 characters long');
+                return;
+            }
+            
+            // Check password match
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+                return;
+            }
+        });
+
+        // Real-time phone number validation
+        document.getElementById('phone').addEventListener('input', function(e) {
+            // Remove any non-digit characters
+            this.value = this.value.replace(/\D/g, '');
+            
+            // Limit to 10 digits
+            if (this.value.length > 10) {
+                this.value = this.value.slice(0, 10);
+            }
+        });
+
+        // Real-time password match validation
+        document.getElementById('confirmPassword').addEventListener('input', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = this.value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                this.setCustomValidity('Passwords do not match');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    </script>
+</body>
+</html>
