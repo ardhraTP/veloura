@@ -6,6 +6,7 @@
     <title>Login - Veloura</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary-red: #5c1e28;
@@ -191,6 +192,17 @@
         .form-group input:focus {
             outline: none;
             border-bottom-color: var(--primary-red);
+        }
+
+        .form-group input.error-input {
+            border-bottom-color: #d32f2f;
+        }
+
+        .error-text {
+            color: #d32f2f;
+            font-size: 11px;
+            margin-top: 5px;
+            display: none;
         }
 
         .form-group input::placeholder {
@@ -417,16 +429,11 @@
             }
         }
     </style>
+<script src="/js/prevent-back.js"></script>
 </head>
 <body>
     <header>
         <a href="/" class="logo">Veloura</a>
-        <div class="header-center">
-            <a href="/">Home</a>
-            <a href="/products">Collections</a>
-            <a href="/about">About</a>
-            <a href="/contact">Contact</a>
-        </div>
     </header>
 
     <div class="login-container">
@@ -448,16 +455,16 @@
                     <div class="error-message"><%= error %></div>
                 <% } %>
 
-                <form action="/login" method="POST">
+                <form action="/login" method="POST" id="loginForm" novalidate>
                     <div class="form-group">
                         <label for="email">Email Address</label>
                         <input 
                             type="email" 
                             id="email" 
                             name="email" 
-                            placeholder="Enter your email address" 
-                            required
+                            placeholder="Enter your email address"
                         >
+                        <div class="error-text" id="emailError"></div>
                     </div>
 
                     <div class="form-group">
@@ -467,11 +474,11 @@
                                 type="password" 
                                 id="password" 
                                 name="password" 
-                                placeholder="Enter your password" 
-                                required
+                                placeholder="Enter your password"
                             >
                             <span class="password-toggle" onclick="togglePassword()"><i class="far fa-eye"></i></span>
                         </div>
+                        <div class="error-text" id="passwordError"></div>
                     </div>
 
                     <div class="forgot-password">
@@ -504,7 +511,6 @@
             <div class="footer-about">
                 <div class="footer-brand">Veloura</div>
                 <div class="social-links">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
                     <a href="#"><i class="fab fa-instagram"></i></a>
                     <a href="#"><i class="fab fa-linkedin-in"></i></a>
                 </div>
@@ -553,6 +559,71 @@
                 passwordInput.type = 'password';
                 toggle.className = 'far fa-eye';
             }
+        }
+
+        function showError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const errorDiv = document.getElementById(fieldId + 'Error');
+            field.classList.add('error-input');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function clearErrors() {
+            const inputs = document.querySelectorAll('.error-input');
+            const errorTexts = document.querySelectorAll('.error-text');
+            inputs.forEach(input => input.classList.remove('error-input'));
+            errorTexts.forEach(text => {
+                text.style.display = 'none';
+                text.textContent = '';
+            });
+        }
+
+        // Form validation
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            clearErrors();
+            let hasError = false;
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Email validation
+            if (!email) {
+                showError('email', 'Please enter your email address');
+                hasError = true;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showError('email', 'Please enter a valid email address');
+                hasError = true;
+            }
+
+            // Password validation
+            if (!password) {
+                showError('password', 'Please enter your password');
+                hasError = true;
+            }
+
+            if (hasError) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Show toast if session expired
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('session') === 'expired') {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'warning',
+                title: 'Session Expired',
+                text: 'Please log in again to continue.',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                customClass: { popup: 'swal-toast-custom' }
+            });
+            // Clean URL without reloading
+            window.history.replaceState({}, '', '/login');
         }
     </script>
 </body>

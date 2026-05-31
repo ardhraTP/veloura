@@ -6,6 +6,7 @@
     <title>Manage Addresses - Veloura</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary-red: #5c1e28;
@@ -384,6 +385,7 @@
             }
         }
     </style>
+<script src="/js/prevent-back.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -422,7 +424,7 @@
                 <li><a href="/wishlist"><i class="far fa-heart"></i> Wishlist</a></li>
             </ul>
 
-            <button class="logout-btn" onclick="window.location.href='/logout'">Log Out</button>
+            <button class="logout-btn" onclick="confirmLogout()">Log Out</button>
         </aside>
 
         <!-- Content Area -->
@@ -514,48 +516,64 @@
 
     <script>
         function removeAddress(id) {
-            if (confirm('Are you sure you want to remove this address?')) {
-                fetch(`/profile/addresses/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Address removed successfully!');
-                        window.location.reload();
-                    } else {
-                        alert(data.message || 'Failed to remove address');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to remove address');
-                });
-            }
+            Swal.fire({
+                title: 'Remove Address?',
+                text: 'This address will be permanently deleted.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#5c1e28',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: 'Yes, Remove',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/profile/addresses/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Address removed', showConfirmButton: false, timer: 2000 });
+                            setTimeout(() => window.location.reload(), 2000);
+                        } else {
+                            Swal.fire('Error', data.message || 'Failed to remove address', 'error');
+                        }
+                    })
+                    .catch(() => Swal.fire('Error', 'Failed to remove address', 'error'));
+                }
+            });
         }
 
         function setDefaultAddress(id) {
             fetch(`/profile/addresses/${id}/default`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'Content-Type': 'application/json' }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Default address updated successfully!');
-                    window.location.reload();
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Default address updated', showConfirmButton: false, timer: 2000 });
+                    setTimeout(() => window.location.reload(), 2000);
                 } else {
-                    alert(data.message || 'Failed to update default address');
+                    Swal.fire('Error', data.message || 'Failed to update default address', 'error');
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to update default address');
+            .catch(() => Swal.fire('Error', 'Failed to update default address', 'error'));
+        }
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Logging Out?',
+                text: 'Are you sure you want to log out of Veloura?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#5c1e28',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: 'Yes, Log Out',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = '/logout';
             });
         }
     </script>

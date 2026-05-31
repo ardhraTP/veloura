@@ -2,7 +2,7 @@
   "name": "veloura",
   "version": "1.0.0",
   "description": "",
-  "type":"module",
+  "type": "module",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
     "connect-flash": "^0.1.1",
     "dotenv": "^17.4.2",
     "ejs": "^3.1.10",

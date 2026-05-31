@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OTP Verification - Veloura</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <style>
         :root {
             --primary-red: #5c1e28;
@@ -256,6 +258,7 @@
             }
         }
     </style>
+<script src="/js/prevent-back.js"></script>
 </head>
 <body>
     <div class="otp-container">
@@ -416,13 +419,36 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('OTP has been resent to your email!');
+                    Toastify({
+                        text: "OTP has been resent to your email!",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#4CAF50",
+                        stopOnFocus: true
+                    }).showToast();
                     startTimer();
+                } else {
+                    Toastify({
+                        text: data.message || "Failed to resend OTP",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#f44336",
+                        stopOnFocus: true
+                    }).showToast();
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to resend OTP. Please try again.');
+                Toastify({
+                    text: "Failed to resend OTP. Please try again.",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#f44336",
+                    stopOnFocus: true
+                }).showToast();
             });
         }
 
@@ -435,7 +461,14 @@
             
             if (otp.length !== 6) {
                 e.preventDefault();
-                alert('Please enter all 6 digits');
+                Toastify({
+                    text: "Please enter all 6 digits",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#f44336",
+                    stopOnFocus: true
+                }).showToast();
             }
         });
     </script>

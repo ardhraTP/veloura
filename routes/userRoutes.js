@@ -1,4 +1,5 @@
 import express from 'express';
+import passport from 'passport';
 import { isAuthenticated, isGuest } from '../middleware/auth.js';
 import upload from '../config/multer.js';
 
@@ -26,7 +27,9 @@ import {
     uploadProfileImage,
     changePassword,
     requestEmailChange,
-    verifyEmailChange
+    getEmailOTPVerify,
+    verifyEmailChange,
+    resendEmailOTP
 } from '../controller/user/profileController.js';
 
 // Import address controllers
@@ -42,7 +45,6 @@ import {
 
 const router = express.Router();
 
-// ==================== PUBLIC ROUTES ====================
 
 // Landing page
 router.get('/', (req, res) => {
@@ -80,6 +82,27 @@ router.post('/reset-password', isGuest, resetPassword);
 // Logout route
 router.get('/logout', isAuthenticated, logout);
 
+// ==================== GOOGLE OAUTH ROUTES ====================
+
+// Initiate Google OAuth flow
+router.get('/auth/google', isGuest, passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// Google OAuth callback
+router.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/login' }),
+    (req, res) => {
+        // Set session userId to match isAuthenticated middleware
+        req.session.userId = req.user._id;
+        req.session.user = {
+            id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            profileImage: req.user.profileImage
+        };
+        res.redirect('/home');
+    }
+);
+
 // ==================== PROFILE ROUTES ====================
 
 // Profile routes
@@ -91,14 +114,25 @@ router.post('/profile/update', isAuthenticated, upload.single('profileImage'), u
 router.post('/profile/upload-image', isAuthenticated, uploadProfileImage);
 
 // Password change
-router.get('/profile/password', isAuthenticated, (req, res) => {
-    res.render('user/change-password', { activeTab: 'password' });
+router.get('/profile/password', isAuthenticated, async (req, res) => {
+    try {
+        const User = (await import('../model/User.js')).default;
+        const user = await User.findById(req.session.userId);
+        // A real bcrypt hash always starts with $2b$ or $2a$
+        const hasPassword = user && user.password && user.password.startsWith('$2');
+        res.render('user/change-password', { activeTab: 'password', hasPassword });
+    } catch (e) {
+        res.render('user/change-password', { activeTab: 'password', hasPassword: true });
+    }
 });
+
 router.post('/profile/change-password', isAuthenticated, changePassword);
 
 // Email change routes
 router.post('/profile/request-email-change', isAuthenticated, requestEmailChange);
+router.get('/profile/verify-email-otp', isAuthenticated, getEmailOTPVerify);
 router.post('/profile/verify-email-change', isAuthenticated, verifyEmailChange);
+router.post('/profile/resend-email-otp', isAuthenticated, resendEmailOTP);
 
 // ==================== ADDRESS ROUTES ====================
 

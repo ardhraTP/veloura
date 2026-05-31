@@ -6,6 +6,7 @@
     <title>Add New Address - Veloura</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary-red: #5c1e28;
@@ -254,6 +255,19 @@
             border-color: var(--primary-red);
         }
 
+        .form-group input.error-input,
+        .form-group select.error-input,
+        .form-group textarea.error-input {
+            border-color: #d32f2f;
+        }
+
+        .error-text {
+            color: #d32f2f;
+            font-size: 11px;
+            margin-top: 5px;
+            display: none;
+        }
+
         .form-group textarea {
             resize: vertical;
             min-height: 100px;
@@ -379,6 +393,7 @@
             }
         }
     </style>
+<script src="/js/prevent-back.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -417,7 +432,7 @@
                 <li><a href="/wishlist"><i class="far fa-heart"></i> Wishlist</a></li>
             </ul>
 
-            <button class="logout-btn" onclick="window.location.href='/logout'">Log Out</button>
+            <button class="logout-btn" onclick="confirmLogout()">Log Out</button>
         </aside>
 
         <!-- Content Area -->
@@ -436,48 +451,55 @@
                 </div>
             <% } %>
 
-            <form action="/profile/addresses/add" method="POST" id="addAddressForm">
+            <form action="/profile/addresses/add" method="POST" id="addAddressForm" novalidate>
                 <div class="form-group">
                     <label for="fullName">Full Name *</label>
-                    <input type="text" id="fullName" name="fullName" placeholder="Enter full name" required>
+                    <input type="text" id="fullName" name="fullName" placeholder="Enter full name">
+                    <div class="error-text" id="fullNameError"></div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="phone">Phone Number *</label>
-                        <input type="tel" id="phone" name="phone" placeholder="Enter phone number" pattern="[0-9]{10}" required>
+                        <input type="tel" id="phone" name="phone" placeholder="Enter phone number">
+                        <div class="error-text" id="phoneError"></div>
                     </div>
 
                     <div class="form-group">
                         <label for="pincode">Pincode *</label>
-                        <input type="text" id="pincode" name="pincode" placeholder="Enter pincode" pattern="[0-9]{6}" required>
+                        <input type="text" id="pincode" name="pincode" placeholder="Enter pincode">
+                        <div class="error-text" id="pincodeError"></div>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="address">Address *</label>
-                    <textarea id="address" name="address" placeholder="House No., Building Name, Street, Area" required></textarea>
+                    <textarea id="address" name="address" placeholder="House No., Building Name, Street, Area"></textarea>
+                    <div class="error-text" id="addressError"></div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="city">City *</label>
-                        <input type="text" id="city" name="city" placeholder="Enter city" required>
+                        <input type="text" id="city" name="city" placeholder="Enter city">
+                        <div class="error-text" id="cityError"></div>
                     </div>
 
                     <div class="form-group">
                         <label for="state">State *</label>
-                        <input type="text" id="state" name="state" placeholder="Enter state" required>
+                        <input type="text" id="state" name="state" placeholder="Enter state">
+                        <div class="error-text" id="stateError"></div>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="addressType">Address Type *</label>
-                    <select id="addressType" name="addressType" required>
+                    <select id="addressType" name="addressType">
                         <option value="">Select address type</option>
                         <option value="home">Home</option>
                         <option value="work">Work</option>
                     </select>
+                    <div class="error-text" id="addressTypeError"></div>
                 </div>
 
                 <div class="form-actions">
@@ -527,25 +549,151 @@
     </footer>
 
     <script>
+        function showError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const errorDiv = document.getElementById(fieldId + 'Error');
+            field.classList.add('error-input');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function clearErrors() {
+            const inputs = document.querySelectorAll('.error-input');
+            const errorTexts = document.querySelectorAll('.error-text');
+            inputs.forEach(input => input.classList.remove('error-input'));
+            errorTexts.forEach(text => {
+                text.style.display = 'none';
+                text.textContent = '';
+            });
+        }
+
         // Form validation
         document.getElementById('addAddressForm').addEventListener('submit', function(e) {
-            const phone = document.getElementById('phone').value;
-            const pincode = document.getElementById('pincode').value;
+            clearErrors();
+            let hasError = false;
 
-            if (!/^[0-9]{10}$/.test(phone)) {
-                e.preventDefault();
-                alert('Please enter a valid 10-digit phone number');
-                return false;
+            const fullName = document.getElementById('fullName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const pincode = document.getElementById('pincode').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value.trim();
+            const addressType = document.getElementById('addressType').value;
+
+            // Full name validation (only letters and spaces, 2-50 characters)
+            if (!fullName) { 
+                showError('fullName', 'Please enter your full name'); 
+                hasError = true; 
+            } else if (!/^[a-zA-Z\s]{2,50}$/.test(fullName)) { 
+                showError('fullName', 'Name must be 2-50 characters and contain only letters'); 
+                hasError = true; 
             }
 
-            if (!/^[0-9]{6}$/.test(pincode)) {
+            // Phone validation
+            if (!phone) { 
+                showError('phone', 'Please enter your phone number'); 
+                hasError = true; 
+            } else if (!/^[0-9]{10}$/.test(phone)) { 
+                showError('phone', 'Please enter a valid 10-digit phone number'); 
+                hasError = true; 
+            }
+            
+            // Pincode validation
+            if (!pincode) { 
+                showError('pincode', 'Please enter your pincode'); 
+                hasError = true; 
+            } else if (!/^[0-9]{6}$/.test(pincode)) { 
+                showError('pincode', 'Please enter a valid 6-digit pincode'); 
+                hasError = true; 
+            }
+            
+            // Address validation (10-200 characters)
+            if (!address) { 
+                showError('address', 'Please enter your address'); 
+                hasError = true; 
+            } else if (address.length < 10) { 
+                showError('address', 'Address must be at least 10 characters'); 
+                hasError = true; 
+            } else if (address.length > 200) { 
+                showError('address', 'Address must not exceed 200 characters'); 
+                hasError = true; 
+            }
+            
+            // City validation (only letters and spaces, 2-50 characters)
+            if (!city) { 
+                showError('city', 'Please enter your city'); 
+                hasError = true; 
+            } else if (!/^[a-zA-Z\s]{2,50}$/.test(city)) { 
+                showError('city', 'City must be 2-50 characters and contain only letters'); 
+                hasError = true; 
+            }
+
+            // State validation (only letters and spaces, 2-50 characters)
+            if (!state) { 
+                showError('state', 'Please enter your state'); 
+                hasError = true; 
+            } else if (!/^[a-zA-Z\s]{2,50}$/.test(state)) { 
+                showError('state', 'State must be 2-50 characters and contain only letters'); 
+                hasError = true; 
+            }
+
+            if (!addressType) { 
+                showError('addressType', 'Please select an address type'); 
+                hasError = true; 
+            }
+
+            if (hasError) {
                 e.preventDefault();
-                alert('Please enter a valid 6-digit pincode');
                 return false;
             }
 
             return true;
         });
+
+        // Real-time validation
+        document.getElementById('fullName').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+            if (this.value.length > 50) this.value = this.value.slice(0, 50);
+        });
+
+        document.getElementById('phone').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length > 10) this.value = this.value.slice(0, 10);
+        });
+
+        document.getElementById('pincode').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length > 6) this.value = this.value.slice(0, 6);
+        });
+
+        document.getElementById('address').addEventListener('input', function(e) {
+            if (this.value.length > 200) this.value = this.value.slice(0, 200);
+        });
+
+        document.getElementById('city').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+            if (this.value.length > 50) this.value = this.value.slice(0, 50);
+        });
+
+        document.getElementById('state').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+            if (this.value.length > 50) this.value = this.value.slice(0, 50);
+        });
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Logging Out?',
+                text: 'Are you sure you want to log out of Veloura?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#5c1e28',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: 'Yes, Log Out',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = '/logout';
+            });
+        }
     </script>
 </body>
 </html>

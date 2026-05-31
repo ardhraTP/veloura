@@ -1,7 +1,11 @@
 <aside class="sidebar">
     <div class="profile-section">
-        <div class="profile-avatar">
-            <i class="fas fa-user"></i>
+        <div class="profile-avatar" style="overflow: hidden;">
+            <% if (typeof user !== 'undefined' && user.profileImage) { %>
+                <img src="<%= user.profileImage %>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover;">
+            <% } else { %>
+                <i class="fas fa-user"></i>
+            <% } %>
         </div>
         <div class="profile-name"><%= typeof user !== 'undefined' ? user.name : 'User' %></div>
     </div>
@@ -15,5 +19,35 @@
         <li><a href="/wishlist" class="<%= typeof activeTab !== 'undefined' && activeTab === 'wishlist' ? 'active' : '' %>"><i class="far fa-heart"></i> Wishlist</a></li>
     </ul>
 
-    <button class="logout-btn" onclick="window.location.href='/logout'">Log Out</button>
+    <button class="logout-btn" onclick="handleSidebarLogout(event)">Log Out</button>
 </aside>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function handleSidebarLogout(event) {
+        if (event) event.preventDefault();
+        
+        // Use Swal if available, fallback to default confirm if not
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Logging Out?',
+                text: 'Are you sure you want to log out of Veloura?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#5c1e28',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: 'Yes, Log Out',
+                cancelButtonText: 'Cancel',
+                borderRadius: '12px'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/logout';
+                }
+            });
+        } else {
+            if (confirm('Are you sure you want to log out of Veloura?')) {
+                window.location.href = '/logout';
+            }
+        }
+    }
+</script>

@@ -6,22 +6,19 @@
     <title>Edit Profile - Veloura</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary-red: #5c1e28;
-            --bg-beige: #fdfbf9; /* Lighter beige for the overall page */
-            --box-beige: #f4f1ec; /* Slightly darker beige for cards */
+            --bg-beige: #fdfbf9;
+            --box-beige: #f4f1ec;
             --text-dark: #2c2c2c;
             --text-light: #666666;
             --white: #ffffff;
             --border-color: #e8e4df;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -64,9 +61,7 @@
             transition: color 0.3s ease;
         }
 
-        .header-center a:hover {
-            color: var(--primary-red);
-        }
+        .header-center a:hover { color: var(--primary-red); }
 
         .header-icons {
             display: flex;
@@ -81,9 +76,7 @@
             transition: color 0.3s ease;
         }
 
-        .header-icons a:hover {
-            color: var(--primary-red);
-        }
+        .header-icons a:hover { color: var(--primary-red); }
 
         /* Main Container */
         .main-container {
@@ -101,7 +94,7 @@
             background: var(--white);
             border-radius: 20px;
             padding: 30px 0;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
         }
 
         .profile-section {
@@ -118,12 +111,16 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto 15px;
+            overflow: hidden;
         }
 
-        .profile-avatar i {
-            font-size: 32px;
-            color: #a09d98;
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
+
+        .profile-avatar i { font-size: 32px; color: #a09d98; }
 
         .profile-name {
             font-family: 'Playfair Display', serif;
@@ -139,9 +136,7 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        .sidebar-menu li {
-            margin-bottom: 5px;
-        }
+        .sidebar-menu li { margin-bottom: 5px; }
 
         .sidebar-menu a {
             display: flex;
@@ -155,29 +150,16 @@
             transition: all 0.3s ease;
         }
 
-        .sidebar-menu a i {
-            width: 20px;
-            font-size: 14px;
-            color: var(--text-light);
-        }
-
-        .sidebar-menu a:hover {
-            color: var(--primary-red);
-            background-color: #fcfcfc;
-        }
-
-        .sidebar-menu a:hover i {
-            color: var(--primary-red);
-        }
+        .sidebar-menu a i { width: 20px; font-size: 14px; color: var(--text-light); }
+        .sidebar-menu a:hover { color: var(--primary-red); background-color: #fcfcfc; }
+        .sidebar-menu a:hover i { color: var(--primary-red); }
 
         .sidebar-menu a.active {
             background-color: var(--primary-red);
             color: var(--white);
         }
 
-        .sidebar-menu a.active i {
-            color: var(--white);
-        }
+        .sidebar-menu a.active i { color: var(--white); }
 
         .logout-btn {
             margin: 20px 25px 0 25px;
@@ -193,9 +175,7 @@
             transition: background-color 0.3s ease;
         }
 
-        .logout-btn:hover {
-            background-color: #b71c1c;
-        }
+        .logout-btn:hover { background-color: #b71c1c; }
 
         /* Content Area */
         .content-area {
@@ -203,7 +183,7 @@
             background: var(--white);
             border-radius: 20px;
             padding: 50px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
         }
 
         .section-title {
@@ -215,9 +195,7 @@
             letter-spacing: -0.5px;
         }
 
-        .form-group {
-            margin-bottom: 25px;
-        }
+        .form-group { margin-bottom: 25px; }
 
         .form-group label {
             display: block;
@@ -239,15 +217,8 @@
             transition: border-color 0.3s ease;
         }
 
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--primary-red);
-        }
-
-        .form-group input:disabled {
-            background-color: #f5f5f5;
-            cursor: not-allowed;
-        }
+        .form-group input:focus { outline: none; border-color: var(--primary-red); }
+        .form-group input:disabled { background-color: #f5f5f5; cursor: not-allowed; }
 
         /* Profile Image Upload Section */
         .profile-image-section {
@@ -260,10 +231,6 @@
             border-radius: 12px;
         }
 
-        .profile-image-preview {
-            position: relative;
-        }
-
         .profile-image-circle {
             width: 120px;
             height: 120px;
@@ -274,6 +241,9 @@
             justify-content: center;
             overflow: hidden;
             border: 3px solid var(--primary-red);
+            position: relative;
+            flex-shrink: 0;
+            cursor: pointer;
         }
 
         .profile-image-circle img {
@@ -282,14 +252,28 @@
             object-fit: cover;
         }
 
-        .profile-image-circle i {
-            font-size: 48px;
-            color: #a09d98;
+        .profile-image-circle i { font-size: 48px; color: #a09d98; }
+
+        /* Hover overlay on the circle */
+        .profile-image-circle::after {
+            content: '\f030'; /* camera icon unicode */
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            color: white;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.25s ease;
         }
 
-        .profile-image-info {
-            flex: 1;
-        }
+        .profile-image-circle:hover::after { opacity: 1; }
+
+        .profile-image-info { flex: 1; }
 
         .profile-image-info h3 {
             font-size: 16px;
@@ -304,10 +288,7 @@
             margin-bottom: 15px;
         }
 
-        .profile-image-actions {
-            display: flex;
-            gap: 10px;
-        }
+        .profile-image-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
         .btn-upload {
             padding: 10px 20px;
@@ -323,9 +304,7 @@
             transition: background-color 0.3s ease;
         }
 
-        .btn-upload:hover {
-            background-color: #40131b;
-        }
+        .btn-upload:hover { background-color: #40131b; }
 
         .btn-remove {
             padding: 10px 20px;
@@ -341,18 +320,22 @@
             transition: all 0.3s ease;
         }
 
-        .btn-remove:hover {
-            background-color: #d32f2f;
-            color: var(--white);
-        }
+        .btn-remove:hover { background-color: #d32f2f; color: var(--white); }
 
-        #profileImageInput {
+        #profileImageInput { display: none; }
+
+        /* Upload progress indicator */
+        .upload-filename {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--primary-red);
+            font-weight: 500;
             display: none;
         }
 
-        .email-field {
-            position: relative;
-        }
+        .upload-filename.visible { display: block; }
+
+        .email-field { position: relative; }
 
         .change-email-link {
             position: absolute;
@@ -366,9 +349,7 @@
             text-decoration: none;
         }
 
-        .change-email-link:hover {
-            text-decoration: underline;
-        }
+        .change-email-link:hover { text-decoration: underline; }
 
         .form-actions {
             display: flex;
@@ -388,14 +369,8 @@
             transition: all 0.3s ease;
         }
 
-        .btn-primary {
-            background-color: var(--primary-red);
-            color: var(--white);
-        }
-
-        .btn-primary:hover {
-            background-color: #40131b;
-        }
+        .btn-primary { background-color: var(--primary-red); color: var(--white); }
+        .btn-primary:hover { background-color: #40131b; }
 
         .btn-secondary {
             background-color: transparent;
@@ -403,27 +378,32 @@
             border: 1px solid var(--border-color);
         }
 
-        .btn-secondary:hover {
-            background-color: #f5f5f5;
+        .btn-secondary:hover { background-color: #f5f5f5; }
+
+        /* Error message */
+        .error-message {
+            background-color: #fee;
+            color: #c33;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 3px solid #c33;
+            font-size: 13px;
         }
 
-        /* Modal/Popup */
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
             z-index: 9999;
             align-items: center;
             justify-content: center;
         }
 
-        .modal.active {
-            display: flex;
-        }
+        .modal.active { display: flex; }
 
         .modal-content {
             background: var(--white);
@@ -436,15 +416,8 @@
         }
 
         @keyframes slideDown {
-            from {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .modal-header {
@@ -470,13 +443,9 @@
             transition: color 0.3s ease;
         }
 
-        .close-modal:hover {
-            color: var(--text-dark);
-        }
+        .close-modal:hover { color: var(--text-dark); }
 
-        .modal-body {
-            margin-bottom: 25px;
-        }
+        .modal-body { margin-bottom: 25px; }
 
         .modal-footer {
             display: flex;
@@ -497,9 +466,7 @@
             max-width: 100%;
         }
 
-        .footer-about {
-            flex: 0 0 30%;
-        }
+        .footer-about { flex: 0 0 30%; }
 
         .footer-brand {
             font-family: 'Playfair Display', serif;
@@ -509,10 +476,7 @@
             margin-bottom: 25px;
         }
 
-        .footer-links-container {
-            display: flex;
-            gap: 100px;
-        }
+        .footer-links-container { display: flex; gap: 100px; }
 
         .footer-column h4 {
             font-size: 10px;
@@ -523,13 +487,8 @@
             color: var(--primary-red);
         }
 
-        .footer-column ul {
-            list-style: none;
-        }
-
-        .footer-column ul li {
-            margin-bottom: 15px;
-        }
+        .footer-column ul { list-style: none; }
+        .footer-column ul li { margin-bottom: 15px; }
 
         .footer-column ul li a {
             color: var(--text-light);
@@ -538,34 +497,20 @@
             transition: color 0.3s ease;
         }
 
-        .footer-column ul li a:hover {
-            color: var(--primary-red);
-        }
+        .footer-column ul li a:hover { color: var(--primary-red); }
 
-        /* Responsive */
         @media (max-width: 992px) {
-            .main-container {
-                flex-direction: column;
-                padding: 0 40px;
-            }
-            .sidebar {
-                width: 100%;
-            }
-            header {
-                padding: 20px 40px;
-            }
-            .footer-content {
-                flex-direction: column;
-                gap: 50px;
-            }
-            .footer-links-container {
-                flex-wrap: wrap;
-                gap: 50px;
-            }
+            .main-container { flex-direction: column; padding: 0 40px; }
+            .sidebar { width: 100%; }
+            header { padding: 20px 40px; }
+            .footer-content { flex-direction: column; gap: 50px; }
+            .footer-links-container { flex-wrap: wrap; gap: 50px; }
         }
     </style>
+<script src="/js/prevent-back.js"></script>
 </head>
 <body>
+
     <!-- Header -->
     <header>
         <a href="/home" class="logo">Veloura</a>
@@ -584,11 +529,16 @@
 
     <!-- Main Container -->
     <div class="main-container">
+
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="profile-section">
                 <div class="profile-avatar">
-                    <i class="fas fa-user"></i>
+                    <% if (user.profileImage) { %>
+                        <img src="<%= user.profileImage %>" alt="Profile">
+                    <% } else { %>
+                        <i class="fas fa-user"></i>
+                    <% } %>
                 </div>
                 <div class="profile-name"><%= user.name %></div>
             </div>
@@ -602,7 +552,7 @@
                 <li><a href="/wishlist"><i class="far fa-heart"></i> Wishlist</a></li>
             </ul>
 
-            <button class="logout-btn" onclick="window.location.href='/logout'">Log Out</button>
+            <button class="logout-btn" onclick="confirmLogout()">Log Out</button>
         </aside>
 
         <!-- Content Area -->
@@ -610,43 +560,68 @@
             <h2 class="section-title">Edit Your Profile</h2>
 
             <% if (typeof error !== 'undefined' && error) { %>
-                <div class="error-message" style="background-color: #fee; color: #c33; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; border-left: 3px solid #c33;">
-                    <%= error %>
-                </div>
+                <div class="error-message"><%= error %></div>
             <% } %>
 
+            <%# Success toast — fires without redirecting so user stays on the page %>
             <% if (typeof success !== 'undefined' && success) { %>
-                <div class="success-message" style="background-color: #efe; color: #2a7c2a; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; border-left: 3px solid #2a7c2a;">
-                    <%= success %>
-                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: '<%= success %>',
+                            showConfirmButton: false,
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
+                        // No redirect — user stays on edit page
+                    });
+                </script>
             <% } %>
 
-            <form action="/profile/update" method="POST" id="profileForm" enctype="multipart/form-data">
+            <form action="/profile/update" method="POST" id="profileForm" enctype="multipart/form-data" novalidate>
+
                 <!-- Profile Image Section -->
                 <div class="profile-image-section">
                     <div class="profile-image-preview">
-                        <div class="profile-image-circle" id="profileImageCircle">
-                            <i class="far fa-user"></i>
+                        <%# Clicking the circle also triggers file picker %>
+                        <div class="profile-image-circle" id="profileImageCircle"
+                             onclick="document.getElementById('profileImageInput').click()"
+                             title="Click to change photo">
+                            <% if (user.profileImage) { %>
+                                <img src="<%= user.profileImage %>" alt="Profile Picture" id="profileImgTag">
+                            <% } else { %>
+                                <i class="far fa-user" id="profileImgPlaceholder"></i>
+                            <% } %>
                         </div>
                     </div>
+
                     <div class="profile-image-info">
                         <h3>Profile Picture</h3>
-                        <p>Upload a profile picture. Recommended size: 400x400px. Max file size: 2MB.</p>
+                        <p>JPG or PNG, max 2 MB. Click the photo or the button to upload.</p>
                         <div class="profile-image-actions">
-                            <button type="button" class="btn-upload" onclick="document.getElementById('profileImageInput').click()">
+                            <button type="button" class="btn-upload"
+                                    onclick="document.getElementById('profileImageInput').click()">
                                 <i class="fas fa-upload"></i> Upload Photo
                             </button>
                             <button type="button" class="btn-remove" onclick="removeProfileImage()">
                                 <i class="fas fa-trash"></i> Remove
                             </button>
                         </div>
-                        <input type="file" id="profileImageInput" name="profileImage" accept="image/*" onchange="previewProfileImage(event)">
+                        <%# Hidden file input — name must match upload.single('profileImage') %>
+                        <input type="file" id="profileImageInput" name="profileImage"
+                               accept="image/*" onchange="previewProfileImage(event)">
+                        <%# Shows selected filename so user knows a file was picked %>
+                        <div class="upload-filename" id="uploadFilename"></div>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="fullName">Full Name *</label>
-                    <input type="text" id="fullName" name="name" value="<%= user.name %>" required>
+                    <input type="text" id="fullName" name="name" value="<%= user.name %>">
+                    <div class="error-text" id="fullNameError"></div>
                 </div>
 
                 <div class="form-group">
@@ -659,12 +634,16 @@
 
                 <div class="form-group">
                     <label for="phone">Phone Number *</label>
-                    <input type="tel" id="phone" name="phone" value="<%= user.phone %>" pattern="[0-9]{10}" required>
+                    <input type="tel" id="phone" name="phone" value="<%= user.phone %>">
+                    <div class="error-text" id="phoneError"></div>
                 </div>
+
+                <%# Hidden field to signal image removal to the server %>
+                <input type="hidden" id="deleteProfileImage" name="deleteProfileImage" value="false">
 
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary"
-                        onclick="window.location.href='/profile'">Cancel</button>
+                            onclick="window.location.href='/profile'">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
@@ -679,22 +658,21 @@
                 <button class="close-modal" onclick="closeEmailModal()">&times;</button>
             </div>
             <div class="modal-body">
+                <div id="emailModalError" style="display: none; background-color: #fee; color: #c33; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; border-left: 3px solid #c33; font-size: 13px;"></div>
                 <form id="emailChangeForm">
                     <div class="form-group">
-                        <label for="currentEmail">Current Email *</label>
+                        <label for="currentEmail">Current Email</label>
                         <input type="email" id="currentEmail" value="<%= user.email %>" disabled>
                     </div>
-
                     <div class="form-group">
                         <label for="newEmail">New Email *</label>
-                        <input type="email" id="newEmail" name="newEmail" placeholder="Enter new email address"
-                            required>
+                        <input type="email" id="newEmail" name="newEmail"
+                               placeholder="Enter new email address">
                     </div>
-
                     <div class="form-group">
                         <label for="confirmEmail">Confirm New Email *</label>
                         <input type="email" id="confirmEmail" name="confirmEmail"
-                            placeholder="Re-enter new email address" required>
+                               placeholder="Re-enter new email address">
                     </div>
                 </form>
             </div>
@@ -711,7 +689,6 @@
             <div class="footer-about">
                 <div class="footer-brand">Veloura</div>
             </div>
-
             <div class="footer-links-container">
                 <div class="footer-column">
                     <h4>Brands</h4>
@@ -721,7 +698,6 @@
                         <li><a href="#">Lakme</a></li>
                     </ul>
                 </div>
-
                 <div class="footer-column">
                     <h4>Support</h4>
                     <ul>
@@ -730,7 +706,6 @@
                         <li><a href="#">Track Order</a></li>
                     </ul>
                 </div>
-
                 <div class="footer-column">
                     <h4>Account</h4>
                     <ul>
@@ -744,138 +719,216 @@
     </footer>
 
     <script>
-        // Profile Image Preview
+        // ── Profile Image Preview ──────────────────────────────────────────────
         function previewProfileImage(event) {
             const file = event.target.files[0];
-            
-            if (file) {
-                // Check file size (2MB max)
-                if (file.size > 2 * 1024 * 1024) {
-                    alert('File size must be less than 2MB');
-                    event.target.value = '';
-                    return;
-                }
+            if (!file) return;
 
-                // Check file type
-                if (!file.type.startsWith('image/')) {
-                    alert('Please upload an image file');
-                    event.target.value = '';
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const circle = document.getElementById('profileImageCircle');
-                    circle.innerHTML = `<img src="${e.target.result}" alt="Profile Picture">`;
-                };
-                reader.readAsDataURL(file);
+            if (file.size > 2 * 1024 * 1024) {
+                Swal.fire({ icon: 'error', title: 'File Too Large', text: 'Image must be under 2 MB.', confirmButtonColor: '#5c1e28' });
+                event.target.value = '';
+                return;
             }
+
+            if (!file.type.startsWith('image/')) {
+                Swal.fire({ icon: 'error', title: 'Invalid File', text: 'Please upload an image file.', confirmButtonColor: '#5c1e28' });
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const circle = document.getElementById('profileImageCircle');
+                // Replace whatever is inside (img or icon) with the preview
+                circle.innerHTML = `<img src="${e.target.result}" alt="Profile Picture" style="width:100%;height:100%;object-fit:cover;">`;
+
+                // Show filename
+                const filenameEl = document.getElementById('uploadFilename');
+                filenameEl.textContent = '✓ ' + file.name;
+                filenameEl.classList.add('visible');
+
+                // Make sure we're not deleting
+                document.getElementById('deleteProfileImage').value = 'false';
+            };
+            reader.readAsDataURL(file);
         }
 
         function removeProfileImage() {
             const circle = document.getElementById('profileImageCircle');
-            circle.innerHTML = '<i class="far fa-user"></i>';
+            circle.innerHTML = '<i class="far fa-user" style="font-size:48px;color:#a09d98;"></i>';
+
             document.getElementById('profileImageInput').value = '';
+            document.getElementById('deleteProfileImage').value = 'true';
+
+            const filenameEl = document.getElementById('uploadFilename');
+            filenameEl.textContent = '';
+            filenameEl.classList.remove('visible');
         }
 
-        // Form validation
+        // ── Form Validation ───────────────────────────────────────────────────
+        function showError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const errorDiv = document.getElementById(fieldId + 'Error');
+            if (field && errorDiv) {
+                field.style.borderColor = '#d32f2f';
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+                errorDiv.style.color = '#d32f2f';
+                errorDiv.style.fontSize = '11px';
+                errorDiv.style.marginTop = '5px';
+            }
+        }
+
+        function clearErrors() {
+            const errorTexts = document.querySelectorAll('.error-text');
+            errorTexts.forEach(text => {
+                text.style.display = 'none';
+                text.textContent = '';
+            });
+            document.getElementById('fullName').style.borderColor = '';
+            document.getElementById('phone').style.borderColor = '';
+        }
+
         document.getElementById('profileForm').addEventListener('submit', function (e) {
-            const name = document.getElementById('fullName').value;
-            const phone = document.getElementById('phone').value;
+            clearErrors();
+            let hasError = false;
 
-            console.log('=== CLIENT-SIDE FORM SUBMISSION DEBUG ===');
-            console.log('Form data being submitted:');
-            console.log('Name:', name);
-            console.log('Phone:', phone);
-            console.log('Form action:', this.action);
-            console.log('Form method:', this.method);
+            const name  = document.getElementById('fullName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
 
-            // Validate phone number (10 digits)
-            if (!/^[0-9]{10}$/.test(phone)) {
+            // Validate name (only letters and spaces, 2-50 characters)
+            if (!name) {
+                showError('fullName', 'Please enter your full name');
+                hasError = true;
+            } else if (!/^[a-zA-Z\s]{2,50}$/.test(name)) {
+                showError('fullName', 'Name must be 2-50 characters and contain only letters');
+                hasError = true;
+            }
+
+            // Validate phone
+            if (!phone) {
+                showError('phone', 'Please enter your phone number');
+                hasError = true;
+            } else if (!/^[0-9]{10}$/.test(phone)) {
+                showError('phone', 'Please enter a valid 10-digit phone number');
+                hasError = true;
+            }
+
+            if (hasError) {
                 e.preventDefault();
-                alert('Please enter a valid 10-digit phone number');
                 return false;
             }
-
-            // Validate name
-            if (!name || name.trim().length < 2) {
-                e.preventDefault();
-                alert('Name must be at least 2 characters long');
-                return false;
-            }
-
-            console.log('Form validation passed, submitting to server...');
-            
-            // Let's also log the FormData to see what's being sent
-            const formData = new FormData(this);
-            console.log('FormData contents:');
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value);
-            }
-            
-            return true;
         });
 
-        function openEmailModal() {
-            document.getElementById('emailModal').classList.add('active');
+        // Real-time name validation
+        document.getElementById('fullName').addEventListener('input', function(e) {
+            // Remove any non-letter characters except spaces
+            this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+            
+            // Limit to 50 characters
+            if (this.value.length > 50) {
+                this.value = this.value.slice(0, 50);
+            }
+        });
+
+        // Real-time phone validation
+        document.getElementById('phone').addEventListener('input', function(e) {
+            // Remove any non-digit characters
+            this.value = this.value.replace(/\D/g, '');
+            
+            // Limit to 10 digits
+            if (this.value.length > 10) {
+                this.value = this.value.slice(0, 10);
+            }
+        });
+
+        // ── Email Modal ───────────────────────────────────────────────────────
+        function showEmailModalError(message) {
+            const errorDiv = document.getElementById('emailModalError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideEmailModalError() {
+            const errorDiv = document.getElementById('emailModalError');
+            errorDiv.textContent = '';
+            errorDiv.style.display = 'none';
+        }
+
+        function openEmailModal()  { 
+            document.getElementById('emailModal').classList.add('active'); 
+            hideEmailModalError();
         }
 
         function closeEmailModal() {
             document.getElementById('emailModal').classList.remove('active');
             document.getElementById('emailChangeForm').reset();
+            hideEmailModalError();
         }
 
         function changeEmail() {
-            const newEmail = document.getElementById('newEmail').value;
-            const confirmEmail = document.getElementById('confirmEmail').value;
+            hideEmailModalError();
+            
+            const newEmail     = document.getElementById('newEmail').value.trim();
+            const confirmEmail = document.getElementById('confirmEmail').value.trim();
 
             if (!newEmail || !confirmEmail) {
-                alert('Please fill in all fields');
+                showEmailModalError('Please fill in both email fields.');
                 return;
             }
 
             if (newEmail !== confirmEmail) {
-                alert('Email addresses do not match!');
+                showEmailModalError('Email addresses do not match.');
                 return;
             }
 
-            // Email validation
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailPattern.test(newEmail)) {
-                alert('Please enter a valid email address');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+                showEmailModalError('Please enter a valid email address.');
                 return;
             }
 
-            // Send email change request
             fetch('/profile/request-email-change', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ newEmail })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('OTP sent to your new email address. Please check your email and verify.');
-                    closeEmailModal();
-                    // You could redirect to an OTP verification page here
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
                 } else {
-                    alert(data.message || 'Failed to send OTP');
+                    return response.json();
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to process email change request');
+            .then(data => {
+                if (data && !data.success) {
+                    showEmailModalError(data.message || 'Failed to send OTP.');
+                }
+            })
+            .catch(() => {
+                showEmailModalError('Failed to process email change request.');
             });
         }
 
-        // Close modal when clicking outside
+        // Close modal on backdrop click
         window.onclick = function (event) {
             const modal = document.getElementById('emailModal');
-            if (event.target == modal) {
-                closeEmailModal();
-            }
+            if (event.target === modal) closeEmailModal();
+        };
+
+        // ── Logout Confirm ────────────────────────────────────────────────────
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Logging Out?',
+                text: 'Are you sure you want to log out of Veloura?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#5c1e28',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: 'Yes, Log Out',
+                cancelButtonText: 'Cancel'
+            }).then(result => {
+                if (result.isConfirmed) window.location.href = '/logout';
+            });
         }
     </script>
 </body>

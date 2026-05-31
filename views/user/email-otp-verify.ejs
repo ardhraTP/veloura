@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify OTP - Veloura</title>
+    <title>Verify Email Change - Veloura</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <style>
@@ -18,7 +19,6 @@
             --border-color: #e8e4df;
         }
 
-
         * {
             margin: 0;
             padding: 0;
@@ -31,15 +31,23 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+        }
+
+        .otp-container {
+            flex: 1;
+            display: flex;
             align-items: center;
             justify-content: center;
             padding: 40px 20px;
         }
 
-        .otp-container {
-            background: transparent;
+        .otp-wrapper {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 60px 80px;
             max-width: 600px;
             width: 100%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
 
@@ -58,25 +66,29 @@
             line-height: 1.6;
         }
 
+        .new-email {
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+
         .otp-inputs {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 40px;
         }
 
         .otp-input {
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             border: 2px solid var(--border-color);
             border-radius: 10px;
             text-align: center;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 600;
             color: var(--text-dark);
             font-family: 'Inter', sans-serif;
             transition: all 0.3s ease;
-            background-color: var(--white);
         }
 
         .otp-input:focus {
@@ -97,7 +109,6 @@
 
         .verify-btn {
             width: 100%;
-            max-width: 400px;
             padding: 14px;
             background-color: var(--primary-red);
             color: var(--white);
@@ -157,33 +168,61 @@
             font-size: 13px;
             margin-bottom: 20px;
             border-left: 3px solid #c33;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .success-message {
             background-color: #efe;
-            color: #2a7c2a;
+            color: #3c3;
             padding: 10px 15px;
             border-radius: 8px;
             font-size: 13px;
             margin-bottom: 20px;
-            border-left: 3px solid #2a7c2a;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
+            border-left: 3px solid #3c3;
+        }
+
+        .back-link {
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .back-link a:hover {
+            color: var(--primary-red);
+            text-decoration: underline;
+        }
+
+        .time-remaining {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 15px;
+        }
+
+        .expired-message {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 3px solid #ffc107;
         }
 
         @media (max-width: 768px) {
+            .otp-wrapper {
+                padding: 40px 30px;
+            }
+
             .otp-inputs {
-                gap: 12px;
+                gap: 10px;
             }
 
             .otp-input {
-                width: 50px;
-                height: 50px;
-                font-size: 20px;
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
             }
 
             .verification-title {
@@ -195,35 +234,48 @@
 </head>
 <body>
     <div class="otp-container">
-        <h1 class="verification-title">Verification</h1>
-        <p class="verification-subtitle">
-            We've sent a 4-digit verification code to your email address.
-        </p>
+        <div class="otp-wrapper">
+            <h1 class="verification-title">Verify New Email</h1>
+            <p class="verification-subtitle">
+                We've sent a 6-digit verification code to your new email address:<br>
+                <span class="new-email"><%= newEmail %></span>
+            </p>
 
-        <% if (typeof error !== 'undefined' && error) { %>
-            <div class="error-message"><%= error %></div>
-        <% } %>
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="error-message"><%= error %></div>
+            <% } %>
 
-        <% if (typeof success !== 'undefined' && success) { %>
-            <div class="success-message"><%= success %></div>
-        <% } %>
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="success-message"><%= success %></div>
+            <% } %>
 
-        <form action="/forgot-otp-verify" method="POST" id="otpForm">
-            <div class="otp-inputs">
-                <input type="number" class="otp-input" maxlength="1" id="otp1" name="otp1" required>
-                <input type="number" class="otp-input" maxlength="1" id="otp2" name="otp2" required>
-                <input type="number" class="otp-input" maxlength="1" id="otp3" name="otp3" required>
-                <input type="number" class="otp-input" maxlength="1" id="otp4" name="otp4" required>
+            <form action="/profile/verify-email-change" method="POST" id="otpForm">
+                <div class="otp-inputs">
+                    <input type="number" class="otp-input" maxlength="1" id="otp1" name="otp1" required>
+                    <input type="number" class="otp-input" maxlength="1" id="otp2" name="otp2" required>
+                    <input type="number" class="otp-input" maxlength="1" id="otp3" name="otp3" required>
+                    <input type="number" class="otp-input" maxlength="1" id="otp4" name="otp4" required>
+                    <input type="number" class="otp-input" maxlength="1" id="otp5" name="otp5" required>
+                    <input type="number" class="otp-input" maxlength="1" id="otp6" name="otp6" required>
+                </div>
+
+                <button type="submit" class="verify-btn" id="verifyBtn">Verify & Update Email</button>
+            </form>
+
+            <div class="time-remaining">
+                <span id="timeRemaining">Time remaining: <span class="timer" id="timeLeft">5:00</span></span>
             </div>
 
-            <button type="submit" class="verify-btn" id="verifyBtn">Verify & Proceed</button>
-        </form>
+            <div class="resend-section">
+                Didn't receive the code? 
+                <a href="#" class="resend-link" id="resendLink" onclick="resendOTP(event)">
+                    <span id="resendText">Resend Code (<span class="timer" id="resendTimer">60</span>s)</span>
+                </a>
+            </div>
 
-        <div class="resend-section">
-            Didn't receive the code? 
-            <a href="#" class="resend-link" id="resendLink" onclick="resendOTP(event)">
-                Resend Code (<span class="timer" id="timer">60</span>s)
-            </a>
+            <div class="back-link">
+                <a href="/profile/edit">← Back to Profile</a>
+            </div>
         </div>
     </div>
 
@@ -256,7 +308,7 @@
             // Handle paste
             input.addEventListener('paste', (e) => {
                 e.preventDefault();
-                const pastedData = e.clipboardData.getData('text').slice(0, 4);
+                const pastedData = e.clipboardData.getData('text').slice(0, 6);
                 const digits = pastedData.split('');
                 
                 digits.forEach((digit, i) => {
@@ -265,8 +317,8 @@
                     }
                 });
                 
-                if (digits.length === 4) {
-                    otpInputs[3].focus();
+                if (digits.length === 6) {
+                    otpInputs[5].focus();
                 }
             });
         });
@@ -276,25 +328,55 @@
             otpInputs[0].focus();
         });
 
-        // Resend OTP Timer
-        let timeLeft = 60;
-        let timerInterval;
+        // OTP Expiry Timer (5 minutes)
+        let otpTimeLeft = 5 * 60; // 5 minutes in seconds
+        let otpTimerInterval;
 
-        function startTimer() {
-            const timerElement = document.getElementById('timer');
+        function startOTPTimer() {
+            const timeLeftElement = document.getElementById('timeLeft');
+            const timeRemainingElement = document.getElementById('timeRemaining');
+            
+            otpTimerInterval = setInterval(() => {
+                otpTimeLeft--;
+                
+                const minutes = Math.floor(otpTimeLeft / 60);
+                const seconds = otpTimeLeft % 60;
+                timeLeftElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (otpTimeLeft <= 0) {
+                    clearInterval(otpTimerInterval);
+                    timeRemainingElement.innerHTML = '<div class="expired-message">OTP has expired. Please request a new one.</div>';
+                    document.getElementById('verifyBtn').disabled = true;
+                    
+                    // Clear OTP inputs
+                    otpInputs.forEach(input => {
+                        input.disabled = true;
+                        input.style.backgroundColor = '#f5f5f5';
+                    });
+                }
+            }, 1000);
+        }
+
+        // Resend OTP Timer (1 minute)
+        let resendTimeLeft = 60;
+        let resendTimerInterval;
+
+        function startResendTimer() {
+            const resendTimerElement = document.getElementById('resendTimer');
             const resendLink = document.getElementById('resendLink');
+            const resendText = document.getElementById('resendText');
             
             resendLink.classList.add('disabled');
             
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                timerElement.textContent = timeLeft;
+            resendTimerInterval = setInterval(() => {
+                resendTimeLeft--;
+                resendTimerElement.textContent = resendTimeLeft;
                 
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
+                if (resendTimeLeft <= 0) {
+                    clearInterval(resendTimerInterval);
                     resendLink.classList.remove('disabled');
-                    resendLink.innerHTML = 'Resend Code';
-                    timeLeft = 60;
+                    resendText.innerHTML = 'Resend Code';
+                    resendTimeLeft = 60;
                 }
             }, 1000);
         }
@@ -302,12 +384,12 @@
         function resendOTP(event) {
             event.preventDefault();
             
-            if (timeLeft < 60) {
+            if (resendTimeLeft < 60) {
                 return;
             }
             
             // Make AJAX call to resend OTP
-            fetch('/resend-forgot-otp', {
+            fetch('/profile/resend-email-otp', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -317,14 +399,28 @@
             .then(data => {
                 if (data.success) {
                     Toastify({
-                        text: "OTP has been resent to your email!",
+                        text: "OTP has been resent to your new email!",
                         duration: 3000,
                         gravity: "top",
                         position: "right",
                         backgroundColor: "#4CAF50",
                         stopOnFocus: true
                     }).showToast();
-                    startTimer();
+                    startResendTimer();
+                    
+                    // Reset OTP timer
+                    clearInterval(otpTimerInterval);
+                    otpTimeLeft = 5 * 60;
+                    startOTPTimer();
+                    
+                    // Re-enable form if it was disabled
+                    document.getElementById('verifyBtn').disabled = false;
+                    otpInputs.forEach(input => {
+                        input.disabled = false;
+                        input.style.backgroundColor = '';
+                        input.value = '';
+                    });
+                    otpInputs[0].focus();
                 } else {
                     Toastify({
                         text: data.message || "Failed to resend OTP",
@@ -349,23 +445,38 @@
             });
         }
 
-        // Start timer on page load
-        startTimer();
+        // Start timers on page load
+        startOTPTimer();
+        startResendTimer();
 
         // Form submission
         document.getElementById('otpForm').addEventListener('submit', (e) => {
             const otp = Array.from(otpInputs).map(input => input.value).join('');
             
-            if (otp.length !== 4) {
+            if (otp.length !== 6) {
                 e.preventDefault();
                 Toastify({
-                    text: "Please enter all 4 digits",
+                    text: "Please enter all 6 digits",
                     duration: 3000,
                     gravity: "top",
                     position: "right",
                     backgroundColor: "#f44336",
                     stopOnFocus: true
                 }).showToast();
+                return;
+            }
+            
+            if (otpTimeLeft <= 0) {
+                e.preventDefault();
+                Toastify({
+                    text: "OTP has expired. Please request a new one.",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#f44336",
+                    stopOnFocus: true
+                }).showToast();
+                return;
             }
         });
     </script>

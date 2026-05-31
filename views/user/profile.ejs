@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/css/navbar.css">
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="/css/profile.css">
+<script src="/js/prevent-back.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -22,6 +23,12 @@
         <!-- Content Area -->
         <main class="content-area">
             <h2 class="section-title">Account Overview</h2>
+
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="success-message" style="background-color: #efe; color: #2a7c2a; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; border-left: 3px solid #2a7c2a;">
+                    <%= success %>
+                </div>
+            <% } %>
 
             <div class="profile-info">
                 <div class="info-row">

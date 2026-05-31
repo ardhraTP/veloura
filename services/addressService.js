@@ -1,31 +1,34 @@
 import Address from '../model/address.js';
 
+
+import { isValidName, isValidPhone, isValidPincode, isValidCity, isValidState, isValidAddress } from '../utils/helpers.js';
+
 //validate address data
 export const validateAddressData = (data) => {
     const { fullName, phone, pincode, address, city, state, addressType } = data;
 
-    if (!fullName || fullName.trim().length < 2) {
-        return { isValid: false, error: 'Full name must be at least 2 characters' };
+    if (!isValidName(fullName)) {
+        return { isValid: false, error: 'Full name must be 2-50 characters and contain only letters' };
     }
 
-    if (!phone || !/^[0-9]{10}$/.test(phone.trim())) {
+    if (!isValidPhone(phone)) {
         return { isValid: false, error: 'Phone number must be exactly 10 digits' };
     }
 
-    if (!pincode || !/^[0-9]{6}$/.test(pincode.trim())) {
+    if (!isValidPincode(pincode)) {
         return { isValid: false, error: 'Pincode must be exactly 6 digits' };
     }
 
-    if (!address || address.trim().length < 10) {
-        return { isValid: false, error: 'Address must be at least 10 characters' };
+    if (!isValidAddress(address)) {
+        return { isValid: false, error: 'Address must be 10-200 characters' };
     }
     
-    if (!city || city.trim().length < 2) {
-        return { isValid: false, error: 'City is required' };
+    if (!isValidCity(city)) {
+        return { isValid: false, error: 'City must be 2-50 characters and contain only letters' };
     }
     
-    if (!state || state.trim().length < 2) {
-        return { isValid: false, error: 'State is required' };
+    if (!isValidState(state)) {
+        return { isValid: false, error: 'State must be 2-50 characters and contain only letters' };
     }
     
     if (!addressType || !['home', 'work'].includes(addressType)) {

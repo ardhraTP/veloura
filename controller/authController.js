@@ -1,7 +1,7 @@
-import User from '../model/user.js';
+import User from '../model/User.js';
 import { hashPassword, comparePassword, sendResponse, addMinutes, generateToken } from '../utils/helpers.js';
 import { sendOTP, sendResetPassword } from '../services/emailService.js';
-import { generate, isValid, clear } from '../services/otpService.js';
+import { generate, isValid,  clear } from '../services/otpService.js';
 import { 
     validateSignupData, 
     validateLoginData, 
@@ -54,6 +54,7 @@ export const signup = async (req, res) => {
             email: email.toLowerCase().trim(),
             phone: phone.trim(),
             password: hashedPassword,
+            isAdmin: false,
             otp: otp,
             otpExpiry: addMinutes(5)
         });
@@ -87,7 +88,8 @@ export const signup = async (req, res) => {
                 req.session.user = {
                     id: newUser._id,
                     name: newUser.name,
-                    email: newUser.email
+                    email: newUser.email,
+                    profileImage: newUser.profileImage
                 };
                 
                 res.redirect('/home');
@@ -149,7 +151,8 @@ export const login = async (req, res) => {
         req.session.user = {
             id: user._id,
             name: user.name,
-            email: user.email
+            email: user.email,
+            profileImage: user.profileImage
         };
 
         res.redirect('/home');
@@ -203,7 +206,7 @@ export const verifyOTP = async (req, res) => {
         // Check if OTP is valid
         if (!isValid(user, otp)) {
             return res.render('user/otp-verify', { 
-                error: 'Invalid or expired OTP',
+                error: 'invalid or expired OTP',
                 success: null 
             });
         }
@@ -219,7 +222,8 @@ export const verifyOTP = async (req, res) => {
         req.session.user = {
             id: user._id,
             name: user.name,
-            email: user.email
+            email: user.email,
+            profileImage: user.profileImage
         };
 
         res.redirect('/home');

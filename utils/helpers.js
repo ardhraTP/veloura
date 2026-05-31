@@ -5,9 +5,42 @@ export const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export const isValidPhone = (phone) => /^[0-9]{10}$/.test(phone);
 
-export const isValidPassword = (password) => password && password.length >= 8;
+export const isValidPassword = (password) => {
+    if (!password || password.length < 8) return false;
+    
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    return hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
+};
+
+export const isValidName = (name) => {
+    if (!name || name.trim().length < 2) return false;
+    if (name.trim().length > 50) return false;
+    return /^[a-zA-Z\s]+$/.test(name.trim());
+};
 
 export const isValidPincode = (pincode) => /^[0-9]{6}$/.test(pincode);
+
+export const isValidCity = (city) => {
+    if (!city || city.trim().length < 2) return false;
+    if (city.trim().length > 50) return false;
+    return /^[a-zA-Z\s]+$/.test(city.trim());
+};
+
+export const isValidState = (state) => {
+    if (!state || state.trim().length < 2) return false;
+    if (state.trim().length > 50) return false;
+    return /^[a-zA-Z\s]+$/.test(state.trim());
+};
+
+export const isValidAddress = (address) => {
+    if (!address || address.trim().length < 10) return false;
+    if (address.trim().length > 200) return false;
+    return true;
+};
 
 // Password functions
 export const hashPassword = async (password) => await bcrypt.hash(password, 12);
@@ -27,24 +60,29 @@ export const sendResponse = (res, success, message, data = null, statusCode = 20
 // Date function
 export const addMinutes = (minutes) => new Date(Date.now() + minutes * 60000);
 
+// Get password validation message
+export const getPasswordRequirements = () => {
+    return 'Password must be at least 8 characters and contain uppercase, lowercase, number, and special character';
+};
+
 // Validation for forms
 export const validateSignup = (data) => {
     const errors = [];
-    if (!data.name || data.name.trim().length < 2) errors.push('Name must be at least 2 characters');
+    if (!isValidName(data.name)) errors.push('Name must be 2-50 characters and contain only letters');
     if (!isValidEmail(data.email)) errors.push('Invalid email format');
     if (!isValidPhone(data.phone)) errors.push('Phone must be 10 digits');
-    if (!isValidPassword(data.password)) errors.push('Password must be at least 8 characters');
+    if (!isValidPassword(data.password)) errors.push(getPasswordRequirements());
     return errors;
 };
 
 export const validateAddress = (data) => {
     const errors = [];
-    if (!data.fullName || data.fullName.trim().length < 2) errors.push('Full name is required');
-    if (!isValidPhone(data.phone)) errors.push('Invalid phone number');
-    if (!isValidPincode(data.pincode)) errors.push('Invalid pincode');
-    if (!data.address || data.address.trim().length < 10) errors.push('Address too short');
-    if (!data.city || data.city.trim().length < 2) errors.push('City is required');
-    if (!data.state || data.state.trim().length < 2) errors.push('State is required');
+    if (!isValidName(data.fullName)) errors.push('Full name must be 2-50 characters and contain only letters');
+    if (!isValidPhone(data.phone)) errors.push('Phone must be 10 digits');
+    if (!isValidPincode(data.pincode)) errors.push('Pincode must be 6 digits');
+    if (!isValidAddress(data.address)) errors.push('Address must be 10-200 characters');
+    if (!isValidCity(data.city)) errors.push('City must be 2-50 characters and contain only letters');
+    if (!isValidState(data.state)) errors.push('State must be 2-50 characters and contain only letters');
     if (!['home', 'work'].includes(data.addressType)) errors.push('Invalid address type');
     return errors;
 };

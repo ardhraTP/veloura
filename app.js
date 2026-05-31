@@ -3,11 +3,19 @@ import session from 'express-session';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import passport from 'passport';
 import connectDB from './config/database.js';
 import userRoutes from './routes/userRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+
+// Load environment variables first
+dotenv.config();
+
+// Import passport config after env vars are loaded
+import './config/passport.js';
 
 // Load environment variables
-dotenv.config();
+// Already loaded above
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -27,6 +35,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Prevent browser caching (fixes back button issues after login/logout)
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    next();
+});
+
 // Session configuration
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
@@ -39,12 +53,25 @@ app.use(session({
     }
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Routes
+app.use('/admin', adminRoutes);
 app.use('/', userRoutes);
 
 // 404 Error handler
 app.use('*', (req, res) => {
     res.status(404).render('error/404');
+});
+
+app.get('/test-cloudinary', async (req, res) => {
+    try {
+        const result = await cloudinary.api.ping();
+        res.json({ success: true, result });
+    } catch (err) {
+        res.json({ success: false, error: err.message, http_code: err.http_code });
+    }
 });
 
 // Global error handler

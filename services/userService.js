@@ -1,12 +1,12 @@
-import User from '../model/user.js';
-import { isValidEmail, isValidPhone, isValidPassword } from '../utils/helpers.js';
+import User from '../model/User.js';
+import { isValidEmail, isValidPhone, isValidPassword, isValidName, getPasswordRequirements } from '../utils/helpers.js';
 
 // Validate signup data
 export const validateSignupData = (data) => {
     const { name, email, phone, password } = data;
 
-    if (!name || name.trim().length < 2) {
-        return { isValid: false, error: 'Name must be at least 2 characters' };
+    if (!isValidName(name)) {
+        return { isValid: false, error: 'Name must be 2-50 characters and contain only letters' };
     }
 
     if (!isValidEmail(email)) {
@@ -18,7 +18,7 @@ export const validateSignupData = (data) => {
     }
 
     if (!isValidPassword(password)) {
-        return { isValid: false, error: 'Password must be at least 8 characters' };
+        return { isValid: false, error: getPasswordRequirements() };
     }
 
     return { isValid: true };
@@ -43,8 +43,8 @@ export const validateLoginData = (data) => {
 export const validateProfileData = (data) => {
     const { name, phone } = data;
 
-    if (!name || name.trim().length < 2) {
-        return { isValid: false, error: 'Name must be at least 2 characters' };
+    if (!isValidName(name)) {
+        return { isValid: false, error: 'Name must be 2-50 characters and contain only letters' };
     }
 
     if (!isValidPhone(phone)) {
@@ -70,12 +70,16 @@ export const validatePasswordChange = (data) => {
         return { isValid: false, error: 'Please confirm your new password' };
     }
 
-    if (newPassword.length < 8) {
-        return { isValid: false, error: 'New password must be at least 8 characters' };
+    if (!isValidPassword(newPassword)) {
+        return { isValid: false, error: getPasswordRequirements() };
     }
 
     if (newPassword !== confirmPassword) {
         return { isValid: false, error: 'New passwords do not match' };
+    }
+
+    if (currentPassword === newPassword) {
+        return { isValid: false, error: 'New password must be different from current password' };
     }
 
     return { isValid: true };

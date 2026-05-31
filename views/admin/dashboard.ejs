@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Veloura</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary-red: #5c1e28;
+            --main-bg: #f4f2f0;
+            --sidebar-bg: #fcfbf9;
+            --card-bg: #ffffff;
+            --text-dark: #2d2a29;
+            --text-gray: #888380;
+            --text-light: #b3aea9;
+            --border-color: #ebe7e5;
+            
+            --success-bg: #e6f7ef;
+            --success-text: #2ea571;
+            --warning-bg: #e8f0fe;
+            --warning-text: #3c78d8;
+            --danger-bg: #fce8e8;
+            --danger-text: #d93025;
+            
+            --icon-blue-bg: #e8f0fe;
+            --icon-blue: #4285f4;
+            --icon-yellow-bg: #fef7e0;
+            --icon-yellow: #f4b400;
+            --icon-green-bg: #e6f4ea;
+            --icon-green: #34a853;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--main-bg);
+            color: var(--text-dark);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .sidebar-header {
+            padding: 30px 40px;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--primary-red);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-menu {
+            overflow-y: auto;
+            list-style: none;
+            padding: 10px 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 15px 40px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .sidebar-menu a i {
+            width: 24px;
+            font-size: 16px;
+            color: var(--text-gray);
+            margin-right: 15px;
+        }
+
+        .sidebar-menu a:hover {
+            background-color: #f7f1f1;
+        }
+
+        .sidebar-menu a.active {
+            background-color: #f7eded;
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+
+        .sidebar-menu a.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: var(--primary-red);
+        }
+
+        .sidebar-menu a.active i {
+            color: var(--primary-red);
+        }
+
+        .logout-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background-color: #c9302c;
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .logout-btn:hover {
+            background-color: #ac2925;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 0 40px 40px 40px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 25px 0;
+        }
+
+        .user-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .user-indicator i {
+            font-size: 18px;
+            color: var(--primary-red);
+        }
+
+        /* Metrics Row */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            position: relative;
+        }
+
+        .metric-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+
+        .metric-trend {
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .trend-up {
+            color: var(--success-text);
+        }
+        .trend-down {
+            color: var(--danger-text);
+        }
+        
+        .trend-text {
+            color: var(--text-light);
+            font-weight: 400;
+            font-size: 11px;
+        }
+
+        .metric-icon {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .icon-users { background-color: var(--icon-blue-bg); color: var(--icon-blue); }
+        .icon-orders { background-color: var(--icon-yellow-bg); color: var(--icon-yellow); }
+        .icon-sales { background-color: var(--icon-green-bg); color: var(--icon-green); }
+
+        /* Chart Section */
+        .chart-section {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .chart-filters {
+            display: flex;
+            gap: 15px;
+        }
+
+        .chart-filter {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: #faf9f8;
+            color: var(--text-dark);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .chart-container {
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Table Section */
+        .table-section {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 15px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table td {
+            padding: 18px 10px;
+            font-size: 13px;
+            color: var(--text-dark);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .td-id {
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-completed { background-color: var(--success-bg); color: var(--success-text); }
+        .status-processing { background-color: var(--warning-bg); color: var(--warning-text); }
+        .status-rejected { background-color: var(--danger-bg); color: var(--danger-text); }
+
+    </style>
+<script src="/js/prevent-back.js"></script>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="/admin/dashboard" class="logo">Veloura</a>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="/admin/dashboard" class="active"><i class="fas fa-th-large"></i> Dashboard</a></li>
+            <li><a href="#"><i class="fas fa-box"></i> Products</a></li>
+            <li><a href="#"><i class="fas fa-clipboard-list"></i> Order List</a></li>
+            <li><a href="/admin/users"><i class="fas fa-users"></i> Users</a></li>
+            <li><a href="#"><i class="fas fa-chart-line"></i> Sales Report</a></li>
+            <li><a href="#"><i class="fas fa-ticket-alt"></i> Coupons</a></li>
+            <li><a href="#"><i class="fas fa-list"></i> Category</a></li>
+            <li><a href="#"><i class="fas fa-star"></i> Reviews</a></li>
+            <li style="padding: 20px 40px; margin-top: 10px;">
+                <a href="/admin/logout" class="logout-btn" style="padding: 14px;">Log Out</a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="user-indicator">
+                ARDRA <i class="far fa-user-circle"></i>
+            </div>
+        </header>
+
+        <!-- Metrics -->
+        <div class="metrics-row">
+            <!-- Total Users -->
+            <div class="metric-card">
+                <div class="metric-title">TOTAL USER</div>
+                <div class="metric-value">40,689</div>
+                <div class="metric-trend">
+                    <span class="trend-up"><i class="fas fa-arrow-up"></i> 8.5%</span>
+                    <span class="trend-text">Up from last month</span>
+                </div>
+                <div class="metric-icon icon-users">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+            </div>
+
+            <!-- Total Orders -->
+            <div class="metric-card">
+                <div class="metric-title">TOTAL ORDER</div>
+                <div class="metric-value">10293</div>
+                <div class="metric-trend">
+                    <span class="trend-up"><i class="fas fa-arrow-up"></i> 1.3%</span>
+                    <span class="trend-text">Up from last month</span>
+                </div>
+                <div class="metric-icon icon-orders">
+                    <i class="fas fa-box-open"></i>
+                </div>
+            </div>
+
+            <!-- Total Sales -->
+            <div class="metric-card">
+                <div class="metric-title">TOTAL SALES</div>
+                <div class="metric-value">$89,000</div>
+                <div class="metric-trend">
+                    <span class="trend-down"><i class="fas fa-arrow-down"></i> 4.3%</span>
+                    <span class="trend-text">Down from last month</span>
+                </div>
+                <div class="metric-icon icon-sales">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Chart -->
+        <div class="chart-section">
+            <div class="section-header">
+                <h2 class="section-title">Sales Details</h2>
+                <div class="chart-filters">
+                    <select class="chart-filter">
+                        <option>Today</option>
+                        <option>This Week</option>
+                    </select>
+                    <select class="chart-filter">
+                        <option>October</option>
+                        <option>November</option>
+                    </select>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="table-section">
+            <div class="section-header" style="margin-bottom: 10px;">
+                <h2 class="section-title">Recent Orders</h2>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>NAME</th>
+                        <th>ADDRESS</th>
+                        <th>DATE</th>
+                        <th>TYPE</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="td-id">00001</td>
+                        <td>Mac Cosmetics</td>
+                        <td>089 Kutch Green Apt. 448</td>
+                        <td>04 Sep 2019</td>
+                        <td>Analogue</td>
+                        <td><span class="status-badge status-completed">COMPLETED</span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-id">00002</td>
+                        <td>Maybelline</td>
+                        <td>979 Immanuel Ferry Suite 526</td>
+                        <td>28 May 2019</td>
+                        <td>Digital</td>
+                        <td><span class="status-badge status-processing">PROCESSING</span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-id">00003</td>
+                        <td>Lakme</td>
+                        <td>8587 Frida Ports</td>
+                        <td>23 Nov 2019</td>
+                        <td>Analogue</td>
+                        <td><span class="status-badge status-rejected">REJECTED</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Chart Setup -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            
+            // Create gradient fill
+            const gradientFill = ctx.createLinearGradient(0, 0, 0, 300);
+            gradientFill.addColorStop(0, 'rgba(92, 30, 40, 0.2)');  // Primary red with opacity
+            gradientFill.addColorStop(1, 'rgba(92, 30, 40, 0)');    // Fade to transparent
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+                    datasets: [{
+                        label: 'Sales',
+                        data: [2100, 2400, 3100, 2800, 4356.77, 3000, 3200, 3500, 2700, 3300],
+                        borderColor: '#5c1e28',
+                        borderWidth: 2,
+                        backgroundColor: gradientFill,
+                        fill: true,
+                        pointBackgroundColor: '#5c1e28',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.4 // Smooth curves
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#222',
+                            titleFont: { size: 11, family: 'Inter' },
+                            bodyFont: { size: 13, family: 'Inter', weight: 'bold' },
+                            padding: 10,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return '$' + context.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 2});
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                display: false // Hiding x labels to match the ultra-clean look in the reference
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: '#f0f0f0',
+                                drawBorder: false,
+                            },
+                            ticks: {
+                                display: false, // Hiding y labels
+                                beginAtZero: true
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
