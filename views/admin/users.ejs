@@ -500,14 +500,14 @@
 
     </main>
 
-<!-- SweetAlert2 for nice popups -->
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 const currentStatus = '<%= currentStatus %>';
 const currentSearch = '<%= searchQuery %>';
 
-// Perform search function
+
 function performSearch() {
     const searchValue = document.getElementById('searchInput').value.trim();
     const statusValue = document.querySelector('.filter-select').value;
@@ -515,12 +515,12 @@ function performSearch() {
     const params = new URLSearchParams();
     if (searchValue) params.append('search', searchValue);
     if (statusValue !== 'all') params.append('status', statusValue);
-    params.append('page', '1'); // Reset to first page on new search
+    params.append('page', '1'); 
     
     window.location.href = `/admin/users?${params.toString()}`;
 }
 
-// Filter users function
+
 function filterUsers() {
     const searchValue = document.getElementById('searchInput').value.trim();
     const statusValue = document.querySelector('.filter-select').value;
@@ -533,7 +533,7 @@ function filterUsers() {
     window.location.href = `/admin/users?${params.toString()}`;
 }
 
-// Clear search function
+
 function clearSearch() {
     document.getElementById('searchInput').value = '';
     const statusValue = document.querySelector('.filter-select').value;
@@ -544,12 +544,11 @@ function clearSearch() {
     
     window.location.href = `/admin/users?${params.toString()}`;
 }
-
-// Add event listeners
+s
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     
-    // Add search on Enter key
+  
     searchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             performSearch();
@@ -557,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Toggle user status function
+
 async function toggleUserStatus(userId, buttonElement) {
     const isCurrentlyBlocked = buttonElement.innerText.trim() === 'UNBLOCK';
     const actionText = isCurrentlyBlocked ? 'unblock' : 'block';

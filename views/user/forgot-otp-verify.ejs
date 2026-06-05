@@ -276,6 +276,20 @@
             otpInputs[0].focus();
         });
 
+        // LocalStorage helpers for timer
+        function getStoredForgotTimerEndTime() {
+            const stored = localStorage.getItem('forgotOTPTimerEndTime');
+            return stored ? parseInt(stored) : null;
+        }
+
+        function setStoredForgotTimerEndTime(endTime) {
+            localStorage.setItem('forgotOTPTimerEndTime', endTime.toString());
+        }
+
+        function clearStoredForgotTimerEndTime() {
+            localStorage.removeItem('forgotOTPTimerEndTime');
+        }
+
         // Resend OTP Timer
         let timeLeft = 60;
         let timerInterval;
@@ -284,6 +298,20 @@
             const timerElement = document.getElementById('timer');
             const resendLink = document.getElementById('resendLink');
             
+            // Check if there's a stored end time
+            const storedEndTime = getStoredForgotTimerEndTime();
+            const now = Date.now();
+            
+            if (storedEndTime && storedEndTime > now) {
+                // Continue from stored time
+                timeLeft = Math.ceil((storedEndTime - now) / 1000);
+            } else {
+                // Start fresh timer
+                timeLeft = 60;
+                setStoredForgotTimerEndTime(now + (60 * 1000));
+            }
+            
+            timerElement.textContent = timeLeft;
             resendLink.classList.add('disabled');
             
             timerInterval = setInterval(() => {
@@ -294,6 +322,7 @@
                     clearInterval(timerInterval);
                     resendLink.classList.remove('disabled');
                     resendLink.innerHTML = 'Resend Code';
+                    clearStoredForgotTimerEndTime();
                     timeLeft = 60;
                 }
             }, 1000);
@@ -324,6 +353,12 @@
                         backgroundColor: "#4CAF50",
                         stopOnFocus: true
                     }).showToast();
+                    
+                    // Reset timer with new end time
+                    clearInterval(timerInterval);
+                    const newEndTime = Date.now() + (60 * 1000);
+                    setStoredForgotTimerEndTime(newEndTime);
+                    timeLeft = 60;
                     startTimer();
                 } else {
                     Toastify({
@@ -351,6 +386,13 @@
 
         // Start timer on page load
         startTimer();
+
+        // Clean up timer interval but KEEP localStorage when leaving page
+        // This allows the timer to persist across page reloads
+        window.addEventListener('beforeunload', () => {
+            clearInterval(timerInterval);
+            // DO NOT clear localStorage here - we want the timer to persist
+        });
 
         // Form submission
         document.getElementById('otpForm').addEventListener('submit', (e) => {

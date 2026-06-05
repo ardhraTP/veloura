@@ -412,10 +412,6 @@
             border-left: 3px solid #c33;
             border-radius: 4px;
             position: relative;
-            animation: none !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            display: block !important;
         }
 
         .error-message::before {
@@ -532,6 +528,7 @@
                             id="phone" 
                             name="phone" 
                             placeholder="Enter your 10-digit phone number"
+                       required
                         >
                         <div class="error-text" id="phoneError"></div>
                     </div>
@@ -667,38 +664,6 @@
             });
         }
 
-        // Ensure error message stays visible
-        document.addEventListener('DOMContentLoaded', function() {
-            const errorMessage = document.getElementById('errorMessage');
-            if (errorMessage) {
-                // Force the error message to stay visible
-                errorMessage.style.display = 'block';
-                errorMessage.style.opacity = '1';
-                errorMessage.style.visibility = 'visible';
-                
-                // Prevent any external scripts from hiding it
-                const observer = new MutationObserver(function(mutations) {
-                    mutations.forEach(function(mutation) {
-                        if (mutation.type === 'attributes' && 
-                            (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
-                            if (errorMessage.style.display === 'none' || 
-                                errorMessage.style.opacity === '0' || 
-                                errorMessage.style.visibility === 'hidden') {
-                                errorMessage.style.display = 'block';
-                                errorMessage.style.opacity = '1';
-                                errorMessage.style.visibility = 'visible';
-                            }
-                        }
-                    });
-                });
-                
-                observer.observe(errorMessage, {
-                    attributes: true,
-                    attributeFilter: ['style', 'class']
-                });
-            }
-        });
-
         // Form validation
         document.getElementById('registerForm').addEventListener('submit', function(e) {
             clearErrors();
@@ -729,13 +694,13 @@
             }
             
             // Validate phone
-            if (!phone) {
-                showError('phone', 'Please enter your phone number');
-                hasError = true;
-            } else if (!/^[0-9]{10}$/.test(phone)) {
-                showError('phone', 'Phone number must be exactly 10 digits');
-                hasError = true;
-            }
+            // if (!phone) {
+            //     showError('phone', 'Please enter your phone number');
+            //     hasError = true;
+            // } else if (!/^[0-9]{10}$/.test(phone)) {
+            //     showError('phone', 'Phone number must be exactly 10 digits');
+            //     hasError = true;
+            // }
             
             // Validate password strength
             if (!password) {
@@ -773,6 +738,19 @@
 
         // Real-time phone number validation
         document.getElementById('phone').addEventListener('input', function(e) {
+            // Clear error for this field when user starts typing
+            const errorDiv = document.getElementById('phoneError');
+            if (errorDiv) {
+                this.classList.remove('error-input');
+                errorDiv.style.display = 'none';
+            }
+            
+            // Clear server error message
+            const serverError = document.getElementById('errorMessage');
+            if (serverError) {
+                serverError.style.display = 'none';
+            }
+            
             // Remove any non-digit characters
             this.value = this.value.replace(/\D/g, '');
             
@@ -784,12 +762,70 @@
 
         // Real-time name validation
         document.getElementById('name').addEventListener('input', function(e) {
+            // Clear error for this field when user starts typing
+            const errorDiv = document.getElementById('nameError');
+            if (errorDiv) {
+                this.classList.remove('error-input');
+                errorDiv.style.display = 'none';
+            }
+            
+            // Clear server error message
+            const serverError = document.getElementById('errorMessage');
+            if (serverError) {
+                serverError.style.display = 'none';
+            }
+            
             // Remove any non-letter characters except spaces
             this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
             
             // Limit to 50 characters
             if (this.value.length > 50) {
                 this.value = this.value.slice(0, 50);
+            }
+        });
+
+        // Clear errors on input for email
+        document.getElementById('email').addEventListener('input', function(e) {
+            const errorDiv = document.getElementById('emailError');
+            if (errorDiv) {
+                this.classList.remove('error-input');
+                errorDiv.style.display = 'none';
+            }
+            
+            // Also clear the server error message when user types in email field
+            const serverError = document.getElementById('errorMessage');
+            if (serverError) {
+                serverError.style.display = 'none';
+            }
+        });
+
+        // Clear errors on input for password
+        document.getElementById('password').addEventListener('input', function(e) {
+            const errorDiv = document.getElementById('passwordError');
+            if (errorDiv) {
+                this.classList.remove('error-input');
+                errorDiv.style.display = 'none';
+            }
+            
+            // Clear server error message
+            const serverError = document.getElementById('errorMessage');
+            if (serverError) {
+                serverError.style.display = 'none';
+            }
+        });
+
+        // Clear errors on input for confirm password
+        document.getElementById('confirmPassword').addEventListener('input', function(e) {
+            const errorDiv = document.getElementById('confirmPasswordError');
+            if (errorDiv) {
+                this.classList.remove('error-input');
+                errorDiv.style.display = 'none';
+            }
+            
+            // Clear server error message
+            const serverError = document.getElementById('errorMessage');
+            if (serverError) {
+                serverError.style.display = 'none';
             }
         });
     </script>

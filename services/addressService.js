@@ -3,7 +3,7 @@ import Address from '../model/address.js';
 
 import { isValidName, isValidPhone, isValidPincode, isValidCity, isValidState, isValidAddress } from '../utils/helpers.js';
 
-//validate address data
+
 export const validateAddressData = (data) => {
     const { fullName, phone, pincode, address, city, state, addressType } = data;
 
@@ -41,23 +41,27 @@ export const validateAddressData = (data) => {
 
 
 
-//get all addresses for a user
 export const getUserAddresses = async (userId) => {
     return await Address.find({ userId }).sort({ createdAt: -1 });
 }
 
-//get address by ID and user ID
+
 export const getAddressById = async (addressId, userId) => {
     return await Address.findOne({ _id: addressId, userId });
 }
 
-//create new address
+
 export const createAddress = async (userId, addressData) => {
     const { fullName, phone, pincode, address, city, state, addressType } = addressData;
 
-    //check if this is the first address(make it default)
+    
+  
+
     const existingAddresses = await Address.find({ userId });
     const isFirstAddress = existingAddresses.length === 0;
+   
+
+    
 
     const newAddress = new Address({
         userId,
@@ -73,7 +77,7 @@ export const createAddress = async (userId, addressData) => {
     return await newAddress.save();
 };
 
-//update address
+
 export const updateAddress = async (addressId, addressData) => {
     const { fullName, phone, pincode, address, city, state, addressType } = addressData;
 
@@ -92,21 +96,20 @@ export const updateAddress = async (addressId, addressData) => {
 );
 };
 
-//delete address
+
 export const deleteAddress = async(addressId) =>{
     return await Address.findByIdAndDelete(addressId);
 };
 
-//set default address
+
 export const setDefaultAddress = async(userId,addressId) =>{
-    //remove default from all other addresses
+   
     await Address.updateMany({userId},{isDefault:false});
 
-    //set this address as default
    return await Address.findByIdAndUpdate(addressId,{isDefault:true});
 };
 
-//get default address
+
 export const getDefaultAddress =  async(userId) =>{
     return await Address.findOne({userId,isDefault:true});
 }

@@ -1,9 +1,9 @@
 import User from '../model/User.js';
 import { isValidEmail, isValidPhone, isValidPassword, isValidName, getPasswordRequirements } from '../utils/helpers.js';
 
-// Validate signup data
+
 export const validateSignupData = (data) => {
-    const { name, email, phone, password } = data;
+    const { name, email,phone, password } = data;
 
     if (!isValidName(name)) {
         return { isValid: false, error: 'Name must be 2-50 characters and contain only letters' };
@@ -24,7 +24,7 @@ export const validateSignupData = (data) => {
     return { isValid: true };
 };
 
-// Validate login data
+
 export const validateLoginData = (data) => {
     const { email, password } = data;
 
@@ -39,7 +39,7 @@ export const validateLoginData = (data) => {
     return { isValid: true };
 };
 
-// Validate profile update data
+
 export const validateProfileData = (data) => {
     const { name, phone } = data;
 
@@ -54,7 +54,7 @@ export const validateProfileData = (data) => {
     return { isValid: true };
 };
 
-// Validate password change data
+
 export const validatePasswordChange = (data) => {
     const { currentPassword, newPassword, confirmPassword } = data;
 
@@ -85,7 +85,6 @@ export const validatePasswordChange = (data) => {
     return { isValid: true };
 };
 
-// Validate email change data
 export const validateEmailChange = (data) => {
     const { newEmail } = data;
 
@@ -100,7 +99,7 @@ export const validateEmailChange = (data) => {
     return { isValid: true };
 };
 
-// Validate OTP
+
 export const validateOTP = (otp) => {
     if (!otp || otp.length !== 6) {
         return { isValid: false, error: 'Please enter a valid 6-digit OTP' };
@@ -109,7 +108,7 @@ export const validateOTP = (otp) => {
     return { isValid: true };
 };
 
-// Check if email exists
+
 export const checkEmailExists = async (email, excludeUserId = null) => {
     const query = { email: email.toLowerCase() };
     if (excludeUserId) {
@@ -120,7 +119,7 @@ export const checkEmailExists = async (email, excludeUserId = null) => {
     return user !== null;
 };
 
-// Check if phone exists
+
 export const checkPhoneExists = async (phone, excludeUserId = null) => {
     const query = { phone: phone.trim() };
     if (excludeUserId) {
@@ -131,17 +130,17 @@ export const checkPhoneExists = async (phone, excludeUserId = null) => {
     return user !== null;
 };
 
-// Get user by email
+
 export const getUserByEmail = async (email) => {
     return await User.findOne({ email: email.toLowerCase() });
 };
 
-// Get user by ID
+
 export const getUserById = async (id) => {
     return await User.findById(id);
 };
 
-// Get user by reset token
+
 export const getUserByResetToken = async (token) => {
     return await User.findOne({ resetToken: token });
 };

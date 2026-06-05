@@ -719,7 +719,7 @@
     </footer>
 
     <script>
-        // ── Profile Image Preview ──────────────────────────────────────────────
+        // Profile Image Preview 
         function previewProfileImage(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -739,15 +739,15 @@
             const reader = new FileReader();
             reader.onload = function (e) {
                 const circle = document.getElementById('profileImageCircle');
-                // Replace whatever is inside (img or icon) with the preview
+              
                 circle.innerHTML = `<img src="${e.target.result}" alt="Profile Picture" style="width:100%;height:100%;object-fit:cover;">`;
 
-                // Show filename
+               
                 const filenameEl = document.getElementById('uploadFilename');
                 filenameEl.textContent = '✓ ' + file.name;
                 filenameEl.classList.add('visible');
 
-                // Make sure we're not deleting
+                
                 document.getElementById('deleteProfileImage').value = 'false';
             };
             reader.readAsDataURL(file);
@@ -765,7 +765,7 @@
             filenameEl.classList.remove('visible');
         }
 
-        // ── Form Validation ───────────────────────────────────────────────────
+        //  Form Validation 
         function showError(fieldId, message) {
             const field = document.getElementById(fieldId);
             const errorDiv = document.getElementById(fieldId + 'Error');
@@ -796,7 +796,7 @@
             const name  = document.getElementById('fullName').value.trim();
             const phone = document.getElementById('phone').value.trim();
 
-            // Validate name (only letters and spaces, 2-50 characters)
+            
             if (!name) {
                 showError('fullName', 'Please enter your full name');
                 hasError = true;
@@ -820,29 +820,25 @@
             }
         });
 
-        // Real-time name validation
         document.getElementById('fullName').addEventListener('input', function(e) {
-            // Remove any non-letter characters except spaces
             this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
             
-            // Limit to 50 characters
+            
             if (this.value.length > 50) {
                 this.value = this.value.slice(0, 50);
             }
         });
 
-        // Real-time phone validation
+     
         document.getElementById('phone').addEventListener('input', function(e) {
-            // Remove any non-digit characters
             this.value = this.value.replace(/\D/g, '');
             
-            // Limit to 10 digits
             if (this.value.length > 10) {
                 this.value = this.value.slice(0, 10);
             }
         });
 
-        // ── Email Modal ───────────────────────────────────────────────────────
+        //Email Modal 
         function showEmailModalError(message) {
             const errorDiv = document.getElementById('emailModalError');
             errorDiv.textContent = message;
@@ -909,13 +905,12 @@
             });
         }
 
-        // Close modal on backdrop click
         window.onclick = function (event) {
             const modal = document.getElementById('emailModal');
             if (event.target === modal) closeEmailModal();
         };
 
-        // ── Logout Confirm ────────────────────────────────────────────────────
+        //Logout Confirm 
         function confirmLogout() {
             Swal.fire({
                 title: 'Logging Out?',

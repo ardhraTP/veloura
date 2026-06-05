@@ -1,17 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Addresses - Veloura</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary-red: #5c1e28;
-            --bg-beige: #fdfbf9; /* Lighter beige for the overall page */
-            --box-beige: #f4f1ec; /* Slightly darker beige for cards */
+            --bg-beige: #fdfbf9;
+            /* Lighter beige for the overall page */
+            --box-beige: #f4f1ec;
+            /* Slightly darker beige for cards */
             --text-dark: #2c2c2c;
             --text-light: #666666;
             --white: #ffffff;
@@ -258,7 +263,8 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
-            background-color: #ebd7a4; /* Soft gold/yellow badge */
+            background-color: #ebd7a4;
+            /* Soft gold/yellow badge */
             color: #634f19;
         }
 
@@ -281,7 +287,7 @@
             display: flex;
             gap: 20px;
             padding-top: 15px;
-            border-top: 1px solid rgba(0,0,0,0.08);
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         .action-btn {
@@ -366,27 +372,33 @@
                 flex-direction: column;
                 padding: 0 40px;
             }
+
             .sidebar {
                 width: 100%;
             }
+
             .address-grid {
                 grid-template-columns: 1fr;
             }
+
             header {
                 padding: 20px 40px;
             }
+
             .footer-content {
                 flex-direction: column;
                 gap: 50px;
             }
+
             .footer-links-container {
                 flex-wrap: wrap;
                 gap: 50px;
             }
         }
     </style>
-<script src="/js/prevent-back.js"></script>
+    <script src="/js/prevent-back.js"></script>
 </head>
+
 <body>
     <!-- Header -->
     <header>
@@ -418,7 +430,8 @@
             <ul class="sidebar-menu">
                 <li><a href="/profile"><i class="far fa-user-circle"></i> Account Overview</a></li>
                 <li><a href="/profile/orders"><i class="fas fa-box"></i> My Orders</a></li>
-                <li><a href="/profile/addresses" class="active"><i class="fas fa-map-marker-alt"></i> Manage Addresses</a></li>
+                <li><a href="/profile/addresses" class="active"><i class="fas fa-map-marker-alt"></i> Manage
+                        Addresses</a></li>
                 <li><a href="/profile/wallet"><i class="fas fa-wallet"></i> Wallet</a></li>
                 <li><a href="/profile/password"><i class="fas fa-lock"></i> Password</a></li>
                 <li><a href="/wishlist"><i class="far fa-heart"></i> Wishlist</a></li>
@@ -431,47 +444,59 @@
         <main class="content-area">
             <div class="page-header">
                 <h1 class="page-title">Manage Addresses</h1>
+               
+
                 <button class="add-address-btn" onclick="window.location.href='/profile/addresses/add'">
                     <i class="fas fa-plus"></i> Add New Address
                 </button>
             </div>
 
             <div class="address-grid">
-                <% if (addresses && addresses.length > 0) { %>
-                    <% addresses.forEach(address => { %>
+                <% if (addresses && addresses.length> 0) { %>
+                    <% addresses.forEach(address=> { %>
                         <div class="address-card">
-                            <span class="address-badge"><%= address.addressType.charAt(0).toUpperCase() + address.addressType.slice(1) %></span>
+                            <span class="address-badge">
+                                <%= address.addressType.charAt(0).toUpperCase() + address.addressType.slice(1) %>
+                            </span>
                             <% if (address.isDefault) { %>
-                                <span class="address-badge" style="background-color: #d4edda; color: #155724; top: 20px; right: 80px;">Default</span>
-                            <% } %>
-                            <h3 class="address-name"><%= address.fullName %></h3>
-                            <p class="address-details">
-                                <%= address.address %><br>
-                                <%= address.city %>, <%= address.state %> - <%= address.pincode %><br>
-                                Phone: <%= address.phone %>
-                            </p>
-                            <div class="address-actions">
-                                <button class="action-btn" onclick="window.location.href='/profile/addresses/edit/<%= address._id %>'">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <% if (!address.isDefault) { %>
-                                    <button class="action-btn" onclick="setDefaultAddress('<%= address._id %>')">
-                                        <i class="fas fa-star"></i> Set Default
-                                    </button>
+                                <span class="address-badge"
+                                    style="background-color: #d4edda; color: #155724; top: 20px; right: 80px;">Default</span>
                                 <% } %>
-                                <button class="action-btn remove" onclick="removeAddress('<%= address._id %>')">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
-                            </div>
+                                    <h3 class="address-name">
+                                        <%= address.fullName %>
+                                    </h3>
+                                    <p class="address-details">
+                                        <%= address.address %><br>
+                                            <%= address.city %>, <%= address.state %> - <%= address.pincode %><br>
+                                                        Phone: <%= address.phone %>
+                                    </p>
+                                    <div class="address-actions">
+                                        <button class="action-btn"
+                                            onclick="window.location.href='/profile/addresses/edit/<%= address._id %>'">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <% if (!address.isDefault) { %>
+                                            <button class="action-btn"
+                                                onclick="setDefaultAddress('<%= address._id %>')">
+                                                <i class="fas fa-star"></i> Set Default
+                                            </button>
+                                            <% } %>
+                                                <button class="action-btn remove"
+                                                    onclick="removeAddress('<%= address._id %>')">
+                                                    <i class="fas fa-trash"></i> Remove
+                                                </button>
+                                    </div>
                         </div>
-                    <% }); %>
-                <% } else { %>
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-light);">
-                        <i class="fas fa-map-marker-alt" style="font-size: 48px; margin-bottom: 20px; opacity: 0.3;"></i>
-                        <h3 style="margin-bottom: 10px;">No addresses found</h3>
-                        <p>Add your first address to get started</p>
-                    </div>
-                <% } %>
+                        <% }); %>
+                            <% } else { %>
+                                <div
+                                    style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-light);">
+                                    <i class="fas fa-map-marker-alt"
+                                        style="font-size: 48px; margin-bottom: 20px; opacity: 0.3;"></i>
+                                    <h3 style="margin-bottom: 10px;">No addresses found</h3>
+                                    <p>Add your first address to get started</p>
+                                </div>
+                                <% } %>
             </div>
         </main>
     </div>
@@ -482,7 +507,7 @@
             <div class="footer-about">
                 <div class="footer-brand">Veloura</div>
             </div>
-            
+
             <div class="footer-links-container">
                 <div class="footer-column">
                     <h4>Brands</h4>
@@ -531,16 +556,16 @@
                         method: 'DELETE',
                         headers: { 'Content-Type': 'application/json' }
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Address removed', showConfirmButton: false, timer: 2000 });
-                            setTimeout(() => window.location.reload(), 2000);
-                        } else {
-                            Swal.fire('Error', data.message || 'Failed to remove address', 'error');
-                        }
-                    })
-                    .catch(() => Swal.fire('Error', 'Failed to remove address', 'error'));
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Address removed', showConfirmButton: false, timer: 2000 });
+                                setTimeout(() => window.location.reload(), 2000);
+                            } else {
+                                Swal.fire('Error', data.message || 'Failed to remove address', 'error');
+                            }
+                        })
+                        .catch(() => Swal.fire('Error', 'Failed to remove address', 'error'));
                 }
             });
         }
@@ -550,16 +575,16 @@
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Default address updated', showConfirmButton: false, timer: 2000 });
-                    setTimeout(() => window.location.reload(), 2000);
-                } else {
-                    Swal.fire('Error', data.message || 'Failed to update default address', 'error');
-                }
-            })
-            .catch(() => Swal.fire('Error', 'Failed to update default address', 'error'));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Default address updated', showConfirmButton: false, timer: 2000 });
+                        setTimeout(() => window.location.reload(), 2000);
+                    } else {
+                        Swal.fire('Error', data.message || 'Failed to update default address', 'error');
+                    }
+                })
+                .catch(() => Swal.fire('Error', 'Failed to update default address', 'error'));
         }
 
         function confirmLogout() {
@@ -578,4 +603,5 @@
         }
     </script>
 </body>
+
 </html>

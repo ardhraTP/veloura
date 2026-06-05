@@ -6,13 +6,13 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure upload directory exists
+
 const uploadDir = path.join(__dirname, '../public/uploads/temp');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Clean up old temp files on startup (older than 1 hour)
+
 const cleanupTempFiles = () => {
     try {
         const files = fs.readdirSync(uploadDir);
@@ -32,10 +32,8 @@ const cleanupTempFiles = () => {
     }
 };
 
-// Run cleanup on startup
 cleanupTempFiles();
 
-// Configure multer for temporary file storage (will upload to Cloudinary later)
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, uploadDir);
@@ -47,7 +45,6 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    // Check if file is an image
     if (file.mimetype.startsWith('image/')) {
         cb(null, true);
     } else {
@@ -58,7 +55,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 2 * 1024 * 1024 // 2MB limit
+        fileSize: 2 * 1024 * 1024 
     },
     fileFilter: fileFilter
 });

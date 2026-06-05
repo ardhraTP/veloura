@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 
-// Validation functions
+
 export const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export const isValidPhone = (phone) => /^[0-9]{10}$/.test(phone);
@@ -42,30 +42,30 @@ export const isValidAddress = (address) => {
     return true;
 };
 
-// Password functions
+
 export const hashPassword = async (password) => await bcrypt.hash(password, 12);
 
 export const comparePassword = async (password, hash) => await bcrypt.compare(password, hash);
 
-// OTP and Token functions
+
 export const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 export const generateToken = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
-// Response function
+
 export const sendResponse = (res, success, message, data = null, statusCode = 200) => {
     res.status(statusCode).json({ success, message, data });
 };
 
-// Date function
+
 export const addMinutes = (minutes) => new Date(Date.now() + minutes * 60000);
 
-// Get password validation message
+
 export const getPasswordRequirements = () => {
     return 'Password must be at least 8 characters and contain uppercase, lowercase, number, and special character';
 };
 
-// Validation for forms
+
 export const validateSignup = (data) => {
     const errors = [];
     if (!isValidName(data.name)) errors.push('Name must be 2-50 characters and contain only letters');

@@ -406,6 +406,15 @@
             border-left: 3px solid #c33;
         }
 
+        .success-message {
+            background-color: #efe;
+            color: #2a7c2a;
+            padding: 12px 15px;
+            font-size: 12px;
+            margin-bottom: 25px;
+            border-left: 3px solid #2a7c2a;
+        }
+
         @media (max-width: 992px) {
             .login-wrapper {
                 flex-direction: column;
@@ -453,6 +462,10 @@
 
                 <% if (typeof error !== 'undefined' && error) { %>
                     <div class="error-message"><%= error %></div>
+                <% } %>
+
+                <% if (typeof success !== 'undefined' && success) { %>
+                    <div class="success-message"><%= success %></div>
                 <% } %>
 
                 <form action="/login" method="POST" id="loginForm" novalidate>
@@ -608,15 +621,82 @@
             }
         });
 
+        // Clear errors on input for email
+        document.getElementById('email').addEventListener('input', function(e) {
+            const errorDiv = document.getElementById('emailError');
+            if (errorDiv) {
+                this.classList.remove('error-input');
+                errorDiv.style.display = 'none';
+            }
+            
+            // Also clear the server error message when user types in email field
+            const serverError = document.querySelector('.error-message');
+            if (serverError) {
+                serverError.style.display = 'none';
+            }
+        });
+
+        // Clear errors on input for password
+        document.getElementById('password').addEventListener('input', function(e) {
+            const errorDiv = document.getElementById('passwordError');
+            if (errorDiv) {
+                this.classList.remove('error-input');
+                errorDiv.style.display = 'none';
+            }
+            
+            // Also clear the server error message when user types in password field
+            const serverError = document.querySelector('.error-message');
+            if (serverError) {
+                serverError.style.display = 'none';
+            }
+        });
+
         // Show toast if session expired
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('session') === 'expired') {
+        const sessionStatus = urlParams.get('session');
+        const errorType = urlParams.get('error');
+        
+        if (sessionStatus === 'expired') {
             Swal.fire({
                 toast: true,
                 position: 'top-end',
                 icon: 'warning',
                 title: 'Session Expired',
                 text: 'Please log in again to continue.',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                customClass: { popup: 'swal-toast-custom' }
+            });
+            // Clean URL without reloading
+            window.history.replaceState({}, '', '/login');
+        } else if (errorType === 'blocked') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Account Blocked',
+                text: 'Your account has been blocked by the administrator. Please contact support for assistance.',
+                confirmButtonColor: '#5c1e28',
+                confirmButtonText: 'OK'
+            });
+            // Clean URL without reloading
+            window.history.replaceState({}, '', '/login');
+        } else if (errorType === 'account_deleted') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Account Not Found',
+                text: 'Your account no longer exists. Please register again or contact support.',
+                confirmButtonColor: '#5c1e28',
+                confirmButtonText: 'OK'
+            });
+            // Clean URL without reloading
+            window.history.replaceState({}, '', '/login');
+        } else if (errorType === 'session_error') {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'error',
+                title: 'Session Error',
+                text: 'An error occurred. Please log in again.',
                 showConfirmButton: false,
                 timer: 4000,
                 timerProgressBar: true,

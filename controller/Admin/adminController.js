@@ -1,8 +1,7 @@
+import { name } from 'ejs';
 import User from '../../model/User.js';
 import bcrypt from 'bcryptjs';
 
-
-// Render the admin login page
 
 export const getLogin = (req, res) => {
     if (req.session.adminId) {
@@ -16,12 +15,12 @@ export const getLogin = (req, res) => {
     req.session.adminLoginError = null;
 };
 
-//Handle admin login post request
+
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // console.log('=== ADMIN LOGIN ATTEMPT ===');
+
         console.log('Email:', email);
 
         const adminUser = await User.findOne({ email: email, isAdmin: true });
@@ -57,29 +56,23 @@ export const getDashboard = (req, res) => {
 };
 
 
-// Render admin products page
 
-export const getProducts = (req, res) => {
-    if (!req.session.adminId) {
-        return res.redirect('/admin/login');
-    }
-
-    res.render('admin/products', { products: [] });
-};
-
-
-//Render admin users page with Pagination, Search & Filter
 
 export const getUsers = async (req, res) => {
     try {
-        if (!req.session.adminId) {
+        if (!req.session.adminId) {         
             return res.redirect('/admin/login');
         }
 
         let page = parseInt(req.query.page) || 1;
         let limit = 5;
-        let query = { isAdmin: false };
+        
+       
+        let query = { 
+            isAdmin: { $ne: true } 
+        };
 
+     
         if (req.query.search) {
             query.$or = [
                 { name: { $regex: req.query.search, $options: 'i' } },
@@ -87,6 +80,7 @@ export const getUsers = async (req, res) => {
             ];
         }
 
+       
         if (req.query.status && req.query.status !== 'all') {
             query.isBlocked = req.query.status === 'blocked';
         }
@@ -100,7 +94,7 @@ export const getUsers = async (req, res) => {
             .sort({ createdAt: -1 });
 
         res.render('admin/users', {
-            users,
+            users,  
             currentPage: page,
             totalPages,
             searchQuery: req.query.search || '',
@@ -114,7 +108,6 @@ export const getUsers = async (req, res) => {
 };
 
 
-// Toggle user block status
 
 export const toggleBlockUser = async (req, res) => {
     try {
@@ -144,7 +137,7 @@ export const toggleBlockUser = async (req, res) => {
 };
 
 
-// Admin logout
+
 
 export const logout = (req, res) => {
     req.session.adminId = null;

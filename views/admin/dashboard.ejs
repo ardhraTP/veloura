@@ -496,15 +496,14 @@
         </div>
     </main>
 
-    <!-- Chart Setup -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const ctx = document.getElementById('salesChart').getContext('2d');
             
-            // Create gradient fill
+           
             const gradientFill = ctx.createLinearGradient(0, 0, 0, 300);
-            gradientFill.addColorStop(0, 'rgba(92, 30, 40, 0.2)');  // Primary red with opacity
-            gradientFill.addColorStop(1, 'rgba(92, 30, 40, 0)');    // Fade to transparent
+            gradientFill.addColorStop(0, 'rgba(92, 30, 40, 0.2)');  
+            gradientFill.addColorStop(1, 'rgba(92, 30, 40, 0)');    
             
             new Chart(ctx, {
                 type: 'line',
@@ -522,7 +521,7 @@
                         pointBorderWidth: 2,
                         pointRadius: 4,
                         pointHoverRadius: 6,
-                        tension: 0.4 // Smooth curves
+                        tension: 0.4 
                     }]
                 },
                 options: {
@@ -552,7 +551,7 @@
                                 drawBorder: false
                             },
                             ticks: {
-                                display: false // Hiding x labels to match the ultra-clean look in the reference
+                                display: false 
                             }
                         },
                         y: {
@@ -561,7 +560,7 @@
                                 drawBorder: false,
                             },
                             ticks: {
-                                display: false, // Hiding y labels
+                                display: false, 
                                 beginAtZero: true
                             }
                         }

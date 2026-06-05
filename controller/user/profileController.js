@@ -4,30 +4,30 @@ import { sendOTP } from '../../services/emailService.js';
 import { generate, isValid, clear } from '../../services/otpService.js';
 import cloudinary from '../../config/cloudinary.js';
 import fs from 'fs';
-import { 
-    validateProfileData, 
-    validatePasswordChange, 
-    validateEmailChange, 
+import {
+    validateProfileData,
+    validatePasswordChange,
+    validateEmailChange,
     validateOTP,
-    checkPhoneExists, 
-    checkEmailExists, 
-    getUserById 
+    checkPhoneExists,
+    checkEmailExists,
+    getUserById
 } from '../../services/userService.js';
 
-// Show profile page
+
 export const getProfile = async (req, res) => {
     try {
         const user = await getUserById(req.session.userId);
         if (!user) {
             return res.redirect('/login');
         }
-        
-        // Check for email update success message from session
+
+
         const emailUpdateSuccess = req.session.emailUpdateSuccess;
-        delete req.session.emailUpdateSuccess; // Clear it after reading
-        
-        res.render('user/profile', { 
-            user, 
+        delete req.session.emailUpdateSuccess;
+
+        res.render('user/profile', {
+            user,
             activeTab: 'profile',
             success: emailUpdateSuccess || null
         });
@@ -37,34 +37,33 @@ export const getProfile = async (req, res) => {
     }
 };
 
-// Show edit profile page
 export const getEditProfile = async (req, res) => {
     try {
-      
+
         const user = await getUserById(req.session.userId);
         if (!user) {
             return res.redirect('/login');
         }
-        
+
         console.log('User data:', {
             id: user._id,
             name: user.name,
             email: user.email,
             phone: user.phone
         });
-        
-        // Check for success message from session
+
+
         const successMessage = req.session.profileUpdateSuccess;
-        delete req.session.profileUpdateSuccess; // Clear it after reading
-        
+        delete req.session.profileUpdateSuccess;
+
         console.log('Success message from session:', successMessage);
-        
-        // Always start with clean state - no error messages on GET
-        res.render('user/edit-profile', { 
-            user, 
-            error: null, 
-            success: successMessage || null, 
-            activeTab: 'profile' 
+
+
+        res.render('user/edit-profile', {
+            user,
+            error: null,
+            success: successMessage || null,
+            activeTab: 'profile'
 
         });
     } catch (error) {
@@ -73,7 +72,7 @@ export const getEditProfile = async (req, res) => {
     }
 };
 
-// Update profile
+
 export const updateProfile = async (req, res) => {
     try {
         const { name, phone, deleteProfileImage } = req.body;
@@ -84,7 +83,7 @@ export const updateProfile = async (req, res) => {
 
         const validation = validateProfileData({ name, phone });
         if (!validation.isValid) {
-            // Clean up temp file if validation fails
+
             if (req.file) fs.unlinkSync(req.file.path);
             return res.render('user/edit-profile', {
                 user: currentUser,
@@ -110,7 +109,7 @@ export const updateProfile = async (req, res) => {
             phone: phone.trim()
         };
 
-        // Handle image upload to Cloudinary
+
         if (req.file) {
             try {
                 const result = await cloudinary.uploader.upload(req.file.path, {
@@ -119,7 +118,7 @@ export const updateProfile = async (req, res) => {
                 });
                 updateData.profileImage = result.secure_url;
 
-                // Delete temp file
+
                 fs.unlinkSync(req.file.path);
             } catch (uploadError) {
                 console.error('Cloudinary upload error:', uploadError);
@@ -133,7 +132,7 @@ export const updateProfile = async (req, res) => {
             }
         }
 
-        // Handle image removal
+
         if (deleteProfileImage === 'true') {
             updateData.profileImage = null;
         }
@@ -161,18 +160,19 @@ export const updateProfile = async (req, res) => {
         });
     }
 };
-// Upload profile image
+
+
 export const uploadProfileImage = async (req, res) => {
     try {
         const userId = req.session.userId;
-        
+
         if (!req.file) {
             return sendResponse(res, false, 'Please select an image');
         }
 
         const tempFilePath = req.file.path;
 
-        // Upload to Cloudinary using unsigned preset
+
         const result = await cloudinary.uploader.upload(tempFilePath, {
             upload_preset: 'ml_default',
             folder: 'veloura/profiles',
@@ -181,7 +181,7 @@ export const uploadProfileImage = async (req, res) => {
 
         console.log('Cloudinary upload successful:', result.secure_url);
 
-        // Delete temporary file after successful upload
+
         try {
             if (fs.existsSync(tempFilePath)) {
                 fs.unlinkSync(tempFilePath);
@@ -191,12 +191,11 @@ export const uploadProfileImage = async (req, res) => {
             console.log('Error deleting temp file:', err);
         }
 
-        // Update user profile image URL
+
         await User.findByIdAndUpdate(userId, {
             profileImage: result.secure_url
         });
 
-        // Update session
         if (req.session.user) {
             req.session.user.profileImage = result.secure_url;
         }
@@ -207,8 +206,8 @@ export const uploadProfileImage = async (req, res) => {
 
     } catch (error) {
         console.error('Upload image error:', error);
-        
-        // Clean up temp file on error
+
+
         if (req.file && req.file.path) {
             try {
                 if (fs.existsSync(req.file.path)) {
@@ -219,36 +218,65 @@ export const uploadProfileImage = async (req, res) => {
                 console.log('Error deleting temp file on error:', err);
             }
         }
-        
+
         sendResponse(res, false, 'Failed to upload image');
     }
 };
 
-// Change password
+
 export const changePassword = async (req, res) => {
     try {
         const passwordData = req.body;
         const userId = req.session.userId;
 
-        // Validate using service
-        const validation = validatePasswordChange(passwordData);
-        if (!validation.isValid) {
-            return sendResponse(res, false, validation.error);
-        }
-
-        // Get user from database
         const user = await getUserById(userId);
         if (!user) {
             return sendResponse(res, false, 'User not found');
         }
 
-        // Verify current password
+        const isGoogleUser = user.authProvider === 'google';
+
+        if (isGoogleUser) {
+           
+            if (!passwordData.newPassword || !passwordData.confirmPassword) {
+                return sendResponse(res, false, 'Please enter new password and confirmation');
+            }
+
+            if (passwordData.newPassword.length < 8) {
+                return sendResponse(res, false, 'Password must be at least 8 characters long');
+            }
+
+            const hasUpperCase = /[A-Z]/.test(passwordData.newPassword);
+            const hasLowerCase = /[a-z]/.test(passwordData.newPassword);
+            const hasNumber = /[0-9]/.test(passwordData.newPassword);
+            const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(passwordData.newPassword);
+
+            if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+                return sendResponse(res, false, 'Password must contain uppercase, lowercase, number, and special character');
+            }
+
+            if (passwordData.newPassword !== passwordData.confirmPassword) {
+                return sendResponse(res, false, 'Passwords do not match');
+            }
+
+            const hashedNewPassword = await hashPassword(passwordData.newPassword);
+            user.password = hashedNewPassword;
+            user.authProvider = 'local'; 
+            await user.save();
+
+            return sendResponse(res, true, 'Password set successfully! You can now login with email and password.');
+        }
+
+        const validation = validatePasswordChange(passwordData);
+        if (!validation.isValid) {
+            return sendResponse(res, false, validation.error);
+        }
+
         const isCurrentPasswordCorrect = await comparePassword(passwordData.currentPassword, user.password);
         if (!isCurrentPasswordCorrect) {
             return sendResponse(res, false, 'Current password is incorrect');
         }
 
-        // Update password
         const hashedNewPassword = await hashPassword(passwordData.newPassword);
         user.password = hashedNewPassword;
         await user.save();
@@ -261,51 +289,49 @@ export const changePassword = async (req, res) => {
     }
 };
 
-// Request email change
+
 export const requestEmailChange = async (req, res) => {
     try {
         const { newEmail } = req.body;
         const userId = req.session.userId;
 
-        // Validate using service
+
         const validation = validateEmailChange({ newEmail });
         if (!validation.isValid) {
             return sendResponse(res, false, validation.error);
         }
 
-        // Check if email already exists using service
         const emailExists = await checkEmailExists(newEmail, userId);
         if (emailExists) {
             return sendResponse(res, false, 'Email already exists');
         }
 
-        // Get current user
+
         const user = await getUserById(userId);
         if (!user) {
             return sendResponse(res, false, 'User not found');
         }
 
-        // Generate OTP for email verification
         const otp = generate();
         user.otp = otp;
-        user.otpExpiry = addMinutes(5); // 5 minutes expiry
+        user.otpExpiry = addMinutes(5);
         await user.save();
 
-        // Store new email in session
+
         req.session.newEmail = newEmail.toLowerCase().trim();
 
         try {
-            // Send OTP to new email
+
             await sendOTP(newEmail, otp, user.name);
-            
-            // Redirect to OTP verification page instead of sending JSON response
+
+
             res.redirect('/profile/verify-email-otp');
         } catch (emailError) {
             console.error('Failed to send email OTP:', emailError);
-            
-            // Clear the session data if email fails
+
+
             delete req.session.newEmail;
-            
+
             return sendResponse(res, false, 'Failed to send verification email. Please try again.');
         }
 
@@ -315,19 +341,19 @@ export const requestEmailChange = async (req, res) => {
     }
 };
 
-// Show email OTP verification page
+
 export const getEmailOTPVerify = async (req, res) => {
     try {
         const newEmail = req.session.newEmail;
-        
+
         if (!newEmail) {
             return res.redirect('/profile/edit');
         }
-        
-        res.render('user/email-otp-verify', { 
+
+        res.render('user/email-otp-verify', {
             newEmail,
-            error: null, 
-            success: null 
+            error: null,
+            success: null
         });
     } catch (error) {
         console.error('Get email OTP verify error:', error);
@@ -335,7 +361,7 @@ export const getEmailOTPVerify = async (req, res) => {
     }
 };
 
-// Verify email change
+
 export const verifyEmailChange = async (req, res) => {
     try {
         const { otp1, otp2, otp3, otp4, otp5, otp6 } = req.body;
@@ -343,74 +369,75 @@ export const verifyEmailChange = async (req, res) => {
         const userId = req.session.userId;
         const newEmail = req.session.newEmail;
 
-        // Check if email change request exists
+
         if (!newEmail) {
-            return res.render('user/email-otp-verify', { 
-                newEmail: '', 
+            return res.render('user/email-otp-verify', {
+                newEmail: '',
                 error: 'No email change request found. Please try again.',
-                success: null 
+                success: null
             });
         }
 
-        // Validate OTP using service
+
         const validation = validateOTP(otp);
         if (!validation.isValid) {
-            return res.render('user/email-otp-verify', { 
+            return res.render('user/email-otp-verify', {
                 newEmail,
                 error: validation.error,
-                success: null 
+                success: null
             });
         }
 
-        // Get user
+
         const user = await getUserById(userId);
         if (!user) {
-            return res.render('user/email-otp-verify', { 
+            return res.render('user/email-otp-verify', {
                 newEmail,
                 error: 'User not found',
-                success: null 
+                success: null
             });
         }
 
-        // Verify OTP
+
         if (!isValid(user, otp)) {
-            return res.render('user/email-otp-verify', { 
+            return res.render('user/email-otp-verify', {
                 newEmail,
                 error: 'Invalid or expired OTP',
-                success: null 
+                success: null
             });
         }
 
-        // Update email
+
         user.email = newEmail;
-        clear(user); // Clear OTP data
+        clear(user);
         await user.save();
 
-        // Update session
+
         req.session.user.email = newEmail;
         delete req.session.newEmail;
 
-        // Set success message and redirect to profile
+
         req.session.emailUpdateSuccess = 'Email updated successfully';
         res.redirect('/profile');
 
     } catch (error) {
         console.error('Verify email change error:', error);
         const newEmail = req.session.newEmail || '';
-        res.render('user/email-otp-verify', { 
+        res.render('user/email-otp-verify', {
             newEmail,
             error: 'Something went wrong. Please try again.',
-            success: null 
+            success: null
         });
     }
 };
 
-// Resend email OTP
+
+
 export const resendEmailOTP = async (req, res) => {
     try {
         const userId = req.session.userId;
         const newEmail = req.session.newEmail;
-        
+
         if (!newEmail) {
             return sendResponse(res, false, 'No email change request found');
         }
@@ -420,14 +447,14 @@ export const resendEmailOTP = async (req, res) => {
             return sendResponse(res, false, 'User not found');
         }
 
-        // Generate new OTP
+
         const newOTP = generate();
         user.otp = newOTP;
-        user.otpExpiry = addMinutes(5); // 5 minutes expiry
+        user.otpExpiry = addMinutes(5);
         await user.save();
 
         try {
-            // Send new OTP
+
             await sendOTP(newEmail, newOTP, user.name);
             sendResponse(res, true, 'New OTP sent successfully');
         } catch (emailError) {
@@ -440,3 +467,6 @@ export const resendEmailOTP = async (req, res) => {
         sendResponse(res, false, 'Failed to send OTP');
     }
 };
+
+
+ 

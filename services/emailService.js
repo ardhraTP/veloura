@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-// Create transporter with better error handling
+
 const createTransporter = () => {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
         throw new Error('Email credentials not configured. Please set EMAIL_USER and EMAIL_PASSWORD in .env file');

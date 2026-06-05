@@ -3,7 +3,7 @@ import { getLogin, login, getDashboard, getUsers, toggleBlockUser, logout } from
 
 const router = express.Router();
 
-// Admin Login Routes
+
 router.get('/login', getLogin);
 router.post('/login', login);
 
