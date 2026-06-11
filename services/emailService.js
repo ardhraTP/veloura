@@ -54,6 +54,7 @@ export const sendResetPassword = async (email, token, name) => {
         const transporter = createTransporter();
         const resetLink = `${process.env.BASE_URL}/reset-password?token=${token}`;
         
+        
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,

@@ -1,4 +1,3 @@
-import User from '../../model/User.js'
 import { hashPassword, comparePassword, sendResponse, addMinutes } from '../../utils/helpers.js';
 import { sendOTP } from '../../services/emailService.js';
 import { generate, isValid, clear } from '../../services/otpService.js';
@@ -11,7 +10,10 @@ import {
     validateOTP,
     checkPhoneExists,
     checkEmailExists,
-    getUserById
+    getUserById,
+    updateUserProfile,
+    updateUserProfileImage,
+    saveUser
 } from '../../services/userService.js';
 
 
@@ -137,9 +139,9 @@ export const updateProfile = async (req, res) => {
             updateData.profileImage = null;
         }
 
-        await User.updateOne({ _id: userId }, { $set: updateData });
+        await updateUserProfile(userId, updateData);
 
-        const updatedUser = await User.findById(userId).select('-password');
+        const updatedUser = await getUserById(userId);
         req.session.user.name = updatedUser.name;
         if (updateData.profileImage !== undefined) {
             req.session.user.profileImage = updateData.profileImage;
@@ -192,9 +194,8 @@ export const uploadProfileImage = async (req, res) => {
         }
 
 
-        await User.findByIdAndUpdate(userId, {
-            profileImage: result.secure_url
-        });
+        
+        await updateUserProfileImage(userId, result.secure_url);
 
         if (req.session.user) {
             req.session.user.profileImage = result.secure_url;
@@ -262,7 +263,7 @@ export const changePassword = async (req, res) => {
             const hashedNewPassword = await hashPassword(passwordData.newPassword);
             user.password = hashedNewPassword;
             user.authProvider = 'local'; 
-            await user.save();
+            await saveUser(user);
 
             return sendResponse(res, true, 'Password set successfully! You can now login with email and password.');
         }
@@ -279,7 +280,7 @@ export const changePassword = async (req, res) => {
 
         const hashedNewPassword = await hashPassword(passwordData.newPassword);
         user.password = hashedNewPassword;
-        await user.save();
+        await saveUser(user);
 
         sendResponse(res, true, 'Password changed successfully');
 
@@ -315,7 +316,7 @@ export const requestEmailChange = async (req, res) => {
         const otp = generate();
         user.otp = otp;
         user.otpExpiry = addMinutes(5);
-        await user.save();
+        await saveUser(user);
 
 
         req.session.newEmail = newEmail.toLowerCase().trim();
@@ -410,7 +411,7 @@ export const verifyEmailChange = async (req, res) => {
 
         user.email = newEmail;
         clear(user);
-        await user.save();
+        await saveUser(user);
 
 
         req.session.user.email = newEmail;
@@ -451,7 +452,7 @@ export const resendEmailOTP = async (req, res) => {
         const newOTP = generate();
         user.otp = newOTP;
         user.otpExpiry = addMinutes(5);
-        await user.save();
+        await saveUser(user);
 
         try {
 

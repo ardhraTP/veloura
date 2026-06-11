@@ -228,7 +228,7 @@
         .footer-column ul li a:hover {
             color: var(--primary-red);
         }
-
+  
         @media (max-width: 768px) {
             .otp-wrapper {
                 padding: 40px 30px;
@@ -331,11 +331,9 @@
     </footer>
 
     <script>
-        // OTP Input Auto-focus and Navigation
         const otpInputs = document.querySelectorAll('.otp-input');
         
         otpInputs.forEach((input, index) => {
-            // Move to next input on input
             input.addEventListener('input', (e) => {
                 if (e.target.value.length === 1) {
                     if (index < otpInputs.length - 1) {
@@ -343,20 +341,17 @@
                     }
                 }
                 
-                // Limit to single digit
                 if (e.target.value.length > 1) {
                     e.target.value = e.target.value.slice(0, 1);
                 }
             });
 
-            // Handle backspace
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Backspace' && !e.target.value && index > 0) {
                     otpInputs[index - 1].focus();
                 }
             });
 
-            // Handle paste
             input.addEventListener('paste', (e) => {
                 e.preventDefault();
                 const pastedData = e.clipboardData.getData('text').slice(0, 6);
@@ -374,12 +369,10 @@
             });
         });
 
-        // Auto-focus first input on page load
         window.addEventListener('load', () => {
             otpInputs[0].focus();
         });
 
-        // Resend OTP Timer
         let timeLeft = 60;
         let timerInterval;
 
@@ -400,20 +393,21 @@
             const timerElement = document.getElementById('timer');
             const resendLink = document.getElementById('resendLink');
             
-            // Clear any existing interval to prevent multiple timers
+            if (!timerElement || !resendLink) {
+                console.error('Timer elements not found!');
+                return;
+            }
+            
             if (timerInterval) {
                 clearInterval(timerInterval);
             }
             
-            // Check if there's a stored end time
             const storedEndTime = getStoredTimerEndTime();
             const now = Date.now();
             
             if (storedEndTime && storedEndTime > now) {
-                // Continue from stored time
                 timeLeft = Math.ceil((storedEndTime - now) / 1000);
             } else {
-                // Start fresh timer
                 timeLeft = 60;
                 setStoredTimerEndTime(now + (60 * 1000));
             }
@@ -428,7 +422,7 @@
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     resendLink.classList.remove('disabled');
-                    resendLink.innerHTML = 'Resend Code';
+                    resendLink.innerHTML = 'Resend Code (<span class="timer" id="timer">60</span>s)';
                     clearStoredTimerEndTime();
                     timeLeft = 60;
                 }
@@ -437,71 +431,90 @@
 
         function resendOTP(event) {
             event.preventDefault();
-            
-            if (timeLeft < 60) {
+
+            const resendLink = document.getElementById('resendLink');
+
+            if (resendLink.classList.contains('disabled')) {
+                console.log('Timer still running, blocking resend');
                 return;
             }
-            
-            // Make AJAX call to resend OTP
+
+            console.log('Sending resend OTP request...');
+
             fetch('/resend-otp', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
-                if (data.success) {
+                console.log('Response data:', data);
+                console.log('data.success type:', typeof data.success);
+                console.log('data.success value:', data.success);
+                
+                if (data.success === true) {
+                    console.log('SUCCESS branch');
                     Toastify({
-                        text: "OTP has been resent to your email!",
+                        text: data.message || 'OTP has been resent to your email!',
                         duration: 3000,
                         gravity: "top",
                         position: "right",
-                        backgroundColor: "#4CAF50",
-                        stopOnFocus: true
+                        style: {
+                            background: "#4CAF50",
+                        }
                     }).showToast();
-                    
-                    // Reset timer with new end time
+
+                    console.log('Restarting timer...');
                     clearInterval(timerInterval);
+                    clearStoredTimerEndTime();
+
                     const newEndTime = Date.now() + (60 * 1000);
                     setStoredTimerEndTime(newEndTime);
                     timeLeft = 60;
                     startTimer();
+                    console.log('Timer restarted successfully');
                 } else {
+                    console.log('FAILURE branch');
                     Toastify({
-                        text: data.message || "Failed to resend OTP",
+                        text: data.message || 'Failed to resend OTP',
                         duration: 3000,
                         gravity: "top",
                         position: "right",
-                        backgroundColor: "#f44336",
-                        stopOnFocus: true
+                        style: {
+                            background: "#f44336",
+                        }
                     }).showToast();
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('CATCH block - Resend OTP Error:', error);
                 Toastify({
                     text: "Failed to resend OTP. Please try again.",
                     duration: 3000,
                     gravity: "top",
                     position: "right",
-                    backgroundColor: "#f44336",
-                    stopOnFocus: true
+                    style: {
+                        background: "#f44336",
+                    }
                 }).showToast();
             });
         }
 
-        // Start timer on page load
         startTimer();
 
-        // Clean up timer interval but KEEP localStorage when leaving page
-        // This allows the timer to persist across page reloads
+       
         window.addEventListener('beforeunload', () => {
             clearInterval(timerInterval);
-            // DO NOT clear localStorage here - we want the timer to persist
+           
         });
 
-        // Form submission
         document.getElementById('otpForm').addEventListener('submit', (e) => {
             const otp = Array.from(otpInputs).map(input => input.value).join('');
             

@@ -8,6 +8,7 @@ import {
     deleteAddress as deleteAddressService,
     setDefaultAddress as setDefaultAddressService
 } from '../../services/addressService.js';
+import User from "../../model/User.js";
 
 
 
@@ -16,6 +17,7 @@ export const getAddresses = async (req, res) => {
     try {
         const userId = req.session.userId;
         const addresses = await getUserAddresses(userId);
+
         res.render('user/manage-addresses', { addresses,activeTab: 'addresses' });
     } catch (error) {
         console.error('get addresses error:', error);

@@ -1,13 +1,15 @@
-import { name } from 'ejs';
-import User from '../../model/User.js';
 import bcrypt from 'bcryptjs';
+import {
+    findAdminByEmail,
+    findAdminById,
+    buildUserQuery,
+    getUsersWithPagination,
+    toggleUserBlockStatus,
+    findUserById
+} from '../../services/adminService.js';
 
 
 export const getLogin = (req, res) => {
-    if (req.session.adminId) {
-        return res.redirect('/admin/dashboard');
-    }
-
     res.render('admin/login', {
         error: req.session.adminLoginError || null
     });
@@ -20,10 +22,7 @@ export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-
-        console.log('Email:', email);
-
-        const adminUser = await User.findOne({ email: email, isAdmin: true });
+        const adminUser = await findAdminByEmail(email);
 
         if (adminUser) {
             const isMatch = await bcrypt.compare(password, adminUser.password);
@@ -46,12 +45,7 @@ export const login = async (req, res) => {
 
 
 // Admin dashboard
-
 export const getDashboard = (req, res) => {
-    if (!req.session.adminId) {
-        return res.redirect('/admin/login');
-    }
-
     res.render('admin/dashboard');
 };
 
@@ -60,38 +54,14 @@ export const getDashboard = (req, res) => {
 
 export const getUsers = async (req, res) => {
     try {
-        if (!req.session.adminId) {         
-            return res.redirect('/admin/login');
-        }
-
         let page = parseInt(req.query.page) || 1;
         let limit = 5;
         
-       
-        let query = { 
-            isAdmin: { $ne: true } 
-        };
-
      
-        if (req.query.search) {
-            query.$or = [
-                { name: { $regex: req.query.search, $options: 'i' } },
-                { email: { $regex: req.query.search, $options: 'i' } }
-            ];
-        }
+        const query = buildUserQuery(req.query.search, req.query.status);
 
        
-        if (req.query.status && req.query.status !== 'all') {
-            query.isBlocked = req.query.status === 'blocked';
-        }
-
-        const totalUsers = await User.countDocuments(query);
-        const totalPages = Math.ceil(totalUsers / limit);
-
-        const users = await User.find(query)
-            .skip((page - 1) * limit)
-            .limit(limit)
-            .sort({ createdAt: -1 });
+        const { users, totalPages } = await getUsersWithPagination(query, page, limit); 
 
         res.render('admin/users', {
             users,  
@@ -111,19 +81,12 @@ export const getUsers = async (req, res) => {
 
 export const toggleBlockUser = async (req, res) => {
     try {
-        if (!req.session.adminId) {
-            return res.status(401).json({ success: false, message: 'Unauthorized' });
-        }
-
         const userId = req.params.id;
-        const user = await User.findById(userId);
+        const user = await toggleUserBlockStatus(userId);
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
-
-        user.isBlocked = !user.isBlocked;
-        await user.save();
 
         res.json({
             success: true,

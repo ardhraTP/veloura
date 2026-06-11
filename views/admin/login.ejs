@@ -240,6 +240,18 @@
             text-align: center;
         }
 
+        .field-error {
+            color: #d32f2f;
+            font-size: 11px;
+            margin-top: 6px;
+            min-height: 16px;
+            display: block;
+        }
+
+        .input-error {
+            border-bottom-color: #d32f2f !important;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .top-bar {
@@ -278,22 +290,24 @@
                 </div>
             <% } %>
 
-            <form action="/admin/login" method="POST">
+            <form action="/admin/login" method="POST" id="adminLoginForm">
                 <div class="form-group">
                     <label for="email">Email</label>
                     <div class="input-wrapper">
-                        <input type="email" id="email" name="email" placeholder="Enter email address" required>
+                        <input type="email" id="email" name="email" placeholder="Enter email address">
                     </div>
+                    <div class="field-error" id="emailError"></div>
                 </div>
 
                 <div class="form-group">
                     <label for="password">Security Key</label>
                     <div class="input-wrapper">
-                        <input type="password" id="password" name="password" placeholder="Enter password" required>
+                        <input type="password" id="password" name="password" placeholder="Enter password">
                         <button type="button" class="password-toggle" onclick="togglePassword()">
                             <i class="far fa-eye" id="eyeIcon"></i>
                         </button>
                     </div>
+                    <div class="field-error" id="passwordError"></div>
                 </div>
 
                 <button type="submit" class="btn-login">Login</button>
@@ -316,6 +330,75 @@
                 eyeIcon.classList.add('fa-eye');
             }
         }
+
+        function showFieldError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            const inputElement = document.getElementById(fieldId);
+            if (errorElement && inputElement) {
+                errorElement.textContent = message;
+                inputElement.classList.add('input-error');
+            }
+        }
+
+        function clearFieldError(fieldId) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            const inputElement = document.getElementById(fieldId);
+            if (errorElement && inputElement) {
+                errorElement.textContent = '';
+                inputElement.classList.remove('input-error');
+            }
+        }
+
+        function clearAllErrors() {
+            clearFieldError('email');
+            clearFieldError('password');
+            
+            const serverError = document.querySelector('.error-message');
+            if (serverError) {
+                serverError.style.display = 'none';
+            }
+        }
+
+        const allInputs = document.querySelectorAll('#adminLoginForm input');
+        allInputs.forEach(input => {
+            input.addEventListener('input', clearAllErrors);
+        });
+
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            clearAllErrors();
+
+            const emailEl = document.getElementById('email');
+            const passwordEl = document.getElementById('password');
+
+            const email = emailEl.value.trim();
+            const password = passwordEl.value.trim();
+
+            let hasError = false;
+
+            if (!email) {
+                showFieldError('email', 'Email is required');
+                hasError = true;
+            } else {
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(email)) {
+                    showFieldError('email', 'Please enter a valid email address');
+                    hasError = true;
+                }
+            }
+
+            if (!password) {
+                showFieldError('password', 'Password is required');
+                hasError = true;
+            }
+
+            if (hasError) {
+                return;
+            }
+
+            this.submit();
+        });
     </script>
 </body>
 </html>

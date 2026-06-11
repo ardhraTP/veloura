@@ -123,12 +123,36 @@
             color: var(--primary-red);
         }
 
+        .sidebar-menu .logout-btn {
+            display: block;
+            width: 100%;
+            padding: 14px !important;
+            background-color: #c9302c;
+            color: #ffffff !important;
+            text-align: center;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            margin: 0;
+        }
+
+        .sidebar-menu .logout-btn:hover {
+            background-color: #ac2925;
+            color: #ffffff !important;
+        }
+
+        .sidebar-menu .logout-btn i {
+            display: none;
+        }
+
         .logout-btn {
             display: block;
             width: 100%;
-            padding: 14px;
+            padding: 14px !important;
             background-color: #c9302c;
-            color: white;
+            color: #ffffff !important;
             text-align: center;
             border-radius: 6px;
             text-decoration: none;
@@ -139,6 +163,7 @@
 
         .logout-btn:hover {
             background-color: #ac2925;
+            color: #ffffff !important;
         }
 
         /* --- Main Content --- */
@@ -399,7 +424,7 @@
             <li><a href="#"><i class="fas fa-list"></i> Category</a></li>
             <li><a href="#"><i class="fas fa-star"></i> Reviews</a></li>
             <li style="padding: 20px 40px; margin-top: 10px;">
-                <a href="/admin/logout" class="logout-btn" style="padding: 14px;">Log Out</a>
+                <a href="/admin/logout" class="logout-btn">Log Out</a>
             </li>
         </ul>
     </aside>
@@ -430,6 +455,7 @@
                 </button>
                 <% } %>
             </div>
+            
         </div>
 
         <!-- Users Table -->
@@ -511,7 +537,7 @@ const currentSearch = '<%= searchQuery %>';
 function performSearch() {
     const searchValue = document.getElementById('searchInput').value.trim();
     const statusValue = document.querySelector('.filter-select').value;
-    
+   
     const params = new URLSearchParams();
     if (searchValue) params.append('search', searchValue);
     if (statusValue !== 'all') params.append('status', statusValue);
@@ -544,7 +570,7 @@ function clearSearch() {
     
     window.location.href = `/admin/users?${params.toString()}`;
 }
-s
+
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     

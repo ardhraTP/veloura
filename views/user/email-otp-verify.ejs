@@ -280,11 +280,9 @@
     </div>
 
     <script>
-        // OTP Input Auto-focus and Navigation
         const otpInputs = document.querySelectorAll('.otp-input');
         
         otpInputs.forEach((input, index) => {
-            // Move to next input on input
             input.addEventListener('input', (e) => {
                 if (e.target.value.length === 1) {
                     if (index < otpInputs.length - 1) {
@@ -292,20 +290,17 @@
                     }
                 }
                 
-                // Limit to single digit
                 if (e.target.value.length > 1) {
                     e.target.value = e.target.value.slice(0, 1);
                 }
             });
 
-            // Handle backspace
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Backspace' && !e.target.value && index > 0) {
                     otpInputs[index - 1].focus();
                 }
             });
 
-            // Handle paste
             input.addEventListener('paste', (e) => {
                 e.preventDefault();
                 const pastedData = e.clipboardData.getData('text').slice(0, 6);
@@ -323,12 +318,10 @@
             });
         });
 
-        // Auto-focus first input on page load
         window.addEventListener('load', () => {
             otpInputs[0].focus();
         });
 
-        // LocalStorage helpers for timers
         function getStoredEmailOTPEndTime() {
             const stored = localStorage.getItem('emailOTPTimerEndTime');
             return stored ? parseInt(stored) : null;
@@ -355,23 +348,19 @@
             localStorage.removeItem('emailResendTimerEndTime');
         }
 
-        // OTP Expiry Timer (5 minutes)
-        let otpTimeLeft = 5 * 60; // 5 minutes in seconds
+        let otpTimeLeft = 5 * 60; 
         let otpTimerInterval;
 
         function startOTPTimer() {
             const timeLeftElement = document.getElementById('timeLeft');
             const timeRemainingElement = document.getElementById('timeRemaining');
             
-            // Check if there's a stored end time
             const storedEndTime = getStoredEmailOTPEndTime();
             const now = Date.now();
             
             if (storedEndTime && storedEndTime > now) {
-                // Continue from stored time
                 otpTimeLeft = Math.ceil((storedEndTime - now) / 1000);
             } else {
-                // Start fresh timer
                 otpTimeLeft = 5 * 60;
                 setStoredEmailOTPEndTime(now + (5 * 60 * 1000));
             }
@@ -389,7 +378,6 @@
                     document.getElementById('verifyBtn').disabled = true;
                     clearStoredEmailOTPEndTime();
                     
-                    // Clear OTP inputs
                     otpInputs.forEach(input => {
                         input.disabled = true;
                         input.style.backgroundColor = '#f5f5f5';
@@ -398,7 +386,6 @@
             }, 1000);
         }
 
-        // Resend OTP Timer (1 minute)
         let resendTimeLeft = 60;
         let resendTimerInterval;
 
@@ -407,15 +394,12 @@
             const resendLink = document.getElementById('resendLink');
             const resendText = document.getElementById('resendText');
             
-            // Check if there's a stored end time
             const storedEndTime = getStoredEmailResendEndTime();
             const now = Date.now();
             
             if (storedEndTime && storedEndTime > now) {
-                // Continue from stored time
                 resendTimeLeft = Math.ceil((storedEndTime - now) / 1000);
             } else {
-                // Start fresh timer
                 resendTimeLeft = 60;
                 setStoredEmailResendEndTime(now + (60 * 1000));
             }
@@ -444,7 +428,6 @@
                 return;
             }
             
-            // Make AJAX call to resend OTP
             fetch('/profile/resend-email-otp', {
                 method: 'POST',
                 headers: {
@@ -463,21 +446,18 @@
                         stopOnFocus: true
                     }).showToast();
                     
-                    // Reset resend timer with new end time
                     clearInterval(resendTimerInterval);
                     const newResendEndTime = Date.now() + (60 * 1000);
                     setStoredEmailResendEndTime(newResendEndTime);
                     resendTimeLeft = 60;
                     startResendTimer();
                     
-                    // Reset OTP timer with new end time
                     clearInterval(otpTimerInterval);
                     const newOTPEndTime = Date.now() + (5 * 60 * 1000);
                     setStoredEmailOTPEndTime(newOTPEndTime);
                     otpTimeLeft = 5 * 60;
                     startOTPTimer();
                     
-                    // Re-enable form if it was disabled
                     document.getElementById('verifyBtn').disabled = false;
                     otpInputs.forEach(input => {
                         input.disabled = false;
@@ -509,19 +489,14 @@
             });
         }
 
-        // Start timers on page load
         startOTPTimer();
         startResendTimer();
 
-        // Clean up timer intervals but KEEP localStorage when leaving page
-        // This allows the timers to persist across page reloads
         window.addEventListener('beforeunload', () => {
             clearInterval(otpTimerInterval);
             clearInterval(resendTimerInterval);
-            // DO NOT clear localStorage here - we want the timers to persist
         });
 
-        // Form submission
         document.getElementById('otpForm').addEventListener('submit', (e) => {
             const otp = Array.from(otpInputs).map(input => input.value).join('');
             

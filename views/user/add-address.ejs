@@ -557,19 +557,24 @@
             errorDiv.style.display = 'block';
         }
 
-        function clearErrors() {
+        function clearAllErrors() {
             const inputs = document.querySelectorAll('.error-input');
             const errorTexts = document.querySelectorAll('.error-text');
+            
             inputs.forEach(input => input.classList.remove('error-input'));
             errorTexts.forEach(text => {
                 text.style.display = 'none';
                 text.textContent = '';
             });
+            
+            const serverError = document.querySelector('.error-message');
+            if (serverError) {
+                serverError.style.display = 'none';
+            }
         }
 
-        // Form validation
         document.getElementById('addAddressForm').addEventListener('submit', function(e) {
-            clearErrors();
+            clearAllErrors();
             let hasError = false;
 
             const fullName = document.getElementById('fullName').value.trim();
@@ -580,7 +585,6 @@
             const state = document.getElementById('state').value.trim();
             const addressType = document.getElementById('addressType').value;
 
-            // Full name validation (only letters and spaces, 2-50 characters)
             if (!fullName) { 
                 showError('fullName', 'Please enter your full name'); 
                 hasError = true; 
@@ -589,7 +593,6 @@
                 hasError = true; 
             }
 
-            // Phone validation
             if (!phone) { 
                 showError('phone', 'Please enter your phone number'); 
                 hasError = true; 
@@ -598,7 +601,6 @@
                 hasError = true; 
             }
             
-            // Pincode validation
             if (!pincode) { 
                 showError('pincode', 'Please enter your pincode'); 
                 hasError = true; 
@@ -607,7 +609,6 @@
                 hasError = true; 
             }
             
-            // Address validation (10-200 characters)
             if (!address) { 
                 showError('address', 'Please enter your address'); 
                 hasError = true; 
@@ -619,7 +620,6 @@
                 hasError = true; 
             }
             
-            // City validation (only letters and spaces, 2-50 characters)
             if (!city) { 
                 showError('city', 'Please enter your city'); 
                 hasError = true; 
@@ -628,7 +628,6 @@
                 hasError = true; 
             }
 
-            // State validation (only letters and spaces, 2-50 characters)
             if (!state) { 
                 showError('state', 'Please enter your state'); 
                 hasError = true; 
@@ -650,34 +649,43 @@
             return true;
         });
 
-        // Real-time validation
         document.getElementById('fullName').addEventListener('input', function(e) {
+            clearAllErrors(); 
             this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
             if (this.value.length > 50) this.value = this.value.slice(0, 50);
         });
 
         document.getElementById('phone').addEventListener('input', function(e) {
+            clearAllErrors();
             this.value = this.value.replace(/\D/g, '');
             if (this.value.length > 10) this.value = this.value.slice(0, 10);
         });
 
         document.getElementById('pincode').addEventListener('input', function(e) {
+            clearAllErrors(); 
             this.value = this.value.replace(/\D/g, '');
             if (this.value.length > 6) this.value = this.value.slice(0, 6);
         });
 
         document.getElementById('address').addEventListener('input', function(e) {
+            clearAllErrors(); 
             if (this.value.length > 200) this.value = this.value.slice(0, 200);
         });
 
         document.getElementById('city').addEventListener('input', function(e) {
+            clearAllErrors(); 
             this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
             if (this.value.length > 50) this.value = this.value.slice(0, 50);
         });
 
         document.getElementById('state').addEventListener('input', function(e) {
+            clearAllErrors();
             this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
             if (this.value.length > 50) this.value = this.value.slice(0, 50);
+        });
+
+        document.getElementById('addressType').addEventListener('change', function(e) {
+            clearAllErrors(); 
         });
 
         function confirmLogout() {

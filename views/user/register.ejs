@@ -664,7 +664,7 @@
             });
         }
 
-        // Form validation
+        
         document.getElementById('registerForm').addEventListener('submit', function(e) {
             clearErrors();
             let hasError = false;
@@ -675,7 +675,7 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             
-            // Validate name (only letters and spaces, 2-50 characters)
+          
             if (!name) {
                 showError('name', 'Please enter your full name');
                 hasError = true;
@@ -684,7 +684,6 @@
                 hasError = true;
             }
             
-            // Validate email
             if (!email) {
                 showError('email', 'Please enter your email address');
                 hasError = true;
@@ -693,16 +692,14 @@
                 hasError = true;
             }
             
-            // Validate phone
-            // if (!phone) {
-            //     showError('phone', 'Please enter your phone number');
-            //     hasError = true;
-            // } else if (!/^[0-9]{10}$/.test(phone)) {
-            //     showError('phone', 'Phone number must be exactly 10 digits');
-            //     hasError = true;
-            // }
+            if (!phone) {
+                showError('phone', 'Please enter your phone number');
+                hasError = true;
+            } else if (!/^[0-9]{10}$/.test(phone)) {
+                showError('phone', 'Phone number must be exactly 10 digits');
+                hasError = true;
+            }
             
-            // Validate password strength
             if (!password) {
                 showError('password', 'Please create a password');
                 hasError = true;
@@ -721,7 +718,6 @@
                 }
             }
             
-            // Check password match
             if (!confirmPassword) {
                 showError('confirmPassword', 'Please confirm your password');
                 hasError = true;
@@ -736,97 +732,50 @@
             }
         });
 
-        // Real-time phone number validation
-        document.getElementById('phone').addEventListener('input', function(e) {
-            // Clear error for this field when user starts typing
-            const errorDiv = document.getElementById('phoneError');
-            if (errorDiv) {
-                this.classList.remove('error-input');
-                errorDiv.style.display = 'none';
-            }
+        function clearAllErrors() {
+            const inputs = document.querySelectorAll('.error-input');
+            const errorTexts = document.querySelectorAll('.error-text');
             
-            // Clear server error message
+            inputs.forEach(input => input.classList.remove('error-input'));
+            errorTexts.forEach(text => {
+                text.style.display = 'none';
+                text.textContent = '';
+            });
+            
             const serverError = document.getElementById('errorMessage');
             if (serverError) {
                 serverError.style.display = 'none';
             }
-            
-            // Remove any non-digit characters
-            this.value = this.value.replace(/\D/g, '');
-            
-            // Limit to 10 digits
-            if (this.value.length > 10) {
-                this.value = this.value.slice(0, 10);
-            }
-        });
+        }
 
-        // Real-time name validation
         document.getElementById('name').addEventListener('input', function(e) {
-            // Clear error for this field when user starts typing
-            const errorDiv = document.getElementById('nameError');
-            if (errorDiv) {
-                this.classList.remove('error-input');
-                errorDiv.style.display = 'none';
-            }
+            clearAllErrors(); 
             
-            // Clear server error message
-            const serverError = document.getElementById('errorMessage');
-            if (serverError) {
-                serverError.style.display = 'none';
-            }
-            
-            // Remove any non-letter characters except spaces
             this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
-            
-            // Limit to 50 characters
             if (this.value.length > 50) {
                 this.value = this.value.slice(0, 50);
             }
         });
 
-        // Clear errors on input for email
         document.getElementById('email').addEventListener('input', function(e) {
-            const errorDiv = document.getElementById('emailError');
-            if (errorDiv) {
-                this.classList.remove('error-input');
-                errorDiv.style.display = 'none';
-            }
+            clearAllErrors(); 
+        });
+
+        document.getElementById('phone').addEventListener('input', function(e) {
+            clearAllErrors(); 
             
-            // Also clear the server error message when user types in email field
-            const serverError = document.getElementById('errorMessage');
-            if (serverError) {
-                serverError.style.display = 'none';
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length > 10) {
+                this.value = this.value.slice(0, 10);
             }
         });
 
-        // Clear errors on input for password
         document.getElementById('password').addEventListener('input', function(e) {
-            const errorDiv = document.getElementById('passwordError');
-            if (errorDiv) {
-                this.classList.remove('error-input');
-                errorDiv.style.display = 'none';
-            }
-            
-            // Clear server error message
-            const serverError = document.getElementById('errorMessage');
-            if (serverError) {
-                serverError.style.display = 'none';
-            }
+            clearAllErrors(); 
         });
 
-        // Clear errors on input for confirm password
         document.getElementById('confirmPassword').addEventListener('input', function(e) {
-            const errorDiv = document.getElementById('confirmPasswordError');
-            if (errorDiv) {
-                this.classList.remove('error-input');
-                errorDiv.style.display = 'none';
-            }
-            
-            // Clear server error message
-            const serverError = document.getElementById('errorMessage');
-            if (serverError) {
-                serverError.style.display = 'none';
-            }
+            clearAllErrors(); 
         });
     </script>
 </body>

@@ -21,6 +21,7 @@ passport.use(new GoogleStrategy({
         
         if (user) {
             user.googleId = profile.id;
+            user.authProvider = 'google';
             user.isVerified = true;
             await user.save();
             return done(null, user);
@@ -40,6 +41,7 @@ passport.use(new GoogleStrategy({
         return done(null, newUser);
         
     } catch (error) {
+        console.error('Google authentication error:', error);
         return done(error, null);
     }
 }));

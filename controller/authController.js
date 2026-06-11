@@ -7,7 +7,6 @@ import {
     validateLoginData,
     validateOTP,
     checkEmailExists,
-    checkPhoneExists,
     getUserByEmail,
     getUserByResetToken
 } from '../services/userService.js';
@@ -43,14 +42,6 @@ export const signup = async (req, res) => {
             return res.redirect('/register');
         }
 
-
-        const phoneExists = await checkPhoneExists(phone);
-        if (phoneExists) {
-            req.session.signupError = 'Phone number already registered';
-            return res.redirect('/register');
-        }
-
-
         const hashedPassword = await hashPassword(password);
         const otp = generate();
 
@@ -66,18 +57,13 @@ export const signup = async (req, res) => {
 
         await newUser.save();
 
-
         try {
             await sendOTP(email, otp, name);
 
-
             req.session.tempUserId = newUser._id;
-
-            res.render('user/otp-verify', {
-                error: null,
-                success: 'OTP sent to your email',
-                email: email
-            });
+            req.session.otpSuccess = 'OTP sent to your email';
+            
+            res.redirect('/verify-otp');
         } catch (emailError) {
             console.error('Email sending failed:', emailError);
 
@@ -126,13 +112,11 @@ export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-
         const validation = validateLoginData({ email, password });
         if (!validation.isValid) {
             req.session.loginError = validation.error;
             return res.redirect('/login');
         }
-
 
         const user = await getUserByEmail(email);
         if (!user) {
@@ -140,18 +124,20 @@ export const login = async (req, res) => {
             return res.redirect('/login');
         }
 
-
         if (user.isBlocked) {
             req.session.loginError = 'Your account has been blocked';
             return res.redirect('/login');
         }
-
 
         if (!user.isVerified) {
             req.session.loginError = 'Please verify your email first';
             return res.redirect('/login');
         }
 
+        if (user.authProvider === 'google') {
+            req.session.loginError = 'This account uses Google Sign-In. Please use the "Sign in with Google" button or set a password from your profile page first.';
+            return res.redirect('/login');
+        }
 
         const passwordMatch = await comparePassword(password, user.password);
         if (!passwordMatch) {
@@ -181,53 +167,47 @@ export const getOTPVerify = (req, res) => {
     if (!req.session.tempUserId) {
         return res.redirect('/register');
     }
-    res.render('user/otp-verify', { error: null, success: null });
+    
+    const error = req.session.otpError || null;
+    const success = req.session.otpSuccess || null;
+    delete req.session.otpError;
+    delete req.session.otpSuccess;
+    
+    res.render('user/otp-verify', { error, success });
 };
 
 
 export const verifyOTP = async (req, res) => {
     try {
-
         const { otp1, otp2, otp3, otp4, otp5, otp6 } = req.body;
         const otp = `${otp1}${otp2}${otp3}${otp4}${otp5}${otp6}`;
         const userId = req.session.tempUserId;
 
         if (!userId) {
-            return res.render('user/otp-verify', {
-                error: 'Session expired. Please register again.',
-                success: null
-            });
+            req.session.otpError = 'Session expired. Please register again.';
+            return res.redirect('/verify-otp');
         }
-
 
         const validation = validateOTP(otp);
         if (!validation.isValid) {
-            return res.render('user/otp-verify', {
-                error: validation.error,
-                success: null
-            });
+            req.session.otpError = validation.error;
+            return res.redirect('/verify-otp');
         }
 
         const user = await User.findById(userId);
         if (!user) {
-            return res.render('user/otp-verify', {
-                error: 'User not found',
-                success: null
-            });
+            req.session.otpError = 'User not found';
+            return res.redirect('/verify-otp');
         }
 
         if (!isValid(user, otp)) {
-            return res.render('user/otp-verify', {
-                error: 'Invalid or expired OTP',
-                success: null
-            });
+            req.session.otpError = 'Invalid or expired OTP';
+            return res.redirect('/verify-otp');
         }
-
 
         user.isVerified = true;
         clear(user);
         await user.save();
-
 
         delete req.session.tempUserId;
         req.session.userId = user._id;
@@ -242,10 +222,8 @@ export const verifyOTP = async (req, res) => {
 
     } catch (error) {
         console.error('OTP verification error:', error);
-        res.render('user/otp-verify', {
-            error: 'Something went wrong. Please try again.',
-            success: null
-        });
+        req.session.otpError = 'Something went wrong. Please try again.';
+        res.redirect('/verify-otp');
     }
 };
 
@@ -305,14 +283,18 @@ export const forgotPassword = async (req, res) => {
             });
         }
 
+        // Check if user registered with Google
+        if (user.authProvider === 'google') {
+            return res.render('user/forgot-password', {
+                error: 'This account uses Google Sign-In. Please login with Google or set a password from your profile page.',
+                success: null
+            });
+        }
 
         const resetToken = generateToken();
         user.resetToken = resetToken;
         user.resetExpiry = addMinutes(15);
         await user.save();
-
-
-
 
         try {
             await sendResetPassword(user.email, resetToken, user.name);
@@ -323,7 +305,6 @@ export const forgotPassword = async (req, res) => {
             });
         } catch (emailError) {
             console.error('Failed to send reset email:', emailError);
-
 
             if (process.env.NODE_ENV === 'development') {
                 res.render('user/forgot-password', {
@@ -422,7 +403,6 @@ export const resetPassword = async (req, res) => {
             });
         }
 
-        // Strong password validation
         const hasUpperCase = /[A-Z]/.test(password);
         const hasLowerCase = /[a-z]/.test(password);
         const hasNumber = /[0-9]/.test(password);

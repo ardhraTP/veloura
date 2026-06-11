@@ -144,3 +144,21 @@ export const getUserById = async (id) => {
 export const getUserByResetToken = async (token) => {
     return await User.findOne({ resetToken: token });
 };
+
+
+export const updateUserProfile = async (userId, updateData) => {
+    return await User.updateOne({ _id: userId }, { $set: updateData });
+};
+
+
+export const updateUserProfileImage = async (userId, imageUrl) => {
+    return await User.findByIdAndUpdate(userId, {
+        profileImage: imageUrl
+    }, { new: true });
+};
+
+
+export const saveUser = async (user) => {
+    return await user.save();
+};
+

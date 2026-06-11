@@ -228,11 +228,9 @@
     </div>
 
     <script>
-        // OTP Input Auto-focus and Navigation
         const otpInputs = document.querySelectorAll('.otp-input');
         
         otpInputs.forEach((input, index) => {
-            // Move to next input on input
             input.addEventListener('input', (e) => {
                 if (e.target.value.length === 1) {
                     if (index < otpInputs.length - 1) {
@@ -240,20 +238,17 @@
                     }
                 }
                 
-                // Limit to single digit
                 if (e.target.value.length > 1) {
                     e.target.value = e.target.value.slice(0, 1);
                 }
             });
 
-            // Handle backspace
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Backspace' && !e.target.value && index > 0) {
                     otpInputs[index - 1].focus();
                 }
             });
 
-            // Handle paste
             input.addEventListener('paste', (e) => {
                 e.preventDefault();
                 const pastedData = e.clipboardData.getData('text').slice(0, 4);
@@ -271,12 +266,10 @@
             });
         });
 
-        // Auto-focus first input on page load
         window.addEventListener('load', () => {
             otpInputs[0].focus();
         });
 
-        // LocalStorage helpers for timer
         function getStoredForgotTimerEndTime() {
             const stored = localStorage.getItem('forgotOTPTimerEndTime');
             return stored ? parseInt(stored) : null;
@@ -290,7 +283,6 @@
             localStorage.removeItem('forgotOTPTimerEndTime');
         }
 
-        // Resend OTP Timer
         let timeLeft = 60;
         let timerInterval;
 
@@ -298,15 +290,12 @@
             const timerElement = document.getElementById('timer');
             const resendLink = document.getElementById('resendLink');
             
-            // Check if there's a stored end time
             const storedEndTime = getStoredForgotTimerEndTime();
             const now = Date.now();
             
             if (storedEndTime && storedEndTime > now) {
-                // Continue from stored time
                 timeLeft = Math.ceil((storedEndTime - now) / 1000);
             } else {
-                // Start fresh timer
                 timeLeft = 60;
                 setStoredForgotTimerEndTime(now + (60 * 1000));
             }
@@ -335,7 +324,6 @@
                 return;
             }
             
-            // Make AJAX call to resend OTP
             fetch('/resend-forgot-otp', {
                 method: 'POST',
                 headers: {
@@ -354,7 +342,6 @@
                         stopOnFocus: true
                     }).showToast();
                     
-                    // Reset timer with new end time
                     clearInterval(timerInterval);
                     const newEndTime = Date.now() + (60 * 1000);
                     setStoredForgotTimerEndTime(newEndTime);
@@ -384,17 +371,12 @@
             });
         }
 
-        // Start timer on page load
         startTimer();
 
-        // Clean up timer interval but KEEP localStorage when leaving page
-        // This allows the timer to persist across page reloads
         window.addEventListener('beforeunload', () => {
             clearInterval(timerInterval);
-            // DO NOT clear localStorage here - we want the timer to persist
         });
 
-        // Form submission
         document.getElementById('otpForm').addEventListener('submit', (e) => {
             const otp = Array.from(otpInputs).map(input => input.value).join('');
             
