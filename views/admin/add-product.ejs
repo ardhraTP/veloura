@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Product - Veloura Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 210px;
+            background-color: #f9f7f5;
+            border-right: 1px solid #e8e4e1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            border-bottom: 1px solid #e8e4e1;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: #5c1e28;
+            text-decoration: none;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu li {
+            margin: 0;
+        }
+
+        .sidebar-menu li a {
+            display: block;
+            padding: 15px 40px;
+            color: #6b6b6b;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu li a:hover {
+            background-color: #f3e8e9;
+            color: #5c1e28;
+        }
+
+        .sidebar-menu li a.active {
+            background-color: #f3e8e9;
+            color: #5c1e28;
+            border-left-color: #5c1e28;
+            font-weight: 600;
+        }
+
+        .sidebar-menu li a i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .logout-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #c9302c;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #a52420;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 210px;
+            flex: 1;
+            padding: 40px 60px;
+            overflow-y: auto;
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            color: #5c1e28;
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: #5c1e28;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            color: #333;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            border-color: #5c1e28;
+        }
+
+        .form-textarea {
+            resize: none;
+            min-height: 100px;
+        }
+
+        /* Variant Section */
+        .variant-card {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .variant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .variant-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            color: #5c1e28;
+            font-weight: 600;
+        }
+
+        .btn-remove-variant {
+            padding: 8px 16px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-remove-variant:hover {
+            background-color: #c82333;
+        }
+
+        .image-preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .image-preview-box {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .image-preview-box:hover {
+            border-color: #5c1e28;
+        }
+
+        .image-preview-box img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #999;
+        }
+
+        .image-preview-placeholder i {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .image-preview-placeholder p {
+            font-size: 11px;
+        }
+
+        .remove-image-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 24px;
+            height: 24px;
+            background-color: #c9302c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        .remove-image-btn:hover {
+            background-color: #a52420;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn-add-variant {
+            padding: 14px 30px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-add-variant:hover {
+            background-color: #218838;
+        }
+
+        .form-footer {
+            margin-top: 40px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-save {
+            padding: 14px 50px;
+            background-color: #5c1e28;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-save:hover {
+            background-color: #4a1620;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(92, 30, 40, 0.3);
+        }
+
+        .btn-cancel {
+            padding: 14px 50px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-cancel:hover {
+            background-color: #5a6268;
+        }
+
+        .error-message {
+            padding: 15px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .upload-note {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/admin/sidebar') %>
+
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <h1 class="page-title">Add New Product</h1>
+
+        <% if (errorMessage) { %>
+            <div class="error-message">
+                <%= errorMessage %>
+            </div>
+        <% } %>
+
+        <form action="/admin/products/add" method="POST" enctype="multipart/form-data" id="productForm">
+            
+            <!-- Product Common Details -->
+            <div class="form-card">
+                <h3 class="section-title">Product Details</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">PRODUCT NAME *</label>
+                        <input type="text" 
+                               name="productName" 
+                               class="form-input" 
+                               placeholder="Enter product name..." 
+                               required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">CATEGORY *</label>
+                        <select name="categoryId" class="form-select" required>
+                            <option value="">Select Category</option>
+                            <% if (categories && categories.length > 0) { %>
+                                <% categories.forEach(category => { %>
+                                    <option value="<%= category._id %>"><%= category.name %></option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label">DESCRIPTION *</label>
+                    <textarea name="description" 
+                              class="form-textarea" 
+                              placeholder="Enter product description..."
+                              required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">STATUS</label>
+                    <select name="status" class="form-select">
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Variants Section -->
+            <div class="form-card">
+                <h3 class="section-title">Product Variants</h3>
+                <p class="upload-note">Add color variants with their own images, prices, and quantities. Each variant requires at least 3 images.</p>
+                
+                <div id="variantsContainer">
+                    <!-- Variants will be added here dynamically -->
+                </div>
+
+                <button type="button" class="btn-add-variant" onclick="addVariant()">
+                    <i class="fas fa-plus"></i> Add Variant
+                </button>
+            </div>
+
+            <div class="form-footer">
+                <button type="submit" class="btn-save">SAVE PRODUCT</button>
+                <a href="/admin/products" class="btn-cancel">CANCEL</a>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        let variantCount = 0;
+        let variantsData = [];
+
+        // Add initial variant on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            addVariant();
+        });
+
+        function addVariant() {
+            const variantIndex = variantCount;
+            variantCount++;
+
+            variantsData[variantIndex] = {
+                files: []
+            };
+
+            const variantHTML = `
+                <div class="variant-card" id="variant-${variantIndex}">
+                    <div class="variant-header">
+                        <span class="variant-number">Variant ${variantIndex + 1}</span>
+                        ${variantIndex > 0 ? `<button type="button" class="btn-remove-variant" onclick="removeVariant(${variantIndex})">Remove</button>` : ''}
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">COLOR *</label>
+                            <input type="text" 
+                                   name="variants[${variantIndex}][color]" 
+                                   class="form-input" 
+                                   placeholder="e.g., Red, Blue, Black..." 
+                                   required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">QUANTITY *</label>
+                            <input type="number" 
+                                   name="variants[${variantIndex}][quantity]" 
+                                   class="form-input" 
+                                   placeholder="0" 
+                                   min="0" 
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">REGULAR PRICE (₹) *</label>
+                            <input type="number" 
+                                   name="variants[${variantIndex}][regularPrice]" 
+                                   class="form-input" 
+                                   placeholder="0.00" 
+                                   min="0" 
+                                   step="0.01" 
+                                   required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">SALE PRICE (₹) *</label>
+                            <input type="number" 
+                                   name="variants[${variantIndex}][salePrice]" 
+                                   class="form-input" 
+                                   placeholder="0.00" 
+                                   min="0" 
+                                   step="0.01" 
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">VARIANT IMAGES * (Min 3 images)</label>
+                        <input type="file" 
+                               id="variantImages-${variantIndex}" 
+                               name="variants[${variantIndex}][images]" 
+                               class="file-input" 
+                               accept="image/*" 
+                               onchange="handleVariantImages(${variantIndex}, this.files)"
+                               required>
+                        
+                        <div class="image-preview-container" id="imagePreview-${variantIndex}">
+                            ${createImagePlaceholders(variantIndex, 5)}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('variantsContainer').insertAdjacentHTML('beforeend', variantHTML);
+        }
+
+        function createImagePlaceholders(variantIndex, count) {
+            let html = '';
+            for (let i = 0; i < count; i++) {
+                html += `
+                    <div class="image-preview-box" onclick="document.getElementById('variantImages-${variantIndex}').click()">
+                        <div class="image-preview-placeholder">
+                            <i class="fas fa-camera"></i>
+                            <p>Click to upload</p>
+                        </div>
+                    </div>
+                `;
+            }
+            return html;
+        }
+
+        function removeVariant(index) {
+            const variantElement = document.getElementById(`variant-${index}`);
+            if (variantElement) {
+                variantElement.remove();
+                delete variantsData[index];
+            }
+        }
+
+        function handleVariantImages(variantIndex, files) {
+            if (files.length === 0) return;
+            
+            // Get the first file only (one by one upload)
+            const file = files[0];
+            
+            // Initialize files array if not exists
+            if (!variantsData[variantIndex].files) {
+                variantsData[variantIndex].files = [];
+            }
+            
+            // Add the new file to the beginning of the array (first slide)
+            variantsData[variantIndex].files.unshift(file);
+            
+            // Update the file input with all files
+            const dt = new DataTransfer();
+            variantsData[variantIndex].files.forEach(f => dt.items.add(f));
+            document.getElementById(`variantImages-${variantIndex}`).files = dt.files;
+            
+            // Re-render the preview
+            renderVariantImagesPreview(variantIndex);
+        }
+
+        function renderVariantImagesPreview(variantIndex) {
+            const previewContainer = document.getElementById(`imagePreview-${variantIndex}`);
+            previewContainer.innerHTML = '';
+
+            const filesArray = variantsData[variantIndex].files || [];
+            const maxImages = 5;
+            const displayCount = Math.min(filesArray.length, maxImages);
+
+            // Display uploaded images
+            for (let i = 0; i < displayCount; i++) {
+                const file = filesArray[i];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const box = document.createElement('div');
+                    box.className = 'image-preview-box';
+                    box.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview">
+                        <button type="button" class="remove-image-btn" onclick="removeVariantImage(${variantIndex}, ${i}); event.stopPropagation();">×</button>
+                    `;
+                    previewContainer.appendChild(box);
+                };
+                
+                reader.readAsDataURL(file);
+            }
+
+            // Add remaining placeholders
+            for (let i = displayCount; i < maxImages; i++) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'image-preview-box';
+                placeholder.onclick = () => document.getElementById(`variantImages-${variantIndex}`).click();
+                placeholder.innerHTML = `
+                    <div class="image-preview-placeholder">
+                        <i class="fas fa-camera"></i>
+                        <p>Click to upload</p>
+                    </div>
+                `;
+                previewContainer.appendChild(placeholder);
+            }
+        }
+
+        function removeVariantImage(variantIndex, imageIndex) {
+            const filesArray = variantsData[variantIndex].files;
+            filesArray.splice(imageIndex, 1);
+            
+            // Create new FileList
+            const dt = new DataTransfer();
+            filesArray.forEach(file => dt.items.add(file));
+            
+            document.getElementById(`variantImages-${variantIndex}`).files = dt.files;
+            renderVariantImagesPreview(variantIndex);
+        }
+
+        // Form validation before submit
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            let isValid = true;
+            let errorMessage = '';
+
+            // Check if at least one variant exists
+            const variantCards = document.querySelectorAll('.variant-card');
+            if (variantCards.length === 0) {
+                isValid = false;
+                errorMessage = 'Please add at least one variant.';
+            }
+
+            // Check each variant has at least 3 images
+            for (let i = 0; i < variantCount; i++) {
+                if (variantsData[i] && variantsData[i].files) {
+                    if (variantsData[i].files.length < 3) {
+                        isValid = false;
+                        errorMessage = `Variant ${i + 1} must have at least 3 images.`;
+                        break;
+                    }
+                }
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                alert(errorMessage);
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

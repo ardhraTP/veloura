@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Product - Veloura Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 260px;
+            background-color: #fcfbf9;
+            border-right: 1px solid #ebe7e5;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+        }
+
+        .sidebar-header {
+            padding: 30px 40px;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: #5c1e28;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-menu {
+            overflow-y: auto;
+            list-style: none;
+            padding: 10px 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 15px 40px;
+            color: #2d2a29;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .sidebar-menu a i {
+            width: 24px;
+            font-size: 16px;
+            color: #888380;
+            margin-right: 15px;
+        }
+
+        .sidebar-menu a:hover {
+            background-color: #f7f1f1;
+        }
+
+        .sidebar-menu a.active {
+            background-color: #f7eded;
+            color: #5c1e28;
+            font-weight: 600;
+        }
+
+        .sidebar-menu a.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: #5c1e28;
+        }
+
+        .sidebar-menu a.active i {
+            color: #5c1e28;
+        }
+
+        .logout-btn {
+            display: block;
+            width: 100%;
+            padding: 14px !important;
+            background-color: #c9302c;
+            color: #ffffff !important;
+            text-align: center;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .logout-btn:hover {
+            background-color: #ac2925;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 60px;
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            color: #5c1e28;
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: #5c1e28;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            color: #333;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            border-color: #5c1e28;
+        }
+
+        .form-textarea {
+            resize: none;
+            min-height: 100px;
+        }
+
+        /* Variant Section */
+        .variant-card {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .variant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .variant-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            color: #5c1e28;
+            font-weight: 600;
+        }
+
+        .btn-delete-variant {
+            padding: 8px 16px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-delete-variant:hover {
+            background-color: #c82333;
+        }
+
+        .image-preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .image-preview-box {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .image-preview-box:hover {
+            border-color: #5c1e28;
+        }
+
+        .image-preview-box img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #999;
+        }
+
+        .image-preview-placeholder i {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .image-preview-placeholder p {
+            font-size: 11px;
+        }
+
+        .remove-image-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 24px;
+            height: 24px;
+            background-color: #c9302c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        .remove-image-btn:hover {
+            background-color: #a52420;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn-add-variant {
+            padding: 14px 30px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-add-variant:hover {
+            background-color: #218838;
+        }
+
+        .form-footer {
+            margin-top: 40px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-save {
+            padding: 14px 50px;
+            background-color: #5c1e28;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-save:hover {
+            background-color: #4a1620;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(92, 30, 40, 0.3);
+        }
+
+        .btn-cancel {
+            padding: 14px 50px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-cancel:hover {
+            background-color: #5a6268;
+        }
+
+        .error-message {
+            padding: 15px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .success-message {
+            padding: 15px;
+            background-color: #d4edda;
+            color: #155724;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .upload-note {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .btn-add-image {
+            padding: 8px 16px;
+            background-color: #5c1e28;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-add-image:hover {
+            background-color: #4a1620;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/admin/sidebar') %>
+
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <h1 class="page-title">Edit Product</h1>
+
+        <% if (errorMessage) { %>
+            <div class="error-message">
+                <%= errorMessage %>
+            </div>
+        <% } %>
+
+        <form action="/admin/products/edit/<%= product._id %>" method="POST" id="productForm">
+            
+            <!-- Product Common Details -->
+            <div class="form-card">
+                <h3 class="section-title">Product Details</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">PRODUCT NAME *</label>
+                        <input type="text" 
+                               name="productName" 
+                               class="form-input" 
+                               value="<%= product.productName %>"
+                               required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">CATEGORY *</label>
+                        <select name="categoryId" class="form-select" required>
+                            <option value="">Select Category</option>
+                            <% if (categories && categories.length > 0) { %>
+                                <% categories.forEach(category => { %>
+                                    <option value="<%= category._id %>" <%= product.categoryId._id.toString() === category._id.toString() ? 'selected' : '' %>>
+                                        <%= category.name %>
+                                    </option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label">DESCRIPTION *</label>
+                    <textarea name="description" 
+                              class="form-textarea" 
+                              required><%= product.description %></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">STATUS</label>
+                    <select name="status" class="form-select">
+                        <option value="ACTIVE" <%= product.status === 'ACTIVE' ? 'selected' : '' %>>Active</option>
+                        <option value="INACTIVE" <%= product.status === 'INACTIVE' ? 'selected' : '' %>>Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <button type="submit" class="btn-save">UPDATE PRODUCT</button>
+                <a href="/admin/products" class="btn-cancel">CANCEL</a>
+            </div>
+        </form>
+
+        <!-- Existing Variants Section -->
+        <div class="form-card">
+            <h3 class="section-title">Product Variants</h3>
+            <p class="upload-note">Manage existing variants and their images. Add images one by one.</p>
+            
+            <% if (variants && variants.length > 0) { %>
+                <% variants.forEach((variant, index) => { %>
+                    <div class="variant-card" data-variant-id="<%= variant._id %>">
+                        <div class="variant-header">
+                            <span class="variant-number">Variant <%= index + 1 %> - <%= variant.color %></span>
+                            <button type="button" class="btn-delete-variant" onclick="deleteVariant('<%= variant._id %>')">
+                                Delete Variant
+                            </button>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">COLOR</label>
+                                <input type="text" 
+                                       value="<%= variant.color %>" 
+                                       class="form-input" 
+                                       disabled>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">QUANTITY</label>
+                                <input type="number" 
+                                       value="<%= variant.quantity %>" 
+                                       class="form-input" 
+                                       disabled>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">REGULAR PRICE (₹)</label>
+                                <input type="number" 
+                                       value="<%= variant.regularPrice %>" 
+                                       class="form-input" 
+                                       disabled>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">SALE PRICE (₹)</label>
+                                <input type="number" 
+                                       value="<%= variant.salePrice %>" 
+                                       class="form-input" 
+                                       disabled>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label">VARIANT IMAGES (<%= variant.images.length %> images)</label>
+                            <input type="file" 
+                                   id="variantImageInput-<%= variant._id %>" 
+                                   class="file-input" 
+                                   accept="image/*" 
+                                   onchange="addImageToVariant('<%= variant._id %>', this.files[0])">
+                            
+                            <div class="image-preview-container" id="imagePreview-<%= variant._id %>">
+                                <% variant.images.forEach((image, imgIndex) => { %>
+                                    <div class="image-preview-box" data-image-index="<%= imgIndex %>">
+                                        <img src="<%= image %>" alt="Variant Image">
+                                        <button type="button" 
+                                                class="remove-image-btn" 
+                                                onclick="removeImageFromVariant('<%= variant._id %>', '<%= image %>', this); event.stopPropagation();">
+                                            ×
+                                        </button>
+                                    </div>
+                                <% }) %>
+                            </div>
+                            
+                            <button type="button" 
+                                    class="btn-add-image" 
+                                    onclick="document.getElementById('variantImageInput-<%= variant._id %>').click()">
+                                <i class="fas fa-plus"></i> Add Image
+                            </button>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <p style="color: #999; text-align: center; padding: 20px;">No variants found for this product.</p>
+            <% } %>
+        </div>
+    </main>
+
+    <script>
+        // Add image to existing variant
+        async function addImageToVariant(variantId, file) {
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch(`/admin/variants/${variantId}/add-image`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Add image preview to the beginning of the container
+                    const container = document.getElementById(`imagePreview-${variantId}`);
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const newBox = document.createElement('div');
+                        newBox.className = 'image-preview-box';
+                        newBox.innerHTML = `
+                            <img src="${e.target.result}" alt="Variant Image">
+                            <button type="button" 
+                                    class="remove-image-btn" 
+                                    onclick="removeImageFromVariant('${variantId}', '${data.imageUrl}', this); event.stopPropagation();">
+                                ×
+                            </button>
+                        `;
+                        container.insertBefore(newBox, container.firstChild);
+                    };
+                    
+                    reader.readAsDataURL(file);
+
+                    // Clear file input
+                    document.getElementById(`variantImageInput-${variantId}`).value = '';
+                    
+                    alert('Image added successfully!');
+                } else {
+                    alert(data.message || 'Error adding image');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error adding image');
+            }
+        }
+
+        // Remove image from variant
+        async function removeImageFromVariant(variantId, imageUrl, button) {
+            if (!confirm('Are you sure you want to remove this image?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/variants/${variantId}/remove-image`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ imageUrl })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Remove the image box from DOM
+                    button.closest('.image-preview-box').remove();
+                    alert('Image removed successfully!');
+                } else {
+                    alert(data.message || 'Error removing image');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error removing image');
+            }
+        }
+
+        // Delete variant
+        async function deleteVariant(variantId) {
+            if (!confirm('Are you sure you want to delete this variant? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/variants/delete/${variantId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Remove variant card from DOM
+                    document.querySelector(`[data-variant-id="${variantId}"]`).remove();
+                    alert('Variant deleted successfully!');
+                } else {
+                    alert(data.message || 'Error deleting variant');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error deleting variant');
+            }
+        }
+    </script>
+</body>
+</html>

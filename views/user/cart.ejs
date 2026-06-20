@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - Veloura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/cart.css">
+    <script src="/js/prevent-back.js"></script>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <script>
+        // Highlight cart icon in navbar
+        document.addEventListener('DOMContentLoaded', function() {
+            const cartLink = document.querySelector('.header-icons a[href="/cart"]');
+            if (cartLink) {
+                cartLink.classList.add('active-cart');
+            }
+        });
+    </script>
+
+    <!-- Cart Title -->
+    <section class="cart-header">
+        <h1 class="cart-title">Cart</h1>
+    </section>
+
+    <!-- Cart Content -->
+    <section class="cart-content">
+        <!-- Left: Cart Items -->
+        <div class="cart-items-section">
+            <% if (cart && cart.items && cart.items.length > 0) { %>
+                <div class="cart-table-header">
+                    <div class="header-product">PRODUCT</div>
+                    <div class="header-price">PRICE</div>
+                    <div class="header-quantity">QUANTITY</div>
+                    <div class="header-subtotal">SUBTOTAL</div>
+                    <div class="header-remove">REMOVE</div>
+                </div>
+
+                <% cart.items.forEach(item => { %>
+                    <div class="cart-item" data-product-id="<%= item.product._id %>">
+                        <div class="item-product">
+                            <div class="item-image">
+                                <img src="<%= item.product.images && item.product.images[0] ? item.product.images[0] : '/images/placeholder.png' %>" 
+                                     alt="<%= item.product.name %>">
+                            </div>
+                            <div class="item-details">
+                                <h3 class="item-name"><%= item.product.name %></h3>
+                                <p class="item-shade">BRAND: <%= item.product.brand.toUpperCase() %></p>
+                            </div>
+                        </div>
+                        <div class="item-price">₹<%= item.price.toFixed(2) %></div>
+                        <div class="item-quantity">
+                            <button class="qty-btn" onclick="decreaseQty(this, '<%= item.product._id %>')">−</button>
+                            <input type="number" value="<%= item.quantity %>" min="1" max="<%= item.product.stock %>" class="qty-input" readonly>
+                            <button class="qty-btn" onclick="increaseQty(this, '<%= item.product._id %>', <%= item.product.stock %>)">+</button>
+                        </div>
+                        <div class="item-subtotal">₹<%= (item.price * item.quantity).toFixed(2) %></div>
+                        <div class="item-remove">
+                            <button class="remove-btn" onclick="removeItem(this, '<%= item.product._id %>')">×</button>
+                        </div>
+                    </div>
+                <% }) %>
+
+                <!-- Return to Shop Button -->
+                <button class="return-shop-btn" onclick="window.location.href='/products'">
+                    <i class="fas fa-arrow-left"></i> RETURN TO SHOP
+                </button>
+            <% } else { %>
+                <!-- Empty Cart Message -->
+                <div class="empty-cart-message" style="text-align: center; padding: 60px 20px;">
+                    <i class="fas fa-shopping-cart" style="font-size: 64px; color: #ddd; margin-bottom: 20px;"></i>
+                    <h3 style="font-family: 'Playfair Display', serif; font-size: 28px; color: #666; margin-bottom: 15px;">Your Cart is Empty</h3>
+                    <p style="font-family: 'Inter', sans-serif; font-size: 14px; color: #999; margin-bottom: 30px;">Add some products to get started</p>
+                    <button class="return-shop-btn" onclick="window.location.href='/products'">
+                        <i class="fas fa-arrow-left"></i> START SHOPPING
+                    </button>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Right: Order Summary -->
+        <% if (cart && cart.items && cart.items.length > 0) { %>
+            <div class="order-summary">
+                <h2 class="summary-title">Order Summary</h2>
+                
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span class="summary-value" id="subtotal">₹<%= cart.totalAmount.toFixed(2) %></span>
+                </div>
+                
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span class="summary-value summary-free">FREE</span>
+                </div>
+                
+                <div class="summary-divider"></div>
+                
+                <div class="summary-row summary-total">
+                    <span>Total</span>
+                    <span class="summary-value" id="total">₹<%= cart.totalAmount.toFixed(2) %></span>
+                </div>
+
+                <button class="checkout-btn" onclick="proceedToCheckout()">
+                    PROCEED TO CHECKOUT <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        <% } %>
+    </section>
+
+    <%- include('../partials/footer') %>
+
+    <script>
+        function updateTotals() {
+            let subtotal = 0;
+            document.querySelectorAll('.cart-item').forEach(item => {
+                const price = parseFloat(item.querySelector('.item-price').textContent.replace('₹', ''));
+                const qty = parseInt(item.querySelector('.qty-input').value);
+                const itemSubtotal = price * qty;
+                item.querySelector('.item-subtotal').textContent = '₹' + itemSubtotal.toFixed(2);
+                subtotal += itemSubtotal;
+            });
+            
+            document.getElementById('subtotal').textContent = '₹' + subtotal.toFixed(2);
+            document.getElementById('total').textContent = '₹' + subtotal.toFixed(2);
+        }
+
+        function increaseQty(btn, productId, maxStock) {
+            const input = btn.previousElementSibling;
+            const currentQty = parseInt(input.value);
+            const newQty = currentQty + 1;
+            
+            if (newQty > maxStock) {
+                alert('Maximum stock available is ' + maxStock);
+                return;
+            }
+            
+            // Send AJAX request to update quantity
+            fetch('/cart/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    productId: productId,
+                    quantity: newQty
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = newQty;
+                    updateTotals();
+                } else {
+                    alert(data.message || 'Failed to update quantity');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update quantity');
+            });
+        }
+
+        function decreaseQty(btn, productId) {
+            const input = btn.nextElementSibling;
+            const currentQty = parseInt(input.value);
+            
+            if (currentQty <= 1) {
+                return;
+            }
+            
+            const newQty = currentQty - 1;
+            
+            // Send AJAX request to update quantity
+            fetch('/cart/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    productId: productId,
+                    quantity: newQty
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = newQty;
+                    updateTotals();
+                } else {
+                    alert(data.message || 'Failed to update quantity');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update quantity');
+            });
+        }
+
+        function removeItem(btn, productId) {
+            if (!confirm('Remove this item from cart?')) {
+                return;
+            }
+            
+            const item = btn.closest('.cart-item');
+            
+            // Send AJAX request to remove item
+            fetch('/cart/remove/' + productId, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        item.remove();
+                        updateTotals();
+                        
+                        // Check if cart is empty
+                        if (document.querySelectorAll('.cart-item').length === 0) {
+                            window.location.reload();
+                        }
+                    }, 300);
+                } else {
+                    alert(data.message || 'Failed to remove item');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to remove item');
+            });
+        }
+        
+        function proceedToCheckout() {
+            // You can add checkout logic here
+            alert('Checkout functionality coming soon!');
+            // window.location.href = '/checkout';
+        }
+    </script>
+</body>
+</html>

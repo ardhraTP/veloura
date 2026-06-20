@@ -28,9 +28,10 @@ export const isAdminAuthenticated = async (req, res, next) => {
             return res.redirect('/admin/login?error=session_error');
         }
     }   
+
     return res.redirect('/admin/login?session=expired');
 };
- 
+
 
 export const isAdminGuest = (req, res, next) => {
     if (!req.session || !req.session.adminId) {

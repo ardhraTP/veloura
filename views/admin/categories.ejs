@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Categories - Veloura Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 210px;
+            background-color: #f9f7f5;
+            border-right: 1px solid #e8e4e1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            border-bottom: 1px solid #e8e4e1;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: #5c1e28;
+            text-decoration: none;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #6b6b6b;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background-color: #f3e8e9;
+            color: #5c1e28;
+        }
+
+        .menu-item.active {
+            border-left: 3px solid #5c1e28;
+            padding-left: 17px;
+        }
+
+        .menu-icon {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .logout-btn {
+            margin: 20px;
+            padding: 12px;
+            background-color: #c9302c;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #a52420;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 210px;
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 60px;
+        }
+
+        /* Top Header */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .breadcrumb {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .breadcrumb span {
+            color: #5c1e28;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: #6b6b6b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .user-icon {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #5c1e28;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #5c1e28;
+        }
+
+        /* Page Title */
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            color: #5c1e28;
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        /* Table Card */
+        .table-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 50px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #5c1e28;
+        }
+
+        th {
+            padding: 18px 30px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        td {
+            padding: 22px 30px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background-color: #fafafa;
+        }
+
+        .category-name {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 16px;
+            color: #333;
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 26px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #5c1e28;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .status-text {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .status-text.listed {
+            color: #5c1e28;
+        }
+
+        .status-text.unlisted {
+            color: #999;
+        }
+
+        /* Edit Button */
+        .edit-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .edit-btn:hover {
+            color: #5c1e28;
+        }
+
+        /* Add Category Form */
+        .add-category-section {
+            margin-top: 60px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            color: #5c1e28;
+            margin-bottom: 30px;
+            font-weight: 400;
+        }
+
+        .form-card {
+            background: #faf9f8;
+            border-radius: 8px;
+            padding: 40px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .form-input,
+        .form-textarea {
+            padding: 12px 0;
+            border: none;
+            border-bottom: 1px solid #ddd;
+            background: transparent;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            color: #333;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: #bbb;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            border-bottom-color: #5c1e28;
+        }
+
+        .form-textarea {
+            resize: none;
+            min-height: 80px;
+        }
+
+        .form-footer {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .btn-save {
+            padding: 14px 50px;
+            background-color: #5c1e28;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-save:hover {
+            background-color: #4a1620;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(92, 30, 40, 0.3);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            width: 600px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #5c1e28;
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            color: #5c1e28;
+            margin-bottom: 30px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+    <script src="/js/prevent-back.js"></script>
+</head>
+<body>
+    <%- include('../partials/admin/sidebar') %>
+
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <div class="top-header">
+            <div class="breadcrumb">
+                MANAGEMENT › <span>CATEGORIES</span>
+            </div>
+            <div class="user-info">
+                ARDRA
+                <div class="user-icon">👤</div>
+            </div>
+        </div>
+
+        <!-- Page Title -->
+        <h1 class="page-title">Manage Categories</h1>
+
+        <!-- Categories Table -->
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>S.NO</th>
+                        <th>CATEGORY NAME</th>
+                        <th>STATUS</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (categories && categories.length > 0) { %>
+                        <% categories.forEach((category, index) => { %>
+                            <tr>
+                                <td><%= index + 1 %></td>
+                                <td class="category-name"><%= category.name %></td>
+                                <td>
+                                    <div class="toggle-container">
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" 
+                                                   <%= category.isListed ? 'checked' : '' %>
+                                                   onchange="toggleCategory('<%= category._id %>', this)">
+                                            <span class="slider"></span>
+                                        </label>
+                                        <span class="status-text <%= category.isListed ? 'listed' : 'unlisted' %>" 
+                                              id="status-<%= category._id %>">
+                                            <%= category.isListed ? 'LISTED' : 'UNLISTED' %>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="edit-btn" 
+                                            data-id="<%= category._id %>"
+                                            data-name="<%= category.name %>"
+                                            data-offer="<%= category.offer || '' %>"
+                                            data-description="<%= category.description || '' %>"
+                                            onclick="openEditModal(this)">
+                                        ✏️
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <p>No categories found. Add your first category below.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Add New Category Section -->
+        <div class="add-category-section">
+            <h2 class="section-title">Add New Category</h2>
+            
+            <div class="form-card">
+                <form action="/admin/categories/add" method="POST">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">CATEGORY NAME</label>
+                            <input type="text" 
+                                   name="name" 
+                                   class="form-input" 
+                                   placeholder="Enter category name..." 
+                                   required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">OFFER</label>
+                            <input type="text" 
+                                   name="offer" 
+                                   class="form-input" 
+                                   placeholder="e.g. 20% Seasonal Discount">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">COLLECTION DESCRIPTION</label>
+                        <textarea name="description" 
+                                  class="form-textarea" 
+                                  placeholder="Describe the collection's essence and target aesthetic..."></textarea>
+                    </div>
+                    
+                    <div class="form-footer">
+                        <button type="submit" class="btn-save">SAVE CATEGORY</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeEditModal()">×</button>
+            <h3 class="modal-title">Edit Category</h3>
+            
+            <form id="editForm" method="POST">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">CATEGORY NAME</label>
+                        <input type="text" 
+                               id="editName" 
+                               name="name" 
+                               class="form-input" 
+                               required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">OFFER</label>
+                        <input type="text" 
+                               id="editOffer" 
+                               name="offer" 
+                               class="form-input">
+                    </div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">COLLECTION DESCRIPTION</label>
+                    <textarea id="editDescription" 
+                              name="description" 
+                              class="form-textarea"></textarea>
+                </div>
+                
+                <div class="form-footer">
+                    <button type="submit" class="btn-save">UPDATE CATEGORY</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Toggle category listing status
+        async function toggleCategory(categoryId, checkbox) {
+            const statusText = document.getElementById('status-' + categoryId);
+            
+            try {
+                const response = await fetch(`/admin/categories/${categoryId}/toggle-list`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.isListed) {
+                        statusText.textContent = 'LISTED';
+                        statusText.className = 'status-text listed';
+                    } else {
+                        statusText.textContent = 'UNLISTED';
+                        statusText.className = 'status-text unlisted';
+                    }
+                } else {
+                    checkbox.checked = !checkbox.checked;
+                    alert(data.message || 'Error updating category status');
+                }
+            } catch (error) {
+                checkbox.checked = !checkbox.checked;
+                console.error('Error:', error);
+                alert('Error connecting to server');
+            }
+        }
+
+        // Open edit modal
+        function openEditModal(button) {
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+            const offer = button.getAttribute('data-offer');
+            const description = button.getAttribute('data-description');
+            
+            document.getElementById('editForm').action = `/admin/categories/${id}/edit`;
+            document.getElementById('editName').value = name;
+            document.getElementById('editOffer').value = offer;
+            document.getElementById('editDescription').value = description;
+            document.getElementById('editModal').classList.add('open');
+        }
+        
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('open');
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+    </script>
+</body>
+</html>

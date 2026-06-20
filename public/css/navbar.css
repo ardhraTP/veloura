@@ -53,6 +53,20 @@ header {
     color: var(--primary-red);
 }
 
+/* Active wishlist icon */
+.header-icons a.active-wishlist {
+    color: var(--primary-red);
+}
+
+.header-icons a.active-wishlist i {
+    font-weight: 900;
+}
+
+/* Active cart icon */
+.header-icons a.active-cart {
+    color: var(--primary-red);
+}
+
 /* Responsive */
 @media (max-width: 992px) {
     header {

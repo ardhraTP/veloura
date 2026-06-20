@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lakme – Absolute Matte Lipstick | Veloura</title>
+    <meta name="description" content="Shop Lakme Absolute Matte Lipstick — iconic finish, unrivaled pigment. Exclusive at Veloura.">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/product-detail.css">
+    <script src="/js/prevent-back.js"></script>
+</head>
+<body>
+
+    <%- include('../partials/navbar') %>
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="/home">Home</a><span>›</span>
+        <a href="/products">Collections</a><span>›</span>
+        <a href="/products">Lakme</a><span>›</span>
+        Absolute Matte Lipstick
+    </nav>
+
+    <!-- ══════════════════════════════
+         PRODUCT HERO
+    ══════════════════════════════ -->
+    <section class="product-hero">
+
+        <!-- LEFT: Thumbnail strip + Main image -->
+        <div class="product-gallery">
+
+            <!-- Vertical thumbnails on far left -->
+            <div class="thumb-strip">
+                <div class="thumb-item active" onclick="switchImg(this,'/images/products_mac_1.png')">
+                    <img src="/images/products_mac_1.png" alt="View 1">
+                </div>
+                <div class="thumb-item" onclick="switchImg(this,'/images/maybelline_product.png')">
+                    <img src="/images/maybelline_product.png" alt="View 2">
+                </div>
+                <div class="thumb-item" onclick="switchImg(this,'/images/products_lakme_1.png')">
+                    <img src="/images/products_lakme_1.png" alt="View 3">
+                </div>
+            </div>
+
+            <!-- Main large image -->
+            <div class="main-image-wrap">
+                <img id="mainImg" src="/images/products_mac_1.png" alt="Lakme Absolute Matte Lipstick">
+            </div>
+
+        </div>
+
+        <!-- RIGHT: Product Info -->
+        <div class="product-info">
+
+            <p class="pd-brand">Lakme</p>
+            <h1 class="pd-title">Absolute Matte<br>Lipstick</h1>
+            <p class="pd-tagline">Iconic Finish. Unrivaled Pigment.</p>
+
+            <!-- Price -->
+            <div class="pd-price-row">
+                <span class="pd-price-now">₹21.00</span>
+                <span class="pd-price-was">₹34.00</span>
+            </div>
+
+            <!-- Stock -->
+            <div class="pd-stock">Stock: 47</div>
+
+            <!-- Color swatches -->
+            <div class="pd-color-section">
+                <p class="pd-color-label">Color: <span id="colorName">Ruby Red</span></p>
+                <div class="pd-swatches">
+                    <div class="pd-swatch active" style="background:#c06070;" data-name="Ruby Red" onclick="selectColor(this)"></div>
+                    <div class="pd-swatch" style="background:#e8c4c4;" data-name="Rose Petal" onclick="selectColor(this)"></div>
+                    <div class="pd-swatch" style="background:#d48090;" data-name="Blush Pink" onclick="selectColor(this)"></div>
+                    <div class="pd-swatch" style="background:#5c1e28;" data-name="Deep Bordeaux" onclick="selectColor(this)"></div>
+                    <div class="pd-swatch" style="background:#a05060;" data-name="Coral Dust" onclick="selectColor(this)"></div>
+                </div>
+            </div>
+
+            <!-- CTA Buttons -->
+            <button class="pd-btn-add" id="addCartBtn" <%= product.stock === 0 ? 'disabled' : '' %>>
+                <%= product.stock === 0 ? 'OUT OF STOCK' : 'ADD TO CART' %>
+            </button>
+            <button class="pd-btn-buy" <%= product.stock === 0 ? 'disabled' : '' %>>BUY NOW</button>
+            <button class="pd-btn-wishlist" id="wishlistBtn" onclick="toggleWishlist()">
+                <i class="far fa-heart"></i> ADD TO WISHLIST
+            </button>
+
+            <!-- Specifications -->
+            <div class="pd-specs">
+                <p class="pd-specs-title">Specifications</p>
+                <table class="pd-specs-table">
+                    <tr>
+                        <td>Brand</td>
+                        <td>Lakme</td>
+                    </tr>
+                    <tr>
+                        <td>Model ID</td>
+                        <td>Velvet Absolute 402</td>
+                    </tr>
+                    <tr>
+                        <td>Finish</td>
+                        <td>Velvet Matte</td>
+                    </tr>
+                    <tr>
+                        <td>Weight</td>
+                        <td>3.5g</td>
+                    </tr>
+                    <tr>
+                        <td>Duration</td>
+                        <td>12 Hour Wear</td>
+                    </tr>
+                    <tr>
+                        <td>Key Ingredient</td>
+                        <td>Vitamin E &amp; Argan Oil</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Shipping -->
+            <div class="pd-shipping">
+                <div class="pd-ship-row">
+                    <i class="fas fa-truck"></i>
+                    <div>
+                        <strong>Free Shipping and Returns</strong>
+                        Free standard shipping on all orders above $50. Free returns within 30 days.
+                    </div>
+                </div>
+                <div class="pd-ship-row">
+                    <i class="fas fa-store"></i>
+                    <div>
+                        <strong>In-Store Pickup</strong>
+                        Pick up at any Veloura retail location at no extra charge.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════
+         PATRON TESTIMONY
+    ══════════════════════════════ -->
+    <section class="testimony-section">
+        <div class="testimony-heading">
+            <h2>Patron Testimony</h2>
+        </div>
+
+        <div class="testimony-grid">
+            <div class="testimony-card">
+                <div class="t-stars">★★★★★</div>
+                <p class="t-quote">"The weight of the titanium is perfectly balanced. It feels less like a watch and more like a second skin engineered for precision."</p>
+                <p class="t-author">Julian V. &nbsp;— Architect</p>
+            </div>
+            <div class="testimony-card">
+                <div class="t-stars">★★★★★</div>
+                <p class="t-quote">"An absolute triumph of industrial design. The DLC coating has a matte finish that captures light unlike any other timepiece in my collection."</p>
+                <p class="t-author">Dean &nbsp;— Lifestyle Editor</p>
+            </div>
+            <div class="testimony-card">
+                <div class="t-stars">★★★★★</div>
+                <p class="t-quote">"The H-Calibre movement is mesmerizing through the caseback. It's a quiet mechanical heart that demands respect."</p>
+                <p class="t-author">Marcus T. &nbsp;— Horologist</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════
+         ART OF THE SWIPE
+    ══════════════════════════════ -->
+    <section class="art-section">
+        <div class="art-text">
+            <p class="art-eyebrow">The Craft</p>
+            <h2 class="art-title">The Art of<br>the Swipe</h2>
+            <p class="art-body">
+                Created in our Parisian laboratories, each bullet is precision-cut to ensure a flawless application. Our formula balances high-saturation pigments with moisturising argan oils for a finish that is undeniably matte yet remarkably comfortable.
+            </p>
+            <a href="/products" class="art-btn">VIEW COLLECTIONS</a>
+        </div>
+        <div class="art-media">
+            <img src="/images/products_lakme_1.png" alt="The Art of the Swipe">
+            <div class="art-play-btn">
+                <i class="fas fa-play"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════
+         RELATED PRODUCTS
+    ══════════════════════════════ -->
+    <section class="related-section">
+        <h2 class="related-heading">Related Products</h2>
+        <div class="related-grid">
+            <div class="related-img-wrap" onclick="window.location.href='/products'">
+                <img src="/images/mac_product.png" alt="MAC Cosmetics">
+            </div>
+            <div class="related-img-wrap" onclick="window.location.href='/products'">
+                <img src="/images/maybelline_product.png" alt="Maybelline">
+            </div>
+            <div class="related-img-wrap" onclick="window.location.href='/products'">
+                <img src="/images/products_maybelline_1.png" alt="Maybelline">
+            </div>
+        </div>
+    </section>
+
+    <%- include('../partials/footer') %>
+
+    <script>
+        // Image switcher
+        function switchImg(thumb, src) {
+            document.getElementById('mainImg').src = src;
+            document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+        }
+
+        // Color selector
+        function selectColor(dot) {
+            document.querySelectorAll('.pd-swatch').forEach(d => d.classList.remove('active'));
+            dot.classList.add('active');
+            document.getElementById('colorName').textContent = dot.dataset.name;
+        }
+
+        // Add to cart feedback
+        document.getElementById('addCartBtn').addEventListener('click', function () {
+            const productId = '<%= product._id %>';
+            const quantity = 1; // Or get from a quantity selector if you add one
+            
+            // Send AJAX request to add to cart
+            fetch('/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    productId: productId,
+                    quantity: quantity
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message and redirect
+                    alert('Product added to cart!');
+                    window.location.href = '/cart';
+                } else {
+                    alert(data.message || 'Failed to add to cart');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to add to cart');
+            });
+        });
+
+        // Toggle wishlist with AJAX
+        function toggleWishlist() {
+            const btn = document.getElementById('wishlistBtn');
+            const icon = btn.querySelector('i');
+            const productId = '<%= product._id %>';
+            const isInWishlist = icon.classList.contains('fas');
+            
+            if (isInWishlist) {
+                // Remove from wishlist
+                fetch('/wishlist/remove/' + productId, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                        btn.classList.remove('active');
+                        btn.innerHTML = '<i class="far fa-heart"></i> ADD TO WISHLIST';
+                        showWishlistFeedback('Removed from wishlist');
+                    } else {
+                        alert(data.message || 'Failed to remove from wishlist');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to remove from wishlist');
+                });
+            } else {
+                // Add to wishlist
+                fetch('/wishlist/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        productId: productId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        btn.classList.add('active');
+                        btn.innerHTML = '<i class="fas fa-heart"></i> ADDED TO WISHLIST';
+                        showWishlistFeedback('Added to wishlist!');
+                    } else {
+                        alert(data.message || 'Failed to add to wishlist');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to add to wishlist');
+                });
+            }
+        }
+        
+        function showWishlistFeedback(message) {
+            // Create feedback element
+            const feedback = document.createElement('div');
+            feedback.className = 'wishlist-feedback';
+            feedback.textContent = message;
+            document.body.appendChild(feedback);
+            
+            // Show feedback
+            setTimeout(() => {
+                feedback.classList.add('show');
+            }, 10);
+            
+            // Remove feedback after 2 seconds
+            setTimeout(() => {
+                feedback.classList.remove('show');
+                setTimeout(() => {
+                    feedback.remove();
+                }, 300);
+            }, 2000);
+        }
+    </script>
+
+</body>
+</html>

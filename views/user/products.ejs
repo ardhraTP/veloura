@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veloura - Collections</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/products.css">
+    <script src="/js/prevent-back.js"></script>
+</head>
+
+<body>
+    <%- include('../partials/navbar') %>
+
+        <main class="collections-main">
+            <div class="collections-container">
+                <h1 class="page-title">The Collections</h1>
+
+                <div class="collections-layout">
+                    <!-- Sidebar Filter -->
+                    <aside class="sidebar">
+                        <div class="filter-group">
+                            <label class="filter-label">SEARCH</label>
+                            <div class="search-wrapper">
+                                <input type="text" 
+                                       class="search-input" 
+                                       id="searchInput"
+                                       placeholder="Search products..."
+                                       value="<%= search || '' %>">
+                                <% if (search) { %>
+                                    <button class="clear-search" onclick="clearSearch()">×</button>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="filter-label">BRAND</label>
+                            <div class="checkbox-group">
+                                <% if (brands && brands.length > 0) { %>
+                                    <% brands.forEach(brand => { %>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" 
+                                                   value="<%= brand %>"
+                                                   <%= selectedBrand === brand ? 'checked' : '' %>
+                                                   onchange="applyFilters()">
+                                            <span class="checkmark"></span>
+                                            <span class="checkbox-text"><%= brand %></span>
+                                        </label>
+                                    <% }) %>
+                                <% } else { %>
+                                    <p style="font-size: 11px; color: #999;">No brands available</p>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="filter-label">CATEGORY</label>
+                            <div class="select-wrapper">
+                                <select class="custom-select" id="categorySelect" onchange="applyFilters()">
+                                    <option value="">All Categories</option>
+                                    <% if (categories && categories.length > 0) { %>
+                                        <% categories.forEach(category => { %>
+                                            <option value="<%= category %>" 
+                                                    <%= selectedCategory === category ? 'selected' : '' %>>
+                                                <%= category %>
+                                            </option>
+                                        <% }) %>
+                                    <% } %>
+                                </select>
+                                <i class="fas fa-chevron-down select-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="filter-label">SORT BY</label>
+                            <div class="select-wrapper">
+                                <select class="custom-select" id="sortSelect" onchange="applyFilters()">
+                                    <option value="newest" <%= selectedSort === 'newest' ? 'selected' : '' %>>Newest First</option>
+                                    <option value="price-low" <%= selectedSort === 'price-low' ? 'selected' : '' %>>Price: Low to High</option>
+                                    <option value="price-high" <%= selectedSort === 'price-high' ? 'selected' : '' %>>Price: High to Low</option>
+                                    <option value="name-asc" <%= selectedSort === 'name-asc' ? 'selected' : '' %>>Name: A to Z</option>
+                                    <option value="name-desc" <%= selectedSort === 'name-desc' ? 'selected' : '' %>>Name: Z to A</option>
+                                </select>
+                                <i class="fas fa-chevron-down select-icon"></i>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Product Grid Area -->
+                    <section class="products-area">
+                        <div class="products-grid">
+                            <% if (products && products.length === 0) { %>
+                                <div class="no-products" style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                                    <i class="fas fa-box-open" style="font-size: 48px; color: #ddd; margin-bottom: 20px;"></i>
+                                    <h3 style="font-family: 'Playfair Display', serif; font-size: 24px; color: #666; margin-bottom: 10px;">No Products Found</h3>
+                                    <p style="font-family: 'Inter', sans-serif; font-size: 14px; color: #999;">Try adjusting your search or filters</p>
+                                </div>
+                            <% } else if (products) { %>
+                                <% products.forEach(product => { %>
+                                    <a href="/product/<%= product._id %>" class="product-card">
+                                        <div class="product-image-container">
+                                            <% if (product.discountPrice && product.discountPrice < product.price) { %>
+                                                <span class="badge">SALE</span>
+                                            <% } %>
+                                            <button class="wishlist-btn" 
+                                                    onclick="event.preventDefault(); addToWishlist(this, '<%= product._id %>');" 
+                                                    title="Add to Wishlist">
+                                                <i class="far fa-heart"></i>
+                                            </button>
+                                            <img src="<%= product.images && product.images[0] ? product.images[0] : '/images/placeholder.png' %>" 
+                                                 alt="<%= product.name %>">
+                                            <div class="brand-overlay"><%= product.brand %></div>
+                                        </div>
+                                        <div class="product-details">
+                                            <div class="product-info-top">
+                                                <h3 class="brand-name"><%= product.brand %></h3>
+                                                <div class="product-swatch-price">
+                                                    <span class="product-price">
+                                                        ₹<%= product.discountPrice || product.price %>
+                                                        <% if (product.discountPrice && product.discountPrice < product.price) { %>
+                                                            <span class="original-price" style="text-decoration: line-through; color: #999; font-size: 12px; margin-left: 5px;">₹<%= product.price %></span>
+                                                        <% } %>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <p class="product-name"><%= product.name %></p>
+                                        </div>
+                                    </a>
+                                <% }) %>
+                            <% } %>
+                        </div>
+
+                        <% if (totalPages > 1) { %>
+                            <div class="pagination">
+                                <% if (currentPage > 1) { %>
+                                    <a href="?page=<%= currentPage - 1 %>&search=<%= search || '' %>&category=<%= selectedCategory || '' %>&brand=<%= selectedBrand || '' %>&sort=<%= selectedSort || '' %>" 
+                                       class="page-arrow">
+                                        <i class="fas fa-arrow-left"></i>
+                                    </a>
+                                <% } %>
+                                
+                                <% for (let i = 1; i <= totalPages; i++) { %>
+                                    <% if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) { %>
+                                        <a href="?page=<%= i %>&search=<%= search || '' %>&category=<%= selectedCategory || '' %>&brand=<%= selectedBrand || '' %>&sort=<%= selectedSort || '' %>" 
+                                           class="page-num <%= i === currentPage ? 'active' : '' %>">
+                                            <%= i < 10 ? '0' + i : i %>
+                                        </a>
+                                    <% } else if (i === currentPage - 2 || i === currentPage + 2) { %>
+                                        <span class="page-dots">...</span>
+                                    <% } %>
+                                <% } %>
+                                
+                                <% if (currentPage < totalPages) { %>
+                                    <a href="?page=<%= currentPage + 1 %>&search=<%= search || '' %>&category=<%= selectedCategory || '' %>&brand=<%= selectedBrand || '' %>&sort=<%= selectedSort || '' %>" 
+                                       class="page-arrow">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                <% } %>
+                            </div>
+                        <% } %>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Bottom Banner -->
+            <div class="bottom-banner">
+                <div class="banner-image">
+                    <img src="/images/products_banner.png" alt="The Art of the Lip">
+                </div>
+                <div class="banner-text-overlay">
+                    <span>THE ART OF THE LIP</span>
+                </div>
+            </div>
+        </main>
+
+        <%- include('../partials/footer', { showSocialLinks: true }) %>
+
+    <script>
+        // Apply all filters when changed
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value.trim();
+            const category = document.getElementById('categorySelect').value;
+            const sort = document.getElementById('sortSelect').value;
+            
+            // Get checked brand (only one for now)
+            const brandCheckboxes = document.querySelectorAll('.checkbox-item input[type="checkbox"]:checked');
+            const brand = brandCheckboxes.length > 0 ? brandCheckboxes[0].value : '';
+            
+            // Build URL
+            let url = '/products?';
+            if (search) url += 'search=' + encodeURIComponent(search) + '&';
+            if (category) url += 'category=' + encodeURIComponent(category) + '&';
+            if (brand) url += 'brand=' + encodeURIComponent(brand) + '&';
+            if (sort) url += 'sort=' + encodeURIComponent(sort);
+            
+            // Redirect to new URL
+            window.location.href = url;
+        }
+        
+        // Clear search
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            applyFilters();
+        }
+        
+        // Search when user presses Enter
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+        
+        // Wishlist function with AJAX
+        function addToWishlist(btn, productId) {
+            const icon = btn.querySelector('i');
+            const isInWishlist = icon.classList.contains('fas');
+            
+            if (isInWishlist) {
+                // Remove from wishlist
+                fetch('/wishlist/remove/' + productId, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                        btn.classList.remove('active');
+                        showWishlistFeedback('Removed from wishlist');
+                    } else {
+                        alert(data.message || 'Failed to remove from wishlist');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to remove from wishlist');
+                });
+            } else {
+                // Add to wishlist
+                fetch('/wishlist/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        productId: productId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        btn.classList.add('active');
+                        showWishlistFeedback('Added to wishlist!');
+                    } else {
+                        alert(data.message || 'Failed to add to wishlist');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to add to wishlist');
+                });
+            }
+        }
+        
+        function showWishlistFeedback(message) {
+            // Create feedback element
+            const feedback = document.createElement('div');
+            feedback.className = 'wishlist-feedback';
+            feedback.textContent = message;
+            document.body.appendChild(feedback);
+            
+            // Show feedback
+            setTimeout(() => {
+                feedback.classList.add('show');
+            }, 10);
+            
+            // Remove feedback after 2 seconds
+            setTimeout(() => {
+                feedback.classList.remove('show');
+                setTimeout(() => {
+                    feedback.remove();
+                }, 300);
+            }, 2000);
+        }
+    </script>
+</body>
+
+</html>
