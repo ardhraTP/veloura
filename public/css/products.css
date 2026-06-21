@@ -400,27 +400,51 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
+    gap: 30px;
     margin-top: 80px;
 }
 
 .pagination a {
     text-decoration: none;
-    color: var(--text-light);
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.pagination a:hover, .pagination a.active {
-    color: var(--primary-red);
-    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
 .page-arrow {
-    font-size: 10px;
-    color: var(--text-dark);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 28px;
+    border: 1.5px solid var(--primary-red);
+    color: var(--primary-red) !important;
+    background-color: transparent;
+    border-radius: 30px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.page-arrow i {
+    font-size: 13px;
+    transition: transform 0.2s ease;
+}
+
+.page-arrow:hover {
+    color: white !important;
+    background-color: var(--primary-red);
+    box-shadow: 0 6px 20px rgba(92, 30, 40, 0.25);
+    transform: translateY(-2px);
+}
+
+/* Subtle micro-animations for arrows on hover */
+.page-arrow:hover .fa-chevron-left {
+    transform: translateX(-3px);
+}
+
+.page-arrow:hover .fa-chevron-right {
+    transform: translateX(3px);
 }
 
 /* Bottom Banner */
@@ -501,4 +525,119 @@ body {
     .bottom-banner {
         height: 250px;
     }
+}
+
+/* Add to Cart button from Collection page */
+.collections-add-cart-btn {
+    display: block;
+    width: 100%;
+    background-color: var(--primary-red);
+    color: var(--white);
+    border: none;
+    padding: 12px 18px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 15px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(92, 30, 40, 0.15);
+}
+
+.collections-add-cart-btn:hover {
+    background-color: #3b1118;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(92, 30, 40, 0.25);
+}
+
+.collections-add-cart-btn:active {
+    transform: translateY(0);
+}
+
+.collections-add-cart-btn:disabled {
+    background-color: #eaeaea;
+    color: #999;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* Toast Notification System */
+.toast-notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: rgba(18, 18, 18, 0.95);
+    color: #fff;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+}
+
+.toast-notification.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast-icon {
+    color: #4cd137;
+    font-size: 18px;
+}
+
+.toast-content {
+    flex-grow: 1;
+}
+
+.toast-action {
+    color: #ff7675;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 10px;
+    transition: color 0.2s ease;
+}
+
+.toast-action:hover {
+    color: #ff7675;
+    text-decoration: underline;
+}
+
+/* Clear Filters Button */
+.clear-filters-btn {
+    display: none;
+    width: 100%;
+    margin-top: 30px;
+    padding: 12px 18px;
+    background-color: transparent;
+    color: #666;
+    border: 1px dashed #bbb;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.clear-filters-btn:hover {
+    background-color: var(--primary-red);
+    color: var(--white, #ffffff);
+    border-color: var(--primary-red);
+    box-shadow: 0 4px 12px rgba(92, 30, 40, 0.15);
 }

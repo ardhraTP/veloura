@@ -9,6 +9,30 @@
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/navbar.css">
     <link rel="stylesheet" href="/css/wishlist.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Shade swatches on wishlist cards */
+        .shade-swatches {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 8px 0 12px;
+        }
+        .shade-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(0,0,0,0.10);
+            display: inline-block;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+            cursor: default;
+            transition: transform 0.15s;
+        }
+        .shade-dot:hover {
+            transform: scale(1.25);
+        }
+    </style>
     <script src="/js/prevent-back.js"></script>
 </head>
 <body>
@@ -40,30 +64,60 @@
         <% if (wishlist && wishlist.products && wishlist.products.length > 0) { %>
             <div class="wishlist-grid">
                 <% wishlist.products.forEach(product => { %>
+                    <%
+                        const firstVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null;
+                        const availableVariant = product.variants && product.variants.length > 0 
+                            ? (product.variants.find(v => v.quantity > 0) || product.variants[0]) 
+                            : null;
+                        const isOutOfStock = !product.variants || product.variants.length === 0 || product.variants.every(v => v.quantity === 0);
+                        const productImage = firstVariant && firstVariant.images && firstVariant.images.length > 0 ? firstVariant.images[0] : '/images/placeholder.png';
+                        const salePrice = firstVariant ? firstVariant.salePrice : null;
+                        const regularPrice = firstVariant ? firstVariant.regularPrice : null;
+                        const hasDiscount = salePrice && regularPrice && salePrice < regularPrice;
+                    %>
                     <div class="wishlist-item" data-product-id="<%= product._id %>">
                         <button class="remove-wishlist-btn" onclick="removeFromWishlist('<%= product._id %>')">
                             <i class="fas fa-times"></i>
                         </button>
                         <div class="wishlist-image">
-                            <img src="<%= product.images && product.images[0] ? product.images[0] : '/images/placeholder.png' %>" 
-                                 alt="<%= product.name %>">
+                            <img src="<%= productImage %>" 
+                                 alt="<%= product.productName %>">
                         </div>
                         <div class="wishlist-details">
-                            <h3 class="wishlist-product-name"><%= product.name %></h3>
+                            <h3 class="wishlist-product-name"><%= product.productName %></h3>
                             <p class="wishlist-product-brand" style="font-family: 'Inter', sans-serif; font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin: 5px 0;"><%= product.brand %></p>
+                            
+                            <% if (product.variants && product.variants.length > 0) { %>
+                                <div class="shade-swatches">
+                                    <% product.variants.forEach(v => { %>
+                                        <span class="shade-dot"
+                                              style="background-color: <%= v.hexCode && v.hexCode.trim() ? v.hexCode : '#cccccc' %>;"
+                                              title="<%= v.color %>"></span>
+                                    <% }) %>
+                                </div>
+                            <% } %>
+
                             <p class="wishlist-product-price">
-                                ₹<%= product.discountPrice || product.price %>
-                                <% if (product.discountPrice && product.discountPrice < product.price) { %>
-                                    <span style="text-decoration: line-through; color: #999; font-size: 12px; margin-left: 5px;">
-                                        ₹<%= product.price %>
-                                    </span>
+                                <% if (salePrice) { %>
+                                    ₹<%= salePrice.toFixed(2) %>
+                                    <% if (hasDiscount) { %>
+                                        <span style="text-decoration: line-through; color: #999; font-size: 12px; margin-left: 5px;">
+                                            ₹<%= regularPrice.toFixed(2) %>
+                                        </span>
+                                    <% } %>
+                                <% } else { %>
+                                    N/A
                                 <% } %>
                             </p>
-                            <button class="wishlist-add-cart-btn" 
-                                    onclick="addToCartFromWishlist('<%= product._id %>')"
-                                    <%= product.stock === 0 ? 'disabled' : '' %>>
-                                <%= product.stock === 0 ? 'OUT OF STOCK' : 'ADD TO CART' %>
-                            </button>
+                            <% if (product.status === 'INACTIVE') { %>
+                                <span class="product-unavailable-label">PRODUCT UNAVAILABLE</span>
+                            <% } else { %>
+                                <button class="wishlist-add-cart-btn" 
+                                        onclick="addToCartFromWishlist('<%= product._id %>', '<%= availableVariant ? availableVariant._id : '' %>')"
+                                        <%= isOutOfStock ? 'disabled' : '' %>>
+                                    <%= isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CART' %>
+                                </button>
+                            <% } %>
                         </div>
                     </div>
                 <% }) %>
@@ -86,34 +140,82 @@
     <script>
         // Remove item from wishlist
         function removeFromWishlist(productId) {
-            if (!confirm('Remove this item from wishlist?')) {
-                return;
-            }
-            
-            // Send AJAX request
-            fetch('/wishlist/remove/' + productId, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
+            Swal.fire({
+                title: 'Remove from Wishlist?',
+                text: 'Remove this item from wishlist?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#5c1e28',
+                cancelButtonColor: '#999',
+                confirmButtonText: 'Yes, Remove',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (!result.isConfirmed) {
+                    return;
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reload page to show updated wishlist
-                    window.location.reload();
-                } else {
-                    alert(data.message || 'Failed to remove from wishlist');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to remove from wishlist');
+                
+                // Send AJAX request
+                fetch('/wishlist/remove/' + productId, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({ 
+                            toast: true, 
+                            position: 'top-end', 
+                            icon: 'success', 
+                            title: 'Removed from wishlist', 
+                            showConfirmButton: false, 
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
+                        // Reload page to show updated wishlist
+                        setTimeout(() => window.location.reload(), 2500);
+                    } else {
+                        Swal.fire({ 
+                            toast: true, 
+                            position: 'top-end', 
+                            icon: 'error', 
+                            title: data.message || 'Failed to remove from wishlist', 
+                            showConfirmButton: false, 
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({ 
+                        toast: true, 
+                        position: 'top-end', 
+                        icon: 'error', 
+                        title: 'Failed to remove from wishlist', 
+                        showConfirmButton: false, 
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
+                });
             });
         }
 
         // Add to cart from wishlist
-        function addToCartFromWishlist(productId) {
+        function addToCartFromWishlist(productId, variantId) {
+            if (!variantId) {
+                Swal.fire({ 
+                    toast: true, 
+                    position: 'top-end', 
+                    icon: 'warning', 
+                    title: 'No shade or variant available for this product', 
+                    showConfirmButton: false, 
+                    timer: 2500,
+                    timerProgressBar: true
+                });
+                return;
+            }
             // Send AJAX request to add to cart
             fetch('/cart/add', {
                 method: 'POST',
@@ -122,22 +224,47 @@
                 },
                 body: JSON.stringify({
                     productId: productId,
+                    variantId: variantId,
                     quantity: 1
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Product added to cart!');
+                    Swal.fire({ 
+                        toast: true, 
+                        position: 'top-end', 
+                        icon: 'success', 
+                        title: 'Product added to cart!', 
+                        showConfirmButton: false, 
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
                     // Product will be automatically removed from wishlist by backend
-                    window.location.reload();
+                    setTimeout(() => window.location.reload(), 2500);
                 } else {
-                    alert(data.message || 'Failed to add to cart');
+                    Swal.fire({ 
+                        toast: true, 
+                        position: 'top-end', 
+                        icon: 'error', 
+                        title: data.message || 'Failed to add to cart', 
+                        showConfirmButton: false, 
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to add to cart');
+                Swal.fire({ 
+                    toast: true, 
+                    position: 'top-end', 
+                    icon: 'error', 
+                    title: 'Failed to add to cart', 
+                    showConfirmButton: false, 
+                    timer: 2500,
+                    timerProgressBar: true
+                });
             });
         }
     </script>

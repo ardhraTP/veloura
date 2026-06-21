@@ -47,124 +47,7 @@
             overflow: hidden;
         }
 
-        /* --- Sidebar (Identical to Dashboard) --- */
-        .sidebar {
-            width: 260px;
-            background-color: var(--sidebar-bg);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
 
-        .sidebar-header {
-            padding: 30px 40px;
-        }
-
-        .logo {
-            font-family: 'Playfair Display', serif;
-            font-size: 32px;
-            font-weight: 600;
-            color: var(--primary-red);
-            text-decoration: none;
-            letter-spacing: -0.5px;
-        }
-
-        .sidebar-menu {
-            overflow-y: auto;
-            list-style: none;
-            padding: 10px 0;
-        }
-
-        .sidebar-menu li {
-            margin-bottom: 5px;
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 15px 40px;
-            color: var(--text-dark);
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        .sidebar-menu a i {
-            width: 24px;
-            font-size: 16px;
-            color: var(--text-gray);
-            margin-right: 15px;
-        }
-
-        .sidebar-menu a:hover {
-            background-color: #f7f1f1;
-        }
-
-        .sidebar-menu a.active {
-            background-color: #f7eded;
-            color: var(--primary-red);
-            font-weight: 600;
-        }
-
-        .sidebar-menu a.active::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 4px;
-            background-color: var(--primary-red);
-        }
-
-        .sidebar-menu a.active i {
-            color: var(--primary-red);
-        }
-
-        .sidebar-menu .logout-btn {
-            display: block;
-            width: 100%;
-            padding: 14px !important;
-            background-color: #c9302c;
-            color: #ffffff !important;
-            text-align: center;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 600;
-            transition: background-color 0.2s;
-            margin: 0;
-        }
-
-        .sidebar-menu .logout-btn:hover {
-            background-color: #ac2925;
-            color: #ffffff !important;
-        }
-
-        .sidebar-menu .logout-btn i {
-            display: none;
-        }
-
-        .logout-btn {
-            display: block;
-            width: 100%;
-            padding: 14px !important;
-            background-color: #c9302c;
-            color: #ffffff !important;
-            text-align: center;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-
-        .logout-btn:hover {
-            background-color: #ac2925;
-            color: #ffffff !important;
-        }
 
         /* --- Main Content --- */
         .main-content {
@@ -408,26 +291,7 @@
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <a href="/admin/dashboard" class="logo">Veloura</a>
-        </div>
-        
-        <ul class="sidebar-menu">
-            <li><a href="/admin/dashboard"><i class="fas fa-th-large"></i> Dashboard</a></li>
-            <li><a href="/admin/products"><i class="fas fa-box"></i> Products</a></li>
-            <li><a href="#"><i class="fas fa-clipboard-list"></i> Order List</a></li>
-            <li><a href="/admin/users" class="active"><i class="fas fa-users"></i> Users</a></li>
-            <li><a href="#"><i class="fas fa-chart-line"></i> Sales Report</a></li>
-            <li><a href="#"><i class="fas fa-ticket-alt"></i> Coupons</a></li>
-            <li><a href="/admin/categories"><i class="fas fa-list"></i> Category</a></li>
-            <li><a href="#"><i class="fas fa-star"></i> Reviews</a></li>
-            <li style="padding: 20px 40px; margin-top: 10px;">
-                <a href="/admin/logout" class="logout-btn">Log Out</a>
-            </li>
-        </ul>
-    </aside>
+    <%- include('../partials/admin/sidebar', { selectedTab: 'users' }) %>
 
     <!-- Main Content -->
     <main class="main-content">

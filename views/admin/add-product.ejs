@@ -8,6 +8,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -22,95 +25,7 @@
             min-height: 100vh;
         }
 
-        /* Sidebar Styles */
-        .sidebar {
-            width: 210px;
-            background-color: #f9f7f5;
-            border-right: 1px solid #e8e4e1;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-        }
 
-        .sidebar-header {
-            padding: 30px 20px;
-            border-bottom: 1px solid #e8e4e1;
-        }
-
-        .logo {
-            font-family: 'Playfair Display', serif;
-            font-size: 28px;
-            font-weight: 600;
-            color: #5c1e28;
-            text-decoration: none;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .sidebar-menu li {
-            margin: 0;
-        }
-
-        .sidebar-menu li a {
-            display: block;
-            padding: 15px 40px;
-            color: #6b6b6b;
-            text-decoration: none;
-            font-size: 14px;
-            transition: all 0.3s;
-            border-left: 3px solid transparent;
-        }
-
-        .sidebar-menu li a:hover {
-            background-color: #f3e8e9;
-            color: #5c1e28;
-        }
-
-        .sidebar-menu li a.active {
-            background-color: #f3e8e9;
-            color: #5c1e28;
-            border-left-color: #5c1e28;
-            font-weight: 600;
-        }
-
-        .sidebar-menu li a i {
-            margin-right: 15px;
-            width: 20px;
-            text-align: center;
-        }
-
-        .logout-btn {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            background-color: #c9302c;
-            color: white;
-            text-align: center;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .logout-btn:hover {
-            background-color: #a52420;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 210px;
-            flex: 1;
-            padding: 40px 60px;
-            overflow-y: auto;
-        }
 
         .page-title {
             font-family: 'Playfair Display', serif;
@@ -180,6 +95,23 @@
         .form-select:focus,
         .form-textarea:focus {
             border-color: #5c1e28;
+        }
+
+        .form-input.input-error,
+        .form-select.input-error,
+        .form-textarea.input-error {
+            border-color: #dc3545;
+        }
+
+        .field-error {
+            color: #dc3545;
+            font-size: 11px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .field-error.visible {
+            display: block;
         }
 
         .form-textarea {
@@ -380,10 +312,51 @@
             color: #999;
             margin-bottom: 10px;
         }
+
+        /* Shade swatch styles */
+        .shade-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .shade-preview {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            flex-shrink: 0;
+            background: #f0f0f0;
+            transition: background-color 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .hex-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .hex-input-wrap input[type="color"] {
+            width: 38px;
+            height: 38px;
+            padding: 2px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .hex-input-wrap .form-input {
+            font-family: 'Inter', monospace;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
-    <%- include('../partials/admin/sidebar') %>
+    <%- include('../partials/admin/sidebar', { selectedTab: 'products' }) %>
 
 
     <!-- Main Content -->
@@ -406,15 +379,16 @@
                     <div class="form-group">
                         <label class="form-label">PRODUCT NAME *</label>
                         <input type="text" 
+                               id="productName"
                                name="productName" 
                                class="form-input" 
-                               placeholder="Enter product name..." 
-                               required>
+                               placeholder="Enter product name...">
+                        <span class="field-error" id="productNameError">Product name is required.</span>
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">CATEGORY *</label>
-                        <select name="categoryId" class="form-select" required>
+                        <select id="categoryId" name="categoryId" class="form-select">
                             <option value="">Select Category</option>
                             <% if (categories && categories.length > 0) { %>
                                 <% categories.forEach(category => { %>
@@ -422,23 +396,36 @@
                                 <% }) %>
                             <% } %>
                         </select>
+                        <span class="field-error" id="categoryIdError">Please select a category.</span>
                     </div>
                 </div>
 
-                <div class="form-group full-width">
-                    <label class="form-label">DESCRIPTION *</label>
-                    <textarea name="description" 
-                              class="form-textarea" 
-                              placeholder="Enter product description..."
-                              required></textarea>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">BRAND *</label>
+                        <input type="text" 
+                               id="brand"
+                               name="brand" 
+                               class="form-input" 
+                               placeholder="Enter brand name...">
+                        <span class="field-error" id="brandError">Brand is required.</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">STATUS</label>
+                        <select name="status" class="form-select">
+                            <option value="ACTIVE">Active</option>
+                            <option value="INACTIVE">Inactive</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">STATUS</label>
-                    <select name="status" class="form-select">
-                        <option value="ACTIVE">Active</option>
-                        <option value="INACTIVE">Inactive</option>
-                    </select>
+                <div class="form-group full-width" style="margin-top: 25px;">
+                    <label class="form-label">DESCRIPTION *</label>
+                    <textarea id="description" name="description" 
+                              class="form-textarea" 
+                              placeholder="Enter product description..."></textarea>
+                    <span class="field-error" id="descriptionError">Description is required.</span>
                 </div>
             </div>
 
@@ -489,12 +476,11 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">COLOR *</label>
+                            <label class="form-label">COLOR NAME *</label>
                             <input type="text" 
                                    name="variants[${variantIndex}][color]" 
                                    class="form-input" 
-                                   placeholder="e.g., Red, Blue, Black..." 
-                                   required>
+                                   placeholder="e.g., Rose Red, Nude Beige...">
                         </div>
                         
                         <div class="form-group">
@@ -503,8 +489,30 @@
                                    name="variants[${variantIndex}][quantity]" 
                                    class="form-input" 
                                    placeholder="0" 
-                                   min="0" 
-                                   required>
+                                   min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label class="form-label">SHADE COLOUR (HEX CODE) *</label>
+                            <div class="shade-row">
+                                <div class="shade-preview" id="shadePreview-${variantIndex}"></div>
+                                <div class="hex-input-wrap">
+                                    <input type="color"
+                                           id="colorPicker-${variantIndex}"
+                                           value="#5c1e28"
+                                           oninput="syncHex(${variantIndex}, this.value)"
+                                           onchange="syncHex(${variantIndex}, this.value)">
+                                    <input type="text"
+                                           id="hexInput-${variantIndex}"
+                                           name="variants[${variantIndex}][hexCode]"
+                                           class="form-input"
+                                           placeholder="#FF5733"
+                                           maxlength="7"
+                                           oninput="syncPicker(${variantIndex}, this.value)">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -516,8 +524,7 @@
                                    class="form-input" 
                                    placeholder="0.00" 
                                    min="0" 
-                                   step="0.01" 
-                                   required>
+                                   step="0.01">
                         </div>
                         
                         <div class="form-group">
@@ -527,8 +534,7 @@
                                    class="form-input" 
                                    placeholder="0.00" 
                                    min="0" 
-                                   step="0.01" 
-                                   required>
+                                   step="0.01">
                         </div>
                     </div>
 
@@ -539,8 +545,8 @@
                                name="variants[${variantIndex}][images]" 
                                class="file-input" 
                                accept="image/*" 
-                               onchange="handleVariantImages(${variantIndex}, this.files)"
-                               required>
+                               multiple
+                               onchange="handleVariantImages(${variantIndex}, this.files)">
                         
                         <div class="image-preview-container" id="imagePreview-${variantIndex}">
                             ${createImagePlaceholders(variantIndex, 5)}
@@ -550,6 +556,9 @@
             `;
 
             document.getElementById('variantsContainer').insertAdjacentHTML('beforeend', variantHTML);
+
+            // Immediately initialise text input + preview circle with the default picker colour
+            syncHex(variantIndex, '#5c1e28');
         }
 
         function createImagePlaceholders(variantIndex, count) {
@@ -575,27 +584,102 @@
             }
         }
 
+        let currentCropper = null;
+
+        function cropImageHelper(file, callback) {
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const modal = document.getElementById('cropperModal');
+                const img = document.getElementById('cropperImage');
+                img.src = e.target.result;
+                modal.style.display = 'flex';
+
+                if (currentCropper) {
+                    currentCropper.destroy();
+                }
+
+                currentCropper = new Cropper(img, {
+                    aspectRatio: 1, // 1:1 square crop
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    responsive: true,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false
+                });
+
+                const cropBtn = document.getElementById('cropperCropBtn');
+                const cancelBtn = document.getElementById('cropperCancelBtn');
+
+                const newCropBtn = cropBtn.cloneNode(true);
+                const newCancelBtn = cancelBtn.cloneNode(true);
+
+                cropBtn.parentNode.replaceChild(newCropBtn, cropBtn);
+                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+                newCropBtn.addEventListener('click', function() {
+                    const canvas = currentCropper.getCroppedCanvas({
+                        width: 800,
+                        height: 800
+                    });
+
+                    canvas.toBlob(function(blob) {
+                        const croppedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+
+                        modal.style.display = 'none';
+                        currentCropper.destroy();
+                        currentCropper = null;
+
+                        callback(croppedFile);
+                    }, 'image/jpeg', 0.9);
+                });
+
+                newCancelBtn.addEventListener('click', function() {
+                    modal.style.display = 'none';
+                    currentCropper.destroy();
+                    currentCropper = null;
+                    callback(null);
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
         function handleVariantImages(variantIndex, files) {
             if (files.length === 0) return;
             
-            // Get the first file only (one by one upload)
             const file = files[0];
             
-            // Initialize files array if not exists
-            if (!variantsData[variantIndex].files) {
-                variantsData[variantIndex].files = [];
-            }
+            // Clear input value so same file can be selected again
+            document.getElementById(`variantImages-${variantIndex}`).value = '';
             
-            // Add the new file to the beginning of the array (first slide)
-            variantsData[variantIndex].files.unshift(file);
-            
-            // Update the file input with all files
-            const dt = new DataTransfer();
-            variantsData[variantIndex].files.forEach(f => dt.items.add(f));
-            document.getElementById(`variantImages-${variantIndex}`).files = dt.files;
-            
-            // Re-render the preview
-            renderVariantImagesPreview(variantIndex);
+            cropImageHelper(file, function(croppedFile) {
+                if (!croppedFile) return; // User cancelled
+                
+                // Initialize files array if not exists
+                if (!variantsData[variantIndex].files) {
+                    variantsData[variantIndex].files = [];
+                }
+                
+                // Add the cropped file to the beginning of the array
+                variantsData[variantIndex].files.unshift(croppedFile);
+                
+                // Update the file input with all files
+                const dt = new DataTransfer();
+                variantsData[variantIndex].files.forEach(f => dt.items.add(f));
+                document.getElementById(`variantImages-${variantIndex}`).files = dt.files;
+                
+                // Re-render the preview
+                renderVariantImagesPreview(variantIndex);
+            });
         }
 
         function renderVariantImagesPreview(variantIndex) {
@@ -606,19 +690,25 @@
             const maxImages = 5;
             const displayCount = Math.min(filesArray.length, maxImages);
 
-            // Display uploaded images
+            // Pre-create the DOM boxes synchronously to maintain exact index order
+            const boxes = [];
+            for (let i = 0; i < displayCount; i++) {
+                const box = document.createElement('div');
+                box.className = 'image-preview-box';
+                previewContainer.appendChild(box);
+                boxes.push(box);
+            }
+
+            // Display uploaded images in the pre-created boxes
             for (let i = 0; i < displayCount; i++) {
                 const file = filesArray[i];
                 const reader = new FileReader();
                 
                 reader.onload = function(e) {
-                    const box = document.createElement('div');
-                    box.className = 'image-preview-box';
-                    box.innerHTML = `
+                    boxes[i].innerHTML = `
                         <img src="${e.target.result}" alt="Preview">
                         <button type="button" class="remove-image-btn" onclick="removeVariantImage(${variantIndex}, ${i}); event.stopPropagation();">×</button>
                     `;
-                    previewContainer.appendChild(box);
                 };
                 
                 reader.readAsDataURL(file);
@@ -651,35 +741,229 @@
             renderVariantImagesPreview(variantIndex);
         }
 
-        // Form validation before submit
-        document.getElementById('productForm').addEventListener('submit', function(e) {
-            let isValid = true;
-            let errorMessage = '';
+        // ── Shade HEX helpers ─────────────────────────────────────────
+        function isValidHex(hex) {
+            return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(hex);
+        }
 
-            // Check if at least one variant exists
+        // Called when the colour-picker wheel changes → push value to text input + preview
+        function syncHex(variantIndex, hexValue) {
+            const textInput = document.getElementById(`hexInput-${variantIndex}`);
+            textInput.value = hexValue.toUpperCase();
+            updateShadePreview(variantIndex, hexValue);
+        }
+
+        // Called when the text input changes → validate hex → push to colour picker + preview
+        function syncPicker(variantIndex, rawValue) {
+            const hex = rawValue.startsWith('#') ? rawValue : '#' + rawValue;
+            if (isValidHex(hex)) {
+                document.getElementById(`colorPicker-${variantIndex}`).value = hex;
+                updateShadePreview(variantIndex, hex);
+            }
+        }
+
+        function updateShadePreview(variantIndex, hex) {
+            const preview = document.getElementById(`shadePreview-${variantIndex}`);
+            if (preview && isValidHex(hex)) {
+                preview.style.backgroundColor = hex;
+                preview.style.borderColor = hex;
+            }
+        }
+        // ─────────────────────────────────────────────────────────────
+
+        // Helpers: show/clear inline field errors
+        function showErr(id, errId, show) {
+            const el = document.getElementById(id);
+            const err = document.getElementById(errId);
+            if (!el || !err) return;
+            el.classList.toggle('input-error', show);
+            err.classList.toggle('visible', show);
+        }
+
+        // Clear errors on input
+        ['productName','categoryId','brand','description'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', function() { showErr(id, id + 'Error', false); });
+            if (el) el.addEventListener('input', function() { showErr(id, id + 'Error', false); });
+        });
+
+        // Form validation before submit
+        document.getElementById('productForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = this;
+            let hasError = false;
+
+            // ── Product-level fields ─────────────────────────────────
+            // Trim values and write back to inputs before validation
+            const productNameInput = document.getElementById('productName');
+            const brandInput       = document.getElementById('brand');
+            const descriptionInput = document.getElementById('description');
+
+            productNameInput.value = productNameInput.value.trim();
+            brandInput.value       = brandInput.value.trim();
+            descriptionInput.value = descriptionInput.value.trim();
+
+            const productName = productNameInput.value;
+            const categoryId  = document.getElementById('categoryId').value;
+            const brand       = brandInput.value;
+            const description = descriptionInput.value;
+
+            // Set specific error messages
+            document.getElementById('productNameError').textContent = productName === '' ? 'Product name is required.' : '';
+            document.getElementById('brandError').textContent       = brand === '' ? 'Brand is required.' : '';
+            document.getElementById('descriptionError').textContent = description === '' ? 'Description is required.' : '';
+
+            showErr('productName', 'productNameError', !productName);
+            showErr('categoryId',  'categoryIdError',  !categoryId);
+            showErr('brand',       'brandError',       !brand);
+            showErr('description', 'descriptionError', !description);
+
+            if (!productName || !categoryId || !brand || !description) hasError = true;
+
+            // ── Variant-level fields ─────────────────────────────────
             const variantCards = document.querySelectorAll('.variant-card');
             if (variantCards.length === 0) {
-                isValid = false;
-                errorMessage = 'Please add at least one variant.';
+                Swal.fire({ icon: 'warning', title: 'No Variants', text: 'Please add at least one variant.', confirmButtonColor: '#5c1e28' });
+                return;
             }
 
-            // Check each variant has at least 3 images
-            for (let i = 0; i < variantCount; i++) {
-                if (variantsData[i] && variantsData[i].files) {
-                    if (variantsData[i].files.length < 3) {
-                        isValid = false;
-                        errorMessage = `Variant ${i + 1} must have at least 3 images.`;
-                        break;
+            for (let card of variantCards) {
+                const idx = parseInt(card.id.split('-')[1]);
+
+                const colorInput    = card.querySelector(`input[name="variants[${idx}][color]"]`);
+                const qtyInput      = card.querySelector(`input[name="variants[${idx}][quantity]"]`);
+                const hexInput      = card.querySelector(`input[name="variants[${idx}][hexCode]"]`);
+                const regPriceInput = card.querySelector(`input[name="variants[${idx}][regularPrice]"]`);
+                const salePriceInput= card.querySelector(`input[name="variants[${idx}][salePrice]"]`);
+
+                const color        = colorInput.value.trim();
+                const quantity     = qtyInput.value.trim();
+                const hexCode      = hexInput.value.trim();
+                const regularPrice = regPriceInput.value.trim();
+                const salePrice    = salePriceInput.value.trim();
+
+                // Write trimmed values back to inputs so submitted data is clean
+                colorInput.value    = color;
+                hexInput.value      = hexCode;
+
+                // Inline error helpers for variant fields
+                function vErr(input, msg, show) {
+                    input.classList.toggle('input-error', show);
+                    let span = input.nextElementSibling;
+                    if (!span || !span.classList.contains('field-error')) {
+                        if (show) {
+                            span = document.createElement('span');
+                            span.className = 'field-error visible';
+                            span.textContent = msg;
+                            input.parentNode.insertBefore(span, input.nextSibling);
+                        }
+                    } else {
+                        span.textContent = msg;
+                        span.classList.toggle('visible', show);
                     }
+                }
+
+                vErr(colorInput,     'Color name is required.',                !color);
+                vErr(qtyInput,       'Quantity is required.',                  quantity === '');
+                vErr(hexInput,       'Hex code is required.',                  !hexCode);
+                vErr(regPriceInput,  'Regular price is required.',             regularPrice === '');
+                vErr(salePriceInput, 'Sale price is required.',                salePrice === '');
+
+                if (!color || quantity === '' || !hexCode || regularPrice === '' || salePrice === '') {
+                    hasError = true; continue;
+                }
+
+                const qty  = parseFloat(quantity);
+                const regP = parseFloat(regularPrice);
+                const salP = parseFloat(salePrice);
+
+                vErr(qtyInput,       'Quantity cannot be negative.',             qty < 0);
+                vErr(regPriceInput,  'Regular price cannot be negative.',        regP < 0);
+                vErr(salePriceInput, 'Sale price cannot be negative.',           salP < 0);
+                if (qty < 0 || regP < 0 || salP < 0) { hasError = true; continue; }
+
+                vErr(salePriceInput, 'Sale price cannot exceed regular price.',  salP > regP);
+                if (salP > regP) { hasError = true; continue; }
+
+                vErr(hexInput, 'Invalid hex code (e.g. #FF5733).', !isValidHex(hexCode));
+                if (!isValidHex(hexCode)) { hasError = true; continue; }
+
+                const files = (variantsData[idx] && variantsData[idx].files) ? variantsData[idx].files : [];
+                if (files.length < 3) {
+                    Swal.fire({ icon: 'warning', title: 'Insufficient Images', text: `Variant ${idx + 1} needs at least 3 images.`, confirmButtonColor: '#5c1e28' });
+                    return;
                 }
             }
 
-            if (!isValid) {
-                e.preventDefault();
-                alert(errorMessage);
-                return false;
+            if (hasError) return;
+
+            // Confirmation before submit
+            const result = await Swal.fire({
+                title: 'Add New Product?',
+                text: 'Are you sure you want to add this product?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#5c1e28',
+                cancelButtonColor: '#999',
+                confirmButtonText: 'Yes, Add Product',
+                cancelButtonText: 'Cancel'
+            });
+
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+
+        // Show success/error notifications from URL parameters and clear them
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const successMsg = urlParams.get('success');
+            const errorMsg = urlParams.get('error');
+
+            if (successMsg) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: successMsg,
+                    confirmButtonColor: '#5c1e28',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                const remainingParams = Array.from(urlParams.entries())
+                    .filter(([key]) => key !== 'success' && key !== 'error')
+                    .map(([key, val]) => `${key}=${encodeURIComponent(val)}`)
+                    .join('&');
+                const newUrl = window.location.pathname + (remainingParams ? '?' + remainingParams : '');
+                window.history.replaceState({}, document.title, newUrl);
+            } else if (errorMsg) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: errorMsg,
+                    confirmButtonColor: '#5c1e28'
+                });
+                const remainingParams = Array.from(urlParams.entries())
+                    .filter(([key]) => key !== 'success' && key !== 'error')
+                    .map(([key, val]) => `${key}=${encodeURIComponent(val)}`)
+                    .join('&');
+                const newUrl = window.location.pathname + (remainingParams ? '?' + remainingParams : '');
+                window.history.replaceState({}, document.title, newUrl);
             }
         });
     </script>
+
+    <!-- Cropper Modal -->
+    <div id="cropperModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; flex-direction: column;">
+        <div style="background: white; border-radius: 12px; padding: 25px; width: 90vw; max-width: 600px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <h3 style="font-family: 'Playfair Display', serif; color: #5c1e28; margin: 0;">Crop Image</h3>
+            <div style="max-height: 400px; width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; background: #f0f0f0; border-radius: 8px;">
+                <img id="cropperImage" style="max-width: 100%; max-height: 400px; display: block;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 15px;">
+                <button id="cropperCancelBtn" type="button" style="padding: 10px 24px; border: 1.5px solid #ccc; background: transparent; border-radius: 30px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;">Cancel</button>
+                <button id="cropperCropBtn" type="button" style="padding: 10px 24px; border: none; background: #5c1e28; color: white; border-radius: 30px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 12px rgba(92, 30, 40, 0.355);">Crop & Save</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,145 +1,146 @@
 import Cart from '../model/Cart.js';
-import {checkProductAvailability} from './productService.js';
-import { removeFromWishlist} from './wishlistService.js';
+import Product from '../model/Product.js';
+import Variant from '../model/Variant.js';
+import { removeFromWishlist } from './wishlistService.js';
 
-//get users cart
-export const getUserCart = async (userId)=>{
-    try{
-        let cart = await Cart.findOne({user:userId})
-        .populate('items.product');
+// ── Get (or create) a user's cart ───────────────────────────────────────────
+export const getUserCart = async (userId) => {
+    try {
+        let cart = await Cart.findOne({ user: userId })
+            .populate('items.product')
+            .populate('items.variant');
 
-        if(!cart){
-            cart = new Cart({
-                user:userId,
-                items:[],
-                totalAmount:0
-            });
+        if (!cart) {
+            cart = new Cart({ user: userId, items: [], totalAmount: 0 });
             await cart.save();
         }
         return cart;
-    }catch(error){
-        console.log('Error getting cart:',error);
+    } catch (error) {
+        console.log('Error getting cart:', error);
         throw error;
     }
 };
 
-//add product to cart
-export const addProductToCart = async (userId,productId,quantity)=>{
-    try{
-        const check = await checkProductAvailability(productId,quantity);
+// ── Add a product+variant to cart ────────────────────────────────────────────
+export const addProductToCart = async (userId, productId, variantId, quantity) => {
+    try {
+        // Validate product is active
+        const product = await Product.findOne({
+            _id: productId,
+            isDeleted: false,
+            status: 'ACTIVE'
+        });
+        if (!product) throw new Error('Product not found or unavailable');
 
-        if(!check.available){
-            throw new Error(check.message);
-        }
+        // Validate variant exists and has enough stock
+        const variant = await Variant.findOne({
+            _id: variantId,
+            productId: productId,
+            isDeleted: false
+        });
+        if (!variant) throw new Error('Variant not found');
+        if (variant.quantity < quantity) throw new Error('Not enough stock available');
 
-        const product = check.product;
+        const priceToUse = variant.salePrice;
 
-        let cart = await getUsersCart(userId);
+        let cart = await getUserCart(userId);
 
-        const existingItem = cart.items.find(
-            item=>item.product._id.toString() === productId
-        );
+        // Check if the same variant is already in the cart
+        const existingItem = cart.items.find(item => {
+            if (!item.variant) return false;
+            const itemVarId = item.variant._id ? item.variant._id.toString() : item.variant.toString();
+            return itemVarId === variantId.toString();
+        });
 
-        if(existingItem){
+        if (existingItem) {
             const newQuantity = existingItem.quantity + quantity;
-
-            const stockCheck = await checkProductAvailability(productId,newQuantity);
-            if(!stockCheck.available){
+            if (newQuantity > 5) {
+                throw new Error('Cannot add more than 5 quantity of the same product variant');
+            }
+            if (variant.quantity < newQuantity) {
                 throw new Error('Not enough stock available');
             }
             existingItem.quantity = newQuantity;
-        }else{
-            //add new item to cart
-            const priceToUse = product.discountPrice || product.price;
+        } else {
+            if (quantity > 5) {
+                throw new Error('Cannot add more than 5 quantity of the same product variant');
+            }
             cart.items.push({
-                product:productId,
-                quantity:quantity,
-                price:priceToUse
+                product: productId,
+                variant: variantId,
+                quantity: quantity,
+                price: priceToUse
             });
         }
 
-        cart.totalAmount = 0;
-        for(let item of cart.items){
-            cart.totalAmount += item.price * item.quantity;
-        }
+        cart.totalAmount = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
         await cart.save();
 
-        //remove from wishlist when added to cart
         try {
             await removeFromWishlist(userId, productId);
-        } catch (wishlistError) {
-            // if product not in wishlis
-            console.log('Product not in wishlist or error removing:', wishlistError.message);
+        } catch (e) {
         }
 
-        cart = await Cart.findById(cart._id).populate('items.product');
+        cart = await Cart.findById(cart._id).populate('items.product').populate('items.variant');
         return cart;
-    }catch(error){
-        console.log('Error adding to cart:',error);
+    } catch (error) {
+        console.log('Error adding to cart:', error);
         throw error;
     }
 };
 
-//update item quantity in cart
-export const updateCartQuantity = async (userId,productId,newQuantity)=>{
-    try{
-        if(newQuantity < 1){
-            throw new Error('Quantity must be at least 1');
-        }
+export const updateCartQuantity = async (userId, variantId, newQuantity) => {
+    try {
+        if (newQuantity < 1) throw new Error('Quantity must be at least 1');
+        if (newQuantity > 5) throw new Error('Cannot add more than 5 quantity of the same product variant');
 
-        //check if the product is available in this quantity
-        const check = await checkProductAvailability(productId,newQuantity);
-        if(!check.available){
-            throw new Error(check.message);
-        }
+        let cart = await getUserCart(userId);
 
-        let cart = await getUsersCart(userId);
+        const item = cart.items.find(item => {
+            if (!item.variant) return false;
+            const itemVarId = item.variant._id ? item.variant._id.toString() : item.variant.toString();
+            return itemVarId === variantId;
+        });
+        if (!item) throw new Error('Product not in cart');
 
-        const item = cart.items.find(
-            item=>item.product._id.toString() === productId
-        );
-
-        if(!item){
-            throw new Error('Product not in cart');
+        // Check stock via variant if available
+        if (item.variant) {
+            const variant = await Variant.findById(item.variant._id);
+            if (variant && variant.quantity < newQuantity) {
+                throw new Error('Not enough stock available');
+            }
         }
 
         item.quantity = newQuantity;
-
-        cart.totalAmount = 0;
-        for(let item of cart.items){
-            cart.totalAmount += item.price * item.quantity;
-        }
-
+        cart.totalAmount = cart.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
         await cart.save();
 
-        cart = await Cart.findById(cart._id).populate('items.product');
+        cart = await Cart.findById(cart._id).populate('items.product').populate('items.variant');
         return cart;
-    }catch(error){
-        console.log('Error updating quantity:',error);
+    } catch (error) {
+        console.log('Error updating quantity:', error);
         throw error;
     }
 };
 
-//remove items from cart
-export const removeFromCart = async(userId,productId)=>{
-    try{
-        let cart = await getUsersCart(userId);
+// ── Remove an item from cart ─────────────────────────────────────────────────
+export const removeFromCart = async (userId, variantId) => {
+    try {
+        let cart = await getUserCart(userId);
 
-        cart.items = cart.items.filter(
-            item => item.product._id.toString() !== productId
-        );
+        cart.items = cart.items.filter(item => {
+            if (!item.variant) return false;
+            const itemVarId = item.variant._id ? item.variant._id.toString() : item.variant.toString();
+            return itemVarId !== variantId;
+        });
 
-        cart.totalAmount = 0;
-        for(let item of cart.items){
-            cart.totalAmount += item.price * item.quantity;
-        }
-
+        cart.totalAmount = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
         await cart.save();
 
-        cart = await Cart.findById(cart._id).populate('items.product');
+        cart = await Cart.findById(cart._id).populate('items.product').populate('items.variant');
         return cart;
-    }catch(error){
-        console.log('Error removing from cart:',error);
+    } catch (error) {
+        console.log('Error removing from cart:', error);
         throw error;
     }
 };

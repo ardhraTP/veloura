@@ -12,7 +12,30 @@
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/navbar.css">
     <link rel="stylesheet" href="/css/products.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/prevent-back.js"></script>
+    <style>
+        /* Shade swatches on product cards */
+        .shade-swatches {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin: 6px 0 2px;
+        }
+        .shade-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(0,0,0,0.10);
+            display: inline-block;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+            cursor: default;
+            transition: transform 0.15s;
+        }
+        .shade-dot:hover {
+            transform: scale(1.25);
+        }
+    </style>
 </head>
 
 <body>
@@ -33,9 +56,7 @@
                                        id="searchInput"
                                        placeholder="Search products..."
                                        value="<%= search || '' %>">
-                                <% if (search) { %>
-                                    <button class="clear-search" onclick="clearSearch()">×</button>
-                                <% } %>
+                                <button class="clear-search" id="clearSearchBtn" onclick="clearSearch()" style="display: <%= search ? 'flex' : 'none' %>;">×</button>
                             </div>
                         </div>
 
@@ -48,7 +69,7 @@
                                             <input type="checkbox" 
                                                    value="<%= brand %>"
                                                    <%= selectedBrand === brand ? 'checked' : '' %>
-                                                   onchange="applyFilters()">
+                                                   onchange="selectSingleBrand(this)">
                                             <span class="checkmark"></span>
                                             <span class="checkbox-text"><%= brand %></span>
                                         </label>
@@ -66,9 +87,9 @@
                                     <option value="">All Categories</option>
                                     <% if (categories && categories.length > 0) { %>
                                         <% categories.forEach(category => { %>
-                                            <option value="<%= category %>" 
-                                                    <%= selectedCategory === category ? 'selected' : '' %>>
-                                                <%= category %>
+                                            <option value="<%= category._id %>" 
+                                                    <%= selectedCategory === category._id.toString() ? 'selected' : '' %>>
+                                                <%= category.name %>
                                             </option>
                                         <% }) %>
                                     <% } %>
@@ -90,6 +111,9 @@
                                 <i class="fas fa-chevron-down select-icon"></i>
                             </div>
                         </div>
+                        <button class="clear-filters-btn" id="clearFiltersBtn" onclick="clearAllFilters()">
+                            CLEAR ALL
+                        </button>
                     </aside>
 
                     <!-- Product Grid Area -->
@@ -103,9 +127,16 @@
                                 </div>
                             <% } else if (products) { %>
                                 <% products.forEach(product => { %>
+                                    <%
+                                        const firstVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null;
+                                        const productImage = firstVariant && firstVariant.images && firstVariant.images.length > 0 ? firstVariant.images[0] : null;
+                                        const salePrice = firstVariant ? firstVariant.salePrice : null;
+                                        const regularPrice = firstVariant ? firstVariant.regularPrice : null;
+                                        const hasDiscount = salePrice && regularPrice && salePrice < regularPrice;
+                                    %>
                                     <a href="/product/<%= product._id %>" class="product-card">
                                         <div class="product-image-container">
-                                            <% if (product.discountPrice && product.discountPrice < product.price) { %>
+                                            <% if (hasDiscount) { %>
                                                 <span class="badge">SALE</span>
                                             <% } %>
                                             <button class="wishlist-btn" 
@@ -113,8 +144,11 @@
                                                     title="Add to Wishlist">
                                                 <i class="far fa-heart"></i>
                                             </button>
-                                            <img src="<%= product.images && product.images[0] ? product.images[0] : '/images/placeholder.png' %>" 
-                                                 alt="<%= product.name %>">
+                                            <% if (productImage) { %>
+                                                <img src="<%= productImage %>" alt="<%= product.productName %>">
+                                            <% } else { %>
+                                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' font-size='14' fill='%23bbb' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E" alt="<%= product.productName %>">
+                                            <% } %>
                                             <div class="brand-overlay"><%= product.brand %></div>
                                         </div>
                                         <div class="product-details">
@@ -122,14 +156,39 @@
                                                 <h3 class="brand-name"><%= product.brand %></h3>
                                                 <div class="product-swatch-price">
                                                     <span class="product-price">
-                                                        ₹<%= product.discountPrice || product.price %>
-                                                        <% if (product.discountPrice && product.discountPrice < product.price) { %>
-                                                            <span class="original-price" style="text-decoration: line-through; color: #999; font-size: 12px; margin-left: 5px;">₹<%= product.price %></span>
+                                                        <% if (salePrice) { %>
+                                                            ₹<%= salePrice.toFixed(2) %>
+                                                            <% if (hasDiscount) { %>
+                                                                <span class="original-price" style="text-decoration: line-through; color: #999; font-size: 12px; margin-left: 5px;">₹<%= regularPrice.toFixed(2) %></span>
+                                                            <% } %>
+                                                        <% } else { %>
+                                                            N/A
                                                         <% } %>
                                                     </span>
                                                 </div>
                                             </div>
-                                            <p class="product-name"><%= product.name %></p>
+                                            <p class="product-name"><%= product.productName %></p>
+                                            <% if (product.variants && product.variants.length > 0) { %>
+                                                <div class="shade-swatches">
+                                                    <% product.variants.forEach(v => { %>
+                                                        <span class="shade-dot"
+                                                              style="background-color: <%= v.hexCode && v.hexCode.trim() ? v.hexCode : '#cccccc' %>;"
+                                                              title="<%= v.color %>"></span>
+                                                    <% }) %>
+                                                </div>
+                                            <% } %>
+                                            
+                                            <%
+                                                const availableVariant = product.variants && product.variants.length > 0
+                                                    ? (product.variants.find(v => v.quantity > 0) || product.variants[0])
+                                                    : null;
+                                                const isOutOfStock = !product.variants || product.variants.length === 0 || product.variants.every(v => v.quantity === 0);
+                                            %>
+                                            <button class="collections-add-cart-btn" 
+                                                    onclick="event.preventDefault(); event.stopPropagation(); addToCartFromCollections(this, '<%= product._id %>', '<%= availableVariant ? availableVariant._id : '' %>');"
+                                                    <%= isOutOfStock ? 'disabled' : '' %>>
+                                                <%= isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CART' %>
+                                            </button>
                                         </div>
                                     </a>
                                 <% }) %>
@@ -138,30 +197,17 @@
 
                         <% if (totalPages > 1) { %>
                             <div class="pagination">
-                                <% if (currentPage > 1) { %>
-                                    <a href="?page=<%= currentPage - 1 %>&search=<%= search || '' %>&category=<%= selectedCategory || '' %>&brand=<%= selectedBrand || '' %>&sort=<%= selectedSort || '' %>" 
-                                       class="page-arrow">
-                                        <i class="fas fa-arrow-left"></i>
-                                    </a>
-                                <% } %>
+                                <a href="?page=<%= currentPage - 1 %>&search=<%= search || '' %>&category=<%= selectedCategory || '' %>&brand=<%= selectedBrand || '' %>&sort=<%= selectedSort || '' %>" 
+                                   class="page-arrow"
+                                   style="<%= currentPage > 1 ? '' : 'display: none;' %>">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
                                 
-                                <% for (let i = 1; i <= totalPages; i++) { %>
-                                    <% if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) { %>
-                                        <a href="?page=<%= i %>&search=<%= search || '' %>&category=<%= selectedCategory || '' %>&brand=<%= selectedBrand || '' %>&sort=<%= selectedSort || '' %>" 
-                                           class="page-num <%= i === currentPage ? 'active' : '' %>">
-                                            <%= i < 10 ? '0' + i : i %>
-                                        </a>
-                                    <% } else if (i === currentPage - 2 || i === currentPage + 2) { %>
-                                        <span class="page-dots">...</span>
-                                    <% } %>
-                                <% } %>
-                                
-                                <% if (currentPage < totalPages) { %>
-                                    <a href="?page=<%= currentPage + 1 %>&search=<%= search || '' %>&category=<%= selectedCategory || '' %>&brand=<%= selectedBrand || '' %>&sort=<%= selectedSort || '' %>" 
-                                       class="page-arrow">
-                                        <i class="fas fa-arrow-right"></i>
-                                    </a>
-                                <% } %>
+                                <a href="?page=<%= currentPage + 1 %>&search=<%= search || '' %>&category=<%= selectedCategory || '' %>&brand=<%= selectedBrand || '' %>&sort=<%= selectedSort || '' %>" 
+                                   class="page-arrow"
+                                   style="<%= currentPage < totalPages ? '' : 'display: none;' %>">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
                             </div>
                         <% } %>
                     </section>
@@ -202,12 +248,96 @@
             // Redirect to new URL
             window.location.href = url;
         }
+
+        // Single select behavior for brand filter checkboxes
+        function selectSingleBrand(checkbox) {
+            if (checkbox.checked) {
+                const checkboxGroup = checkbox.closest('.checkbox-group');
+                if (checkboxGroup) {
+                    checkboxGroup.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        if (cb !== checkbox) {
+                            cb.checked = false;
+                        }
+                    });
+                }
+            }
+            applyFilters();
+        }
         
         // Clear search
         function clearSearch() {
             document.getElementById('searchInput').value = '';
             applyFilters();
         }
+
+        // Clear all filters
+        function clearAllFilters() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.value = '';
+
+            const categorySelect = document.getElementById('categorySelect');
+            if (categorySelect) categorySelect.value = '';
+
+            const sortSelect = document.getElementById('sortSelect');
+            if (sortSelect) sortSelect.value = 'newest';
+
+            document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+
+            window.location.href = '/products';
+        }
+
+        // Check if any filter is active to show/hide the clear filters button
+        function checkActiveFilters() {
+            const searchInput = document.getElementById('searchInput');
+            const search = searchInput ? searchInput.value.trim() : '';
+            
+            const categorySelect = document.getElementById('categorySelect');
+            const category = categorySelect ? categorySelect.value : '';
+            
+            const sortSelect = document.getElementById('sortSelect');
+            const sort = sortSelect ? sortSelect.value : 'newest';
+            
+            const brandCheckboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked');
+            
+            const hasFilters = search.length > 0 || category !== '' || sort !== 'newest' || brandCheckboxes.length > 0;
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            if (clearFiltersBtn) {
+                clearFiltersBtn.style.display = hasFilters ? 'block' : 'none';
+            }
+        }
+
+        // Show/hide clear button dynamically as user types
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const clearSearchBtn = document.getElementById('clearSearchBtn');
+            
+            checkActiveFilters();
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    if (clearSearchBtn) {
+                        clearSearchBtn.style.display = this.value.trim().length > 0 ? 'flex' : 'none';
+                    }
+                    checkActiveFilters();
+                });
+            }
+
+            const categorySelect = document.getElementById('categorySelect');
+            if (categorySelect) {
+                categorySelect.addEventListener('change', checkActiveFilters);
+            }
+
+            const sortSelect = document.getElementById('sortSelect');
+            if (sortSelect) {
+                sortSelect.addEventListener('change', checkActiveFilters);
+            }
+
+            document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', checkActiveFilters);
+            });
+        });
         
         // Search when user presses Enter
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
@@ -235,14 +365,38 @@
                         icon.classList.remove('fas');
                         icon.classList.add('far');
                         btn.classList.remove('active');
-                        showWishlistFeedback('Removed from wishlist');
+                        Swal.fire({ 
+                            toast: true, 
+                            position: 'top-end', 
+                            icon: 'success', 
+                            title: 'Removed from wishlist', 
+                            showConfirmButton: false, 
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
                     } else {
-                        alert(data.message || 'Failed to remove from wishlist');
+                        Swal.fire({ 
+                            toast: true, 
+                            position: 'top-end', 
+                            icon: 'error', 
+                            title: data.message || 'Failed to remove from wishlist', 
+                            showConfirmButton: false, 
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Failed to remove from wishlist');
+                    Swal.fire({ 
+                        toast: true, 
+                        position: 'top-end', 
+                        icon: 'error', 
+                        title: 'Failed to remove from wishlist', 
+                        showConfirmButton: false, 
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
                 });
             } else {
                 // Add to wishlist
@@ -261,37 +415,120 @@
                         icon.classList.remove('far');
                         icon.classList.add('fas');
                         btn.classList.add('active');
-                        showWishlistFeedback('Added to wishlist!');
+                        Swal.fire({ 
+                            toast: true, 
+                            position: 'top-end', 
+                            icon: 'success', 
+                            title: 'Added to wishlist!', 
+                            showConfirmButton: false, 
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
                     } else {
-                        alert(data.message || 'Failed to add to wishlist');
+                        Swal.fire({ 
+                            toast: true, 
+                            position: 'top-end', 
+                            icon: 'error', 
+                            title: data.message || 'Failed to add to wishlist', 
+                            showConfirmButton: false, 
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Failed to add to wishlist');
+                    Swal.fire({ 
+                        toast: true, 
+                        position: 'top-end', 
+                        icon: 'error', 
+                        title: 'Failed to add to wishlist', 
+                        showConfirmButton: false, 
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
                 });
             }
         }
-        
-        function showWishlistFeedback(message) {
-            // Create feedback element
-            const feedback = document.createElement('div');
-            feedback.className = 'wishlist-feedback';
-            feedback.textContent = message;
-            document.body.appendChild(feedback);
-            
-            // Show feedback
-            setTimeout(() => {
-                feedback.classList.add('show');
-            }, 10);
-            
-            // Remove feedback after 2 seconds
-            setTimeout(() => {
-                feedback.classList.remove('show');
-                setTimeout(() => {
-                    feedback.remove();
-                }, 300);
-            }, 2000);
+
+        // Add to Cart from collections page
+        function addToCartFromCollections(btn, productId, variantId) {
+            if (!variantId) {
+                Swal.fire({ 
+                    toast: true, 
+                    position: 'top-end', 
+                    icon: 'warning', 
+                    title: 'Product shade is unavailable', 
+                    showConfirmButton: false, 
+                    timer: 2500,
+                    timerProgressBar: true
+                });
+                return;
+            }
+
+            const originalText = btn.textContent;
+            btn.textContent = 'ADDING...';
+            btn.disabled = true;
+
+            fetch('/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    productId: productId,
+                    variantId: variantId,
+                    quantity: 1
+                })
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data) return;
+                btn.textContent = originalText;
+                btn.disabled = false;
+
+                if (data.success) {
+                    Swal.fire({ 
+                        toast: true, 
+                        position: 'top-end', 
+                        icon: 'success', 
+                        title: 'Product added to cart successfully!', 
+                        showConfirmButton: false, 
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
+                } else {
+                    Swal.fire({ 
+                        toast: true, 
+                        position: 'top-end', 
+                        icon: 'error', 
+                        title: data.message || 'Failed to add to cart', 
+                        showConfirmButton: false, 
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error adding to cart:', error);
+                btn.textContent = originalText;
+                btn.disabled = false;
+                Swal.fire({ 
+                    toast: true, 
+                    position: 'top-end', 
+                    icon: 'error', 
+                    title: 'Failed to add to cart', 
+                    showConfirmButton: false, 
+                    timer: 2500,
+                    timerProgressBar: true
+                });
+            });
         }
     </script>
 </body>

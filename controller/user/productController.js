@@ -46,9 +46,7 @@ export const getProductDetail = async (req,res)=>{
 
         const product = await productService.getProductById(productId);
 
-        //if product not found or blocked/unlisted
-
-        if(!product || product.isBlocked || !product.isListed){
+        if (!product) {
             return res.redirect('/products');
         }
 

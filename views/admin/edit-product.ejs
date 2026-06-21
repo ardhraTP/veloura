@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Product - Veloura Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -22,108 +28,7 @@
             min-height: 100vh;
         }
 
-        /* Sidebar Styles */
-        .sidebar {
-            width: 260px;
-            background-color: #fcfbf9;
-            border-right: 1px solid #ebe7e5;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            position: fixed;
-        }
 
-        .sidebar-header {
-            padding: 30px 40px;
-        }
-
-        .logo {
-            font-family: 'Playfair Display', serif;
-            font-size: 32px;
-            font-weight: 600;
-            color: #5c1e28;
-            text-decoration: none;
-            letter-spacing: -0.5px;
-        }
-
-        .sidebar-menu {
-            overflow-y: auto;
-            list-style: none;
-            padding: 10px 0;
-        }
-
-        .sidebar-menu li {
-            margin-bottom: 5px;
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 15px 40px;
-            color: #2d2a29;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        .sidebar-menu a i {
-            width: 24px;
-            font-size: 16px;
-            color: #888380;
-            margin-right: 15px;
-        }
-
-        .sidebar-menu a:hover {
-            background-color: #f7f1f1;
-        }
-
-        .sidebar-menu a.active {
-            background-color: #f7eded;
-            color: #5c1e28;
-            font-weight: 600;
-        }
-
-        .sidebar-menu a.active::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 4px;
-            background-color: #5c1e28;
-        }
-
-        .sidebar-menu a.active i {
-            color: #5c1e28;
-        }
-
-        .logout-btn {
-            display: block;
-            width: 100%;
-            padding: 14px !important;
-            background-color: #c9302c;
-            color: #ffffff !important;
-            text-align: center;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-
-        .logout-btn:hover {
-            background-color: #ac2925;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 260px;
-            flex: 1;
-            overflow-y: auto;
-            padding: 40px 60px;
-        }
 
         .page-title {
             font-family: 'Playfair Display', serif;
@@ -137,7 +42,7 @@
             background: white;
             border-radius: 8px;
             padding: 40px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             margin-bottom: 30px;
         }
 
@@ -193,6 +98,23 @@
         .form-select:focus,
         .form-textarea:focus {
             border-color: #5c1e28;
+        }
+
+        .form-input.input-error,
+        .form-select.input-error,
+        .form-textarea.input-error {
+            border-color: #dc3545;
+        }
+
+        .field-error {
+            color: #dc3545;
+            font-size: 11px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .field-error.visible {
+            display: block;
         }
 
         .form-textarea {
@@ -417,269 +339,1230 @@
         .btn-add-image:hover {
             background-color: #4a1620;
         }
+
+        .btn-edit-variant {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-edit-variant:hover {
+            background-color: #0056b3;
+        }
+
+        /* Shade swatch styles */
+        .shade-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .shade-preview {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            flex-shrink: 0;
+            background: #f0f0f0;
+            transition: background-color 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .hex-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .hex-input-wrap input[type="color"] {
+            width: 38px;
+            height: 38px;
+            padding: 2px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .hex-input-wrap .form-input {
+            font-family: 'Inter', monospace;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
     </style>
 </head>
+
 <body>
-    <%- include('../partials/admin/sidebar') %>
+    <%- include('../partials/admin/sidebar', { selectedTab: 'products' }) %>
 
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <h1 class="page-title">Edit Product</h1>
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1 class="page-title">Edit Product</h1>
 
-        <% if (errorMessage) { %>
-            <div class="error-message">
-                <%= errorMessage %>
-            </div>
-        <% } %>
-
-        <form action="/admin/products/edit/<%= product._id %>" method="POST" id="productForm">
-            
-            <!-- Product Common Details -->
-            <div class="form-card">
-                <h3 class="section-title">Product Details</h3>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">PRODUCT NAME *</label>
-                        <input type="text" 
-                               name="productName" 
-                               class="form-input" 
-                               value="<%= product.productName %>"
-                               required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">CATEGORY *</label>
-                        <select name="categoryId" class="form-select" required>
-                            <option value="">Select Category</option>
-                            <% if (categories && categories.length > 0) { %>
-                                <% categories.forEach(category => { %>
-                                    <option value="<%= category._id %>" <%= product.categoryId._id.toString() === category._id.toString() ? 'selected' : '' %>>
-                                        <%= category.name %>
-                                    </option>
-                                <% }) %>
-                            <% } %>
-                        </select>
-                    </div>
+            <% if (errorMessage) { %>
+                <div class="error-message">
+                    <%= errorMessage %>
                 </div>
+                <% } %>
 
-                <div class="form-group full-width">
-                    <label class="form-label">DESCRIPTION *</label>
-                    <textarea name="description" 
-                              class="form-textarea" 
-                              required><%= product.description %></textarea>
-                </div>
+                    <form action="/admin/products/edit/<%= product._id %>" method="POST" id="productForm">
 
-                <div class="form-group">
-                    <label class="form-label">STATUS</label>
-                    <select name="status" class="form-select">
-                        <option value="ACTIVE" <%= product.status === 'ACTIVE' ? 'selected' : '' %>>Active</option>
-                        <option value="INACTIVE" <%= product.status === 'INACTIVE' ? 'selected' : '' %>>Inactive</option>
-                    </select>
-                </div>
-            </div>
+                        <!-- Product Common Details -->
+                        <div class="form-card">
+                            <h3 class="section-title">Product Details</h3>
 
-            <div class="form-footer">
-                <button type="submit" class="btn-save">UPDATE PRODUCT</button>
-                <a href="/admin/products" class="btn-cancel">CANCEL</a>
-            </div>
-        </form>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">PRODUCT NAME *</label>
+                                    <input type="text" id="editProductName" name="productName" class="form-input"
+                                        value="<%= product.productName %>">
+                                    <span class="field-error" id="editProductNameError">Product name is required.</span>
+                                </div>
 
-        <!-- Existing Variants Section -->
-        <div class="form-card">
-            <h3 class="section-title">Product Variants</h3>
-            <p class="upload-note">Manage existing variants and their images. Add images one by one.</p>
-            
-            <% if (variants && variants.length > 0) { %>
-                <% variants.forEach((variant, index) => { %>
-                    <div class="variant-card" data-variant-id="<%= variant._id %>">
-                        <div class="variant-header">
-                            <span class="variant-number">Variant <%= index + 1 %> - <%= variant.color %></span>
-                            <button type="button" class="btn-delete-variant" onclick="deleteVariant('<%= variant._id %>')">
-                                Delete Variant
-                            </button>
+                                <div class="form-group">
+                                    <label class="form-label">CATEGORY *</label>
+                                    <select id="editCategoryId" name="categoryId" class="form-select">
+                                        <option value="">Select Category</option>
+                                        <% if (categories && categories.length> 0) { %>
+                                            <% categories.forEach(category=> { %>
+                                                <option value="<%= category._id %>"
+                                                    <%=product.categoryId._id.toString()===category._id.toString()
+                                                    ? 'selected' : '' %>>
+                                                    <%= category.name %>
+                                                </option>
+                                                <% }) %>
+                                                    <% } %>
+                                    </select>
+                                    <span class="field-error" id="editCategoryIdError">Please select a category.</span>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">BRAND *</label>
+                                    <input type="text" id="editBrand" name="brand" class="form-input" value="<%= product.brand %>">
+                                    <span class="field-error" id="editBrandError">Brand is required.</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">STATUS</label>
+                                    <select name="status" class="form-select">
+                                        <option value="ACTIVE" <%=product.status==='ACTIVE' ? 'selected' : '' %>>Active
+                                        </option>
+                                        <option value="INACTIVE" <%=product.status==='INACTIVE' ? 'selected' : '' %>
+                                            >Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label class="form-label">DESCRIPTION *</label>
+                                <textarea id="editDescription" name="description" class="form-textarea"><%= product.description %></textarea>
+                                <span class="field-error" id="editDescriptionError">Description is required.</span>
+                            </div>
+
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">COLOR</label>
-                                <input type="text" 
-                                       value="<%= variant.color %>" 
-                                       class="form-input" 
-                                       disabled>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">QUANTITY</label>
-                                <input type="number" 
-                                       value="<%= variant.quantity %>" 
-                                       class="form-input" 
-                                       disabled>
-                            </div>
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">REGULAR PRICE (₹)</label>
-                                <input type="number" 
-                                       value="<%= variant.regularPrice %>" 
-                                       class="form-input" 
-                                       disabled>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">SALE PRICE (₹)</label>
-                                <input type="number" 
-                                       value="<%= variant.salePrice %>" 
-                                       class="form-input" 
-                                       disabled>
-                            </div>
-                        </div>
+                        <!-- Existing Variants Section -->
+                        <div class="form-card">
+                            <h3 class="section-title">Product Variants</h3>
+                            <p class="upload-note">Manage existing variants and their images. Add images one by one.</p>
 
-                        <div class="form-group full-width">
-                            <label class="form-label">VARIANT IMAGES (<%= variant.images.length %> images)</label>
-                            <input type="file" 
-                                   id="variantImageInput-<%= variant._id %>" 
-                                   class="file-input" 
-                                   accept="image/*" 
-                                   onchange="addImageToVariant('<%= variant._id %>', this.files[0])">
-                            
-                            <div class="image-preview-container" id="imagePreview-<%= variant._id %>">
-                                <% variant.images.forEach((image, imgIndex) => { %>
-                                    <div class="image-preview-box" data-image-index="<%= imgIndex %>">
-                                        <img src="<%= image %>" alt="Variant Image">
-                                        <button type="button" 
-                                                class="remove-image-btn" 
-                                                onclick="removeImageFromVariant('<%= variant._id %>', '<%= image %>', this); event.stopPropagation();">
-                                            ×
-                                        </button>
+                            <% if (variants && variants.length> 0) { %>
+                                <% variants.forEach((variant, index)=> { %>
+                                    <div class="variant-card" data-variant-id="<%= variant._id %>">
+                                        <div class="variant-header">
+                                            <span class="variant-number">Variant <%= index + 1 %> - <%= variant.color %>
+                                                        </span>
+                                            <div style="display: flex; gap: 10px;">
+                                                <button type="button" class="btn-edit-variant"
+                                                    style="background-color: #28a745;"
+                                                    onclick="updateVariantDirect('<%= variant._id %>')">
+                                                    UPDATE
+                                                </button>
+                                                <button type="button" class="btn-delete-variant"
+                                                    onclick="deleteVariant('<%= variant._id %>')">
+                                                    Delete Variant
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row">
+                                            <input type="hidden" name="variants[<%= variant._id %>][_id]"
+                                                value="<%= variant._id %>">
+                                            <div class="form-group">
+                                                <label class="form-label">COLOR NAME *</label>
+                                                <input type="text" name="variants[<%= variant._id %>][color]"
+                                                    id="colorInput-<%= variant._id %>" value="<%= variant.color %>"
+                                                    class="form-input">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="form-label">QUANTITY *</label>
+                                                <input type="number" name="variants[<%= variant._id %>][quantity]"
+                                                    id="qtyInput-<%= variant._id %>" value="<%= variant.quantity %>"
+                                                    class="form-input" min="0">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row">
+                                            <div class="form-group" style="grid-column: 1 / -1;">
+                                                <label class="form-label">SHADE COLOUR (HEX CODE) *</label>
+                                                <div class="shade-row">
+                                                    <div class="shade-preview" id="shadePreview-<%= variant._id %>"
+                                                        style="background-color: <%= variant.hexCode && variant.hexCode.trim() ? variant.hexCode : '#ffffff' %>; border-color: <%= variant.hexCode && variant.hexCode.trim() ? variant.hexCode : '#ddd' %>;">
+                                                    </div>
+                                                    <div class="hex-input-wrap">
+                                                        <input type="color" id="colorPicker-<%= variant._id %>"
+                                                            value="<%= variant.hexCode && variant.hexCode.trim() ? variant.hexCode : '#ffffff' %>"
+                                                            oninput="syncHex('<%= variant._id %>', this.value)"
+                                                            onchange="syncHex('<%= variant._id %>', this.value)">
+                                                        <input type="text" name="variants[<%= variant._id %>][hexCode]"
+                                                            id="hexInput-<%= variant._id %>"
+                                                            value="<%= variant.hexCode || '' %>" class="form-input"
+                                                            placeholder="#FF5733" maxlength="7"
+                                                            oninput="syncPicker('<%= variant._id %>', this.value)">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">REGULAR PRICE (₹) *</label>
+                                                <input type="number" name="variants[<%= variant._id %>][regularPrice]"
+                                                    id="regPriceInput-<%= variant._id %>"
+                                                    value="<%= variant.regularPrice %>" class="form-input" min="0"
+                                                    step="0.01">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="form-label">SALE PRICE (₹) *</label>
+                                                <input type="number" name="variants[<%= variant._id %>][salePrice]"
+                                                    id="salePriceInput-<%= variant._id %>"
+                                                    value="<%= variant.salePrice %>" class="form-input" min="0"
+                                                    step="0.01">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group full-width">
+                                            <label class="form-label">VARIANT IMAGES (<%= variant.images.length %>
+                                                    images)</label>
+                                            <input type="file" id="variantImageInput-<%= variant._id %>"
+                                                class="file-input" accept="image/*"
+                                                onchange="addImageToVariant('<%= variant._id %>', this.files[0])">
+
+                                            <div class="image-preview-container" id="imagePreview-<%= variant._id %>">
+                                                <% variant.images.forEach((image, imgIndex)=> { %>
+                                                    <div class="image-preview-box" data-image-index="<%= imgIndex %>">
+                                                        <img src="<%= image %>" alt="Variant Image">
+                                                        <button type="button" class="remove-image-btn"
+                                                            onclick="removeImageFromVariant('<%= variant._id %>', '<%= image %>', this); event.stopPropagation();">
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                    <% }) %>
+                                            </div>
+
+                                            <button type="button" class="btn-add-image"
+                                                onclick="document.getElementById('variantImageInput-<%= variant._id %>').click()">
+                                                <i class="fas fa-plus"></i> Add Image
+                                            </button>
+                                        </div>
                                     </div>
-                                <% }) %>
-                            </div>
-                            
-                            <button type="button" 
-                                    class="btn-add-image" 
-                                    onclick="document.getElementById('variantImageInput-<%= variant._id %>').click()">
-                                <i class="fas fa-plus"></i> Add Image
-                            </button>
-                        </div>
-                    </div>
-                <% }) %>
-            <% } else { %>
-                <p style="color: #999; text-align: center; padding: 20px;">No variants found for this product.</p>
-            <% } %>
-        </div>
-    </main>
+                                    <% }) %>
+                                        <% } else { %>
+                                            <p style="color: #999; text-align: center; padding: 20px;">No variants found
+                                                for this product.</p>
+                                            <% } %>
 
-    <script>
-        // Add image to existing variant
-        async function addImageToVariant(variantId, file) {
+                                                <!-- Add Variant Section -->
+                                                <div class="variant-card"
+                                                    style="border: 2px dashed #28a745; background-color: #f8fff9; margin-top: 40px;"
+                                                    id="addVariantSection">
+                                                    <div class="variant-header">
+                                                        <span class="variant-number" style="color: #28a745;"><i
+                                                                class="fas fa-plus-circle"></i> Add New Variant</span>
+                                                    </div>
+
+                                                    <div class="form-row">
+                                                        <div class="form-group">
+                                                            <label class="form-label">COLOR NAME *</label>
+                                                            <input type="text" id="newVariantColor" class="form-input"
+                                                                placeholder="e.g., Ruby Red, Rose Pink...">
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label class="form-label">QUANTITY *</label>
+                                                            <input type="number" id="newVariantQuantity"
+                                                                class="form-input" placeholder="0" min="0">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-row">
+                                                        <div class="form-group" style="grid-column: 1 / -1;">
+                                                            <label class="form-label">SHADE COLOUR (HEX CODE) *</label>
+                                                            <div class="shade-row">
+                                                                <div class="shade-preview" id="newShadePreview"
+                                                                    style="background-color: #5c1e28; border-color: #5c1e28;">
+                                                                </div>
+                                                                <div class="hex-input-wrap">
+                                                                    <input type="color" id="newColorPicker"
+                                                                        value="#5c1e28" oninput="syncNewHex(this.value)"
+                                                                        onchange="syncNewHex(this.value)">
+                                                                    <input type="text" id="newHexInput"
+                                                                        class="form-input" placeholder="#FF5733"
+                                                                        value="#5C1E28" maxlength="7"
+                                                                        oninput="syncNewPicker(this.value)">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-row">
+                                                        <div class="form-group">
+                                                            <label class="form-label">REGULAR PRICE (₹) *</label>
+                                                            <input type="number" id="newVariantRegPrice"
+                                                                class="form-input" placeholder="0.00" min="0"
+                                                                step="0.01">
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label class="form-label">SALE PRICE (₹) *</label>
+                                                            <input type="number" id="newVariantSalePrice"
+                                                                class="form-input" placeholder="0.00" min="0"
+                                                                step="0.01">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-group full-width" style="margin-bottom: 20px;">
+                                                        <label class="form-label">VARIANT IMAGES * (Min 3
+                                                            images)</label>
+                                                        <input type="file" id="newVariantImages" class="file-input"
+                                                            accept="image/*" multiple
+                                                            onchange="handleNewVariantImages(this.files)">
+
+                                                        <div class="image-preview-container" id="newImagesPreview">
+                                                            <div class="image-preview-box"
+                                                                onclick="document.getElementById('newVariantImages').click()">
+                                                                <div class="image-preview-placeholder">
+                                                                    <i class="fas fa-camera"></i>
+                                                                    <p>Click to upload</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <button type="button" class="btn-add-variant"
+                                                        onclick="submitNewVariant()">
+                                                        <i class="fas fa-plus"></i> Save Variant to Product
+                                                    </button>
+                                                </div>
+                        </div>
+        </main>
+
+        <script>
+        // Form submission confirmation and JS validation with SweetAlert
+        document.getElementById('productForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = this;
+            let hasError = false;
+
+            // Helper: show/clear inline errors
+            function showErr(id, errId, show) {
+                const el = document.getElementById(id);
+                const err = document.getElementById(errId);
+                if (!el || !err) return;
+                el.classList.toggle('input-error', show);
+                err.classList.toggle('visible', show);
+            }
+
+            // ── Product-level fields ─────────────────────────────────
+            // Trim and write back to inputs before validation
+            const productNameInput = document.getElementById('editProductName');
+            const brandInput       = document.getElementById('editBrand');
+            const descriptionInput = document.getElementById('editDescription');
+
+            productNameInput.value = productNameInput.value.trim();
+            brandInput.value       = brandInput.value.trim();
+            descriptionInput.value = descriptionInput.value.trim();
+
+            const productName = productNameInput.value;
+            const categoryId  = document.getElementById('editCategoryId').value;
+            const brand       = brandInput.value;
+            const description = descriptionInput.value;
+
+            showErr('editProductName', 'editProductNameError', !productName);
+            showErr('editCategoryId',  'editCategoryIdError',  !categoryId);
+            showErr('editBrand',       'editBrandError',       !brand);
+            showErr('editDescription', 'editDescriptionError', !description);
+
+            if (!productName || !categoryId || !brand || !description) hasError = true;
+
+            // ── Existing variant fields ───────────────────────────────
+            const variantCards = form.querySelectorAll('.variant-card[data-variant-id]');
+            for (let card of variantCards) {
+                const variantId = card.getAttribute('data-variant-id');
+
+                const colorInput     = document.getElementById(`colorInput-${variantId}`);
+                const qtyInput       = document.getElementById(`qtyInput-${variantId}`);
+                const regPriceInput  = document.getElementById(`regPriceInput-${variantId}`);
+                const salePriceInput = document.getElementById(`salePriceInput-${variantId}`);
+                const hexInput       = document.getElementById(`hexInput-${variantId}`);
+
+                const color        = colorInput.value.trim();
+                const quantity     = qtyInput.value.trim();
+                const regularPrice = regPriceInput.value.trim();
+                const salePrice    = salePriceInput.value.trim();
+                const hexCode      = hexInput.value.trim();
+
+                // Write trimmed values back so submitted data is clean
+                colorInput.value = color;
+                hexInput.value   = hexCode;
+
+                // Inline error helper for variant fields
+                function vErr(input, errId, show) {
+                    input.classList.toggle('input-error', show);
+                    let span = document.getElementById(errId);
+                    if (!span) {
+                        if (show) {
+                            span = document.createElement('span');
+                            span.id = errId;
+                            span.className = 'field-error visible';
+                            input.parentNode.insertBefore(span, input.nextSibling);
+                        }
+                    } else {
+                        span.classList.toggle('visible', show);
+                    }
+                }
+
+                const colorErrId    = `colorErr-${variantId}`;
+                const qtyErrId      = `qtyErr-${variantId}`;
+                const regErrId      = `regErr-${variantId}`;
+                const saleErrId     = `saleErr-${variantId}`;
+                const hexErrId      = `hexErr-${variantId}`;
+
+                vErr(colorInput,     colorErrId, !color);
+                vErr(qtyInput,       qtyErrId,   quantity === '');
+                vErr(regPriceInput,  regErrId,   regularPrice === '');
+                vErr(salePriceInput, saleErrId,  salePrice === '');
+                vErr(hexInput,       hexErrId,   !hexCode);
+
+                if (!color) { getOrCreateSpan(colorErrId).textContent = 'Color name is required.'; }
+                if (quantity === '') { getOrCreateSpan(qtyErrId).textContent = 'Quantity is required.'; }
+                if (regularPrice === '') { getOrCreateSpan(regErrId).textContent = 'Regular price is required.'; }
+                if (salePrice === '') { getOrCreateSpan(saleErrId).textContent = 'Sale price is required.'; }
+                if (!hexCode) { getOrCreateSpan(hexErrId).textContent = 'Hex code is required.'; }
+
+                if (!color || quantity === '' || regularPrice === '' || salePrice === '' || !hexCode) {
+                    hasError = true; continue;
+                }
+
+                const qty  = parseFloat(quantity);
+                const regP = parseFloat(regularPrice);
+                const salP = parseFloat(salePrice);
+
+                if (qty < 0) {
+                    vErr(qtyInput, qtyErrId, true);
+                    getOrCreateSpan(qtyErrId).textContent = 'Quantity cannot be negative.';
+                    hasError = true;
+                }
+                if (regP < 0) {
+                    vErr(regPriceInput, regErrId, true);
+                    getOrCreateSpan(regErrId).textContent = 'Regular price cannot be negative.';
+                    hasError = true;
+                }
+                if (salP < 0) {
+                    vErr(salePriceInput, saleErrId, true);
+                    getOrCreateSpan(saleErrId).textContent = 'Sale price cannot be negative.';
+                    hasError = true;
+                }
+                if (salP > regP) {
+                    vErr(salePriceInput, saleErrId, true);
+                    getOrCreateSpan(saleErrId).textContent = 'Sale price cannot exceed regular price.';
+                    hasError = true;
+                }
+                if (!isValidHex(hexCode)) {
+                    vErr(hexInput, hexErrId, true);
+                    getOrCreateSpan(hexErrId).textContent = 'Invalid hex code (e.g. #FF5733).';
+                    hasError = true;
+                }
+            }
+
+            if (hasError) return;
+
+            const result = await Swal.fire({
+                title: 'Save Changes?',
+                text: 'Are you sure you want to update this product?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#5c1e28',
+                cancelButtonColor: '#999',
+                confirmButtonText: 'Yes, Save',
+                cancelButtonText: 'Cancel'
+            });
+
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+
+        // Helper to get or create an error span
+        function getOrCreateSpan(id) {
+            let span = document.getElementById(id);
+            if (!span) {
+                span = document.createElement('span');
+                span.id = id;
+                span.className = 'field-error visible';
+            }
+            return span;
+        }
+
+        // Clear errors on input for product-level fields
+        ['editProductName','editCategoryId','editBrand','editDescription'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', function() {
+                    this.classList.remove('input-error');
+                    const err = document.getElementById(id + 'Error');
+                    if (err) err.classList.remove('visible');
+                });
+                el.addEventListener('change', function() {
+                    this.classList.remove('input-error');
+                    const err = document.getElementById(id + 'Error');
+                    if (err) err.classList.remove('visible');
+                });
+            }
+        });
+
+        let currentCropper = null;
+
+        function cropImageHelper(file, callback) {
             if (!file) return;
 
-            const formData = new FormData();
-            formData.append('image', file);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const modal = document.getElementById('cropperModal');
+                const img = document.getElementById('cropperImage');
+                img.src = e.target.result;
+                modal.style.display = 'flex';
 
-            try {
-                const response = await fetch(`/admin/variants/${variantId}/add-image`, {
-                    method: 'POST',
-                    body: formData
+                if (currentCropper) {
+                    currentCropper.destroy();
+                }
+
+                currentCropper = new Cropper(img, {
+                    aspectRatio: 1, // 1:1 square crop
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    responsive: true,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false
                 });
 
-                const data = await response.json();
+                const cropBtn = document.getElementById('cropperCropBtn');
+                const cancelBtn = document.getElementById('cropperCancelBtn');
 
-                if (data.success) {
-                    // Add image preview to the beginning of the container
-                    const container = document.getElementById(`imagePreview-${variantId}`);
+                const newCropBtn = cropBtn.cloneNode(true);
+                const newCancelBtn = cancelBtn.cloneNode(true);
+
+                cropBtn.parentNode.replaceChild(newCropBtn, cropBtn);
+                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+                newCropBtn.addEventListener('click', function() {
+                    const canvas = currentCropper.getCroppedCanvas({
+                        width: 800,
+                        height: 800
+                    });
+
+                    canvas.toBlob(function(blob) {
+                        const croppedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+
+                        modal.style.display = 'none';
+                        currentCropper.destroy();
+                        currentCropper = null;
+
+                        callback(croppedFile);
+                    }, 'image/jpeg', 0.9);
+                });
+
+                newCancelBtn.addEventListener('click', function() {
+                    modal.style.display = 'none';
+                    currentCropper.destroy();
+                    currentCropper = null;
+                    callback(null);
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Add image to existing variant
+            async function addImageToVariant(variantId, file) {
+                if (!file) return;
+
+                // Clear input value so same file can be selected again
+                document.getElementById(`variantImageInput-${variantId}`).value = '';
+
+                cropImageHelper(file, async function(croppedFile) {
+                    if (!croppedFile) return;
+
+                    const formData = new FormData();
+                    formData.append('image', croppedFile);
+
+                    try {
+                        const response = await fetch(`/admin/variants/${variantId}/add-image`, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Image added successfully!',
+                                confirmButtonColor: '#5c1e28',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            window.location.reload();
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Error adding image',
+                                confirmButtonColor: '#5c1e28'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Error adding image',
+                            confirmButtonColor: '#5c1e28'
+                        });
+                    }
+                });
+            }
+
+            // Remove image from variant
+            async function removeImageFromVariant(variantId, imageUrl, button) {
+                const result = await Swal.fire({
+                    title: 'Remove Image?',
+                    text: 'Are you sure you want to remove this image?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#5c1e28',
+                    cancelButtonColor: '#999',
+                    confirmButtonText: 'Yes, Remove',
+                    cancelButtonText: 'Cancel'
+                });
+
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/admin/variants/${variantId}/remove-image`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ imageUrl })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Remove the image box from DOM
+                        button.closest('.image-preview-box').remove();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Removed!',
+                            text: 'Image removed successfully!',
+                            confirmButtonColor: '#5c1e28',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error removing image',
+                            confirmButtonColor: '#5c1e28'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error removing image',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                }
+            }
+
+            // Delete variant
+            async function deleteVariant(variantId) {
+                const result = await Swal.fire({
+                    title: 'Delete Variant?',
+                    text: 'Are you sure you want to delete this variant? This action cannot be undone.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#999',
+                    confirmButtonText: 'Yes, Delete',
+                    cancelButtonText: 'Cancel'
+                });
+
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/admin/variants/delete/${variantId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Remove variant card from DOM
+                        document.querySelector(`[data-variant-id="${variantId}"]`).remove();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: 'Variant deleted successfully!',
+                            confirmButtonColor: '#5c1e28',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error deleting variant',
+                            confirmButtonColor: '#5c1e28'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error deleting variant',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                }
+            }
+
+            // Direct update for a single variant
+            async function updateVariantDirect(variantId) {
+                const colorInput = document.getElementById(`colorInput-${variantId}`);
+                const qtyInput = document.getElementById(`qtyInput-${variantId}`);
+                const regPriceInput = document.getElementById(`regPriceInput-${variantId}`);
+                const salePriceInput = document.getElementById(`salePriceInput-${variantId}`);
+                const hexInput = document.getElementById(`hexInput-${variantId}`);
+
+                const color = colorInput.value.trim();
+                const quantity = parseInt(qtyInput.value);
+                const regularPrice = parseFloat(regPriceInput.value);
+                const salePrice = parseFloat(salePriceInput.value);
+                const hexCode = hexInput.value.trim();
+
+                // Write trimmed values back so submitted data is clean
+                colorInput.value = color;
+                hexInput.value   = hexCode;
+
+                let hasError = false;
+
+                // Helper to show/clear inline errors
+                function vErr(input, errId, show, msg = '') {
+                    input.classList.toggle('input-error', show);
+                    let span = document.getElementById(errId);
+                    if (!span && show) {
+                        span = document.createElement('span');
+                        span.id = errId;
+                        span.className = 'field-error visible';
+                        span.textContent = msg;
+                        input.parentNode.insertBefore(span, input.nextSibling);
+                    } else if (span) {
+                        span.classList.toggle('visible', show);
+                        if (show && msg) span.textContent = msg;
+                    }
+                }
+
+                const colorErrId = `updateColorErr-${variantId}`;
+                const qtyErrId = `updateQtyErr-${variantId}`;
+                const regErrId = `updateRegErr-${variantId}`;
+                const saleErrId = `updateSaleErr-${variantId}`;
+                const hexErrId = `updateHexErr-${variantId}`;
+
+                // Validate each field
+                if (!color) {
+                    vErr(colorInput, colorErrId, true, 'Color name is required.');
+                    hasError = true;
+                } else {
+                    vErr(colorInput, colorErrId, false);
+                }
+
+                if (isNaN(quantity) || qtyInput.value.trim() === '') {
+                    vErr(qtyInput, qtyErrId, true, 'Quantity is required.');
+                    hasError = true;
+                } else if (quantity < 0) {
+                    vErr(qtyInput, qtyErrId, true, 'Quantity cannot be negative.');
+                    hasError = true;
+                } else {
+                    vErr(qtyInput, qtyErrId, false);
+                }
+
+                if (isNaN(regularPrice) || regPriceInput.value.trim() === '') {
+                    vErr(regPriceInput, regErrId, true, 'Regular price is required.');
+                    hasError = true;
+                } else if (regularPrice < 0) {
+                    vErr(regPriceInput, regErrId, true, 'Regular price cannot be negative.');
+                    hasError = true;
+                } else {
+                    vErr(regPriceInput, regErrId, false);
+                }
+
+                if (isNaN(salePrice) || salePriceInput.value.trim() === '') {
+                    vErr(salePriceInput, saleErrId, true, 'Sale price is required.');
+                    hasError = true;
+                } else if (salePrice < 0) {
+                    vErr(salePriceInput, saleErrId, true, 'Sale price cannot be negative.');
+                    hasError = true;
+                } else if (salePrice > regularPrice) {
+                    vErr(salePriceInput, saleErrId, true, 'Sale price cannot exceed regular price.');
+                    hasError = true;
+                } else {
+                    vErr(salePriceInput, saleErrId, false);
+                }
+
+                if (!hexCode) {
+                    vErr(hexInput, hexErrId, true, 'Hex code is required.');
+                    hasError = true;
+                } else if (!isValidHex(hexCode)) {
+                    vErr(hexInput, hexErrId, true, 'Invalid hex code (e.g. #FF5733).');
+                    hasError = true;
+                } else {
+                    vErr(hexInput, hexErrId, false);
+                }
+
+                if (hasError) return;
+
+                try {
+                    const response = await fetch(`/admin/variants/update/${variantId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ color, hexCode, quantity, regularPrice, salePrice })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Updated!',
+                            text: 'Variant updated successfully!',
+                            confirmButtonColor: '#5c1e28',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        // Redirect to products page after success
+                        window.location.href = '/admin/products';
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error updating variant',
+                            confirmButtonColor: '#5c1e28'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error updating variant',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                }
+            }
+
+
+
+            function syncHex(variantId, hexValue) {
+                document.getElementById(`hexInput-${variantId}`).value = hexValue.toUpperCase();
+                updateShadePreview(variantId, hexValue);
+            }
+
+            function syncPicker(variantId, rawValue) {
+                const hex = rawValue.startsWith('#') ? rawValue : '#' + rawValue;
+                if (isValidHex(hex)) {
+                    document.getElementById(`colorPicker-${variantId}`).value = hex;
+                    updateShadePreview(variantId, hex);
+                }
+            }
+
+            function updateShadePreview(variantId, hex) {
+                const preview = document.getElementById(`shadePreview-${variantId}`);
+                if (preview && isValidHex(hex)) {
+                    preview.style.backgroundColor = hex;
+                    preview.style.borderColor = hex;
+                }
+            }
+
+            function isValidHex(hex) {
+                return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(hex);
+            }
+
+            // --- New variant functions ---
+            function syncNewHex(hexValue) {
+                document.getElementById('newHexInput').value = hexValue.toUpperCase();
+                const preview = document.getElementById('newShadePreview');
+                preview.style.backgroundColor = hexValue;
+                preview.style.borderColor = hexValue;
+            }
+
+            function syncNewPicker(rawValue) {
+                const hex = rawValue.startsWith('#') ? rawValue : '#' + rawValue;
+                if (isValidHex(hex)) {
+                    document.getElementById('newColorPicker').value = hex;
+                    const preview = document.getElementById('newShadePreview');
+                    preview.style.backgroundColor = hex;
+                    preview.style.borderColor = hex;
+                }
+            }
+
+            let newVariantFiles = [];
+
+            function handleNewVariantImages(files) {
+                if (files.length === 0) return;
+                const file = files[0];
+                
+                // Clear input value
+                document.getElementById('newVariantImages').value = '';
+                
+                cropImageHelper(file, function(croppedFile) {
+                    if (!croppedFile) return;
+                    newVariantFiles.push(croppedFile);
+                    renderNewImagesPreview();
+                });
+            }
+
+            function renderNewImagesPreview() {
+                const previewContainer = document.getElementById('newImagesPreview');
+                previewContainer.innerHTML = '';
+
+                newVariantFiles.forEach((file, index) => {
                     const reader = new FileReader();
-                    
-                    reader.onload = function(e) {
-                        const newBox = document.createElement('div');
-                        newBox.className = 'image-preview-box';
-                        newBox.innerHTML = `
-                            <img src="${e.target.result}" alt="Variant Image">
-                            <button type="button" 
-                                    class="remove-image-btn" 
-                                    onclick="removeImageFromVariant('${variantId}', '${data.imageUrl}', this); event.stopPropagation();">
-                                ×
-                            </button>
-                        `;
-                        container.insertBefore(newBox, container.firstChild);
+                    const box = document.createElement('div');
+                    box.className = 'image-preview-box';
+                    previewContainer.appendChild(box);
+
+                    reader.onload = function (e) {
+                        box.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview">
+                        <button type="button" class="remove-image-btn" onclick="removeNewImage(${index}); event.stopPropagation();">×</button>
+                    `;
                     };
-                    
                     reader.readAsDataURL(file);
-
-                    // Clear file input
-                    document.getElementById(`variantImageInput-${variantId}`).value = '';
-                    
-                    alert('Image added successfully!');
-                } else {
-                    alert(data.message || 'Error adding image');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error adding image');
-            }
-        }
-
-        // Remove image from variant
-        async function removeImageFromVariant(variantId, imageUrl, button) {
-            if (!confirm('Are you sure you want to remove this image?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/admin/variants/${variantId}/remove-image`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ imageUrl })
                 });
 
-                const data = await response.json();
+                const clickBox = document.createElement('div');
+                clickBox.className = 'image-preview-box';
+                clickBox.onclick = () => document.getElementById('newVariantImages').click();
+                clickBox.innerHTML = `
+                <div class="image-preview-placeholder">
+                    <i class="fas fa-camera"></i>
+                    <p>Click to upload</p>
+                </div>
+            `;
+                previewContainer.appendChild(clickBox);
+            }
 
-                if (data.success) {
-                    // Remove the image box from DOM
-                    button.closest('.image-preview-box').remove();
-                    alert('Image removed successfully!');
-                } else {
-                    alert(data.message || 'Error removing image');
+            function removeNewImage(index) {
+                newVariantFiles.splice(index, 1);
+                renderNewImagesPreview();
+            }
+
+            async function submitNewVariant() {
+                const colorInput = document.getElementById('newVariantColor');
+                const qtyInput = document.getElementById('newVariantQuantity');
+                const regPriceInput = document.getElementById('newVariantRegPrice');
+                const salePriceInput = document.getElementById('newVariantSalePrice');
+                const hexInput = document.getElementById('newHexInput');
+
+                const color = colorInput.value.trim();
+                const quantity = parseInt(qtyInput.value);
+                const regularPrice = parseFloat(regPriceInput.value);
+                const salePrice = parseFloat(salePriceInput.value);
+                const hexCode = hexInput.value.trim();
+
+                // Write trimmed values back so submitted data is clean
+                colorInput.value = color;
+                hexInput.value   = hexCode;
+
+                let hasError = false;
+
+                // Helper to show/clear inline errors
+                function vErr(input, errId, show, msg = '') {
+                    input.classList.toggle('input-error', show);
+                    let span = document.getElementById(errId);
+                    if (!span && show) {
+                        span = document.createElement('span');
+                        span.id = errId;
+                        span.className = 'field-error visible';
+                        span.textContent = msg;
+                        input.parentNode.insertBefore(span, input.nextSibling);
+                    } else if (span) {
+                        span.classList.toggle('visible', show);
+                        if (show && msg) span.textContent = msg;
+                    }
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error removing image');
-            }
-        }
 
-        // Delete variant
-        async function deleteVariant(variantId) {
-            if (!confirm('Are you sure you want to delete this variant? This action cannot be undone.')) {
-                return;
+                const colorErrId = 'newColorErr';
+                const qtyErrId = 'newQtyErr';
+                const regErrId = 'newRegErr';
+                const saleErrId = 'newSaleErr';
+                const hexErrId = 'newHexErr';
+                const imgErrId = 'newImgErr';
+
+                // Validate each field
+                if (!color) {
+                    vErr(colorInput, colorErrId, true, 'Color name is required.');
+                    hasError = true;
+                } else {
+                    vErr(colorInput, colorErrId, false);
+                }
+
+                if (isNaN(quantity) || qtyInput.value.trim() === '') {
+                    vErr(qtyInput, qtyErrId, true, 'Quantity is required.');
+                    hasError = true;
+                } else if (quantity < 0) {
+                    vErr(qtyInput, qtyErrId, true, 'Quantity cannot be negative.');
+                    hasError = true;
+                } else {
+                    vErr(qtyInput, qtyErrId, false);
+                }
+
+                if (isNaN(regularPrice) || regPriceInput.value.trim() === '') {
+                    vErr(regPriceInput, regErrId, true, 'Regular price is required.');
+                    hasError = true;
+                } else if (regularPrice < 0) {
+                    vErr(regPriceInput, regErrId, true, 'Regular price cannot be negative.');
+                    hasError = true;
+                } else {
+                    vErr(regPriceInput, regErrId, false);
+                }
+
+                if (isNaN(salePrice) || salePriceInput.value.trim() === '') {
+                    vErr(salePriceInput, saleErrId, true, 'Sale price is required.');
+                    hasError = true;
+                } else if (salePrice < 0) {
+                    vErr(salePriceInput, saleErrId, true, 'Sale price cannot be negative.');
+                    hasError = true;
+                } else if (salePrice > regularPrice) {
+                    vErr(salePriceInput, saleErrId, true, 'Sale price cannot exceed regular price.');
+                    hasError = true;
+                } else {
+                    vErr(salePriceInput, saleErrId, false);
+                }
+
+                if (!hexCode) {
+                    vErr(hexInput, hexErrId, true, 'Hex code is required.');
+                    hasError = true;
+                } else if (!isValidHex(hexCode)) {
+                    vErr(hexInput, hexErrId, true, 'Invalid hex code (e.g. #FF5733).');
+                    hasError = true;
+                } else {
+                    vErr(hexInput, hexErrId, false);
+                }
+
+                // Validate images (show error below the preview container)
+                const previewContainer = document.getElementById('newImagesPreview');
+                if (newVariantFiles.length < 3) {
+                    let imgSpan = document.getElementById(imgErrId);
+                    if (!imgSpan) {
+                        imgSpan = document.createElement('span');
+                        imgSpan.id = imgErrId;
+                        imgSpan.className = 'field-error visible';
+                        imgSpan.textContent = 'Please upload at least 3 images for the variant.';
+                        previewContainer.parentNode.insertBefore(imgSpan, previewContainer.nextSibling);
+                    } else {
+                        imgSpan.classList.add('visible');
+                    }
+                    hasError = true;
+                } else {
+                    let imgSpan = document.getElementById(imgErrId);
+                    if (imgSpan) imgSpan.classList.remove('visible');
+                }
+
+                if (hasError) return;
+
+                const formData = new FormData();
+                formData.append('color', color);
+                formData.append('quantity', quantity);
+                formData.append('regularPrice', regularPrice);
+                formData.append('salePrice', salePrice);
+                formData.append('hexCode', hexCode);
+
+                newVariantFiles.forEach(file => {
+                    formData.append('images', file);
+                });
+
+                try {
+                    const response = await fetch('/admin/products/<%= product._id %>/add-variant', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Variant added successfully!',
+                            confirmButtonColor: '#5c1e28',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        window.location.reload();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error adding variant',
+                            confirmButtonColor: '#5c1e28'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error adding variant',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                }
             }
 
-            try {
-                const response = await fetch(`/admin/variants/delete/${variantId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
+            // Show success/error notifications from URL parameters and clear them
+            document.addEventListener('DOMContentLoaded', function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const successMsg = urlParams.get('success');
+                const errorMsg = urlParams.get('error');
+
+                if (successMsg) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: successMsg,
+                        confirmButtonColor: '#5c1e28',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                    const remainingParams = Array.from(urlParams.entries())
+                        .filter(([key]) => key !== 'success' && key !== 'error')
+                        .map(([key, val]) => `${key}=${encodeURIComponent(val)}`)
+                        .join('&');
+                    const newUrl = window.location.pathname + (remainingParams ? '?' + remainingParams : '');
+                    window.history.replaceState({}, document.title, newUrl);
+                } else if (errorMsg) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: errorMsg,
+                        confirmButtonColor: '#5c1e28'
+                    });
+                    const remainingParams = Array.from(urlParams.entries())
+                        .filter(([key]) => key !== 'success' && key !== 'error')
+                        .map(([key, val]) => `${key}=${encodeURIComponent(val)}`)
+                        .join('&');
+                    const newUrl = window.location.pathname + (remainingParams ? '?' + remainingParams : '');
+                    window.history.replaceState({}, document.title, newUrl);
+                }
+
+                // Add real-time error clearing for existing variant fields
+                document.querySelectorAll('.variant-card[data-variant-id]').forEach(card => {
+                    const variantId = card.getAttribute('data-variant-id');
+                    ['colorInput', 'qtyInput', 'regPriceInput', 'salePriceInput', 'hexInput'].forEach(prefix => {
+                        const el = document.getElementById(`${prefix}-${variantId}`);
+                        if (el) {
+                            el.addEventListener('input', function() {
+                                this.classList.remove('input-error');
+                                const errSpan = this.nextElementSibling;
+                                if (errSpan && errSpan.classList.contains('field-error')) {
+                                    errSpan.classList.remove('visible');
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // Add real-time error clearing for new variant fields
+                ['newVariantColor', 'newVariantQuantity', 'newVariantRegPrice', 'newVariantSalePrice', 'newHexInput'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.addEventListener('input', function() {
+                            this.classList.remove('input-error');
+                            const errSpan = this.nextElementSibling;
+                            if (errSpan && errSpan.classList.contains('field-error')) {
+                                errSpan.classList.remove('visible');
+                            }
+                        });
                     }
                 });
 
-                const data = await response.json();
-
-                if (data.success) {
-                    // Remove variant card from DOM
-                    document.querySelector(`[data-variant-id="${variantId}"]`).remove();
-                    alert('Variant deleted successfully!');
-                } else {
-                    alert(data.message || 'Error deleting variant');
+                // Clear image error when files are added
+                const newVariantImagesInput = document.getElementById('newVariantImages');
+                if (newVariantImagesInput) {
+                    newVariantImagesInput.addEventListener('change', function() {
+                        const imgErrSpan = document.getElementById('newImgErr');
+                        if (imgErrSpan) imgErrSpan.classList.remove('visible');
+                    });
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error deleting variant');
-            }
-        }
-    </script>
+            });
+        </script>
+    <!-- Cropper Modal -->
+    <div id="cropperModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; flex-direction: column;">
+        <div style="background: white; border-radius: 12px; padding: 25px; width: 90vw; max-width: 600px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <h3 style="font-family: 'Playfair Display', serif; color: #5c1e28; margin: 0;">Crop Image</h3>
+            <div style="max-height: 400px; width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; background: #f0f0f0; border-radius: 8px;">
+                <img id="cropperImage" style="max-width: 100%; max-height: 400px; display: block;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 15px;">
+                <button id="cropperCancelBtn" type="button" style="padding: 10px 24px; border: 1.5px solid #ccc; background: transparent; border-radius: 30px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s;">Cancel</button>
+                <button id="cropperCropBtn" type="button" style="padding: 10px 24px; border: none; background: #5c1e28; color: white; border-radius: 30px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 12px rgba(92, 30, 40, 0.355);">Crop & Save</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

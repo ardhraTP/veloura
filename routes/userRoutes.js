@@ -1,4 +1,4 @@
-﻿// import express from 'express';
+// import express from 'express';
 // import { isAuthenticated, isGuest } from '../middleware/userAuth.js';
 // import { upload } from '../middleware/upload.js';
 // import passport from 'passport';
@@ -237,7 +237,7 @@ router.get('/product/:id',getProductDetail);
 router.get('/cart',isAuthenticated,getCartPage);
 router.post('/cart/add',isAuthenticated,addToCart);
 router.post('/cart/update',isAuthenticated,updateQuantity);
-router.delete('/cart/remove/:productId',isAuthenticated,removeItem);
+router.delete('/cart/remove/:variantId',isAuthenticated,removeItem);
 
 //wishlist routes
 router.get('/wishlist',isAuthenticated,getWishlistPage);

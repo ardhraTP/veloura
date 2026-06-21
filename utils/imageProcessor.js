@@ -11,8 +11,11 @@ export const processProductImages = async (files) => {
             const filename = 'product-' + Date.now() + '-' + Math.round(Math.random() * 1E9) + '.jpg';
             const outputPath = path.join('public', 'uploads', 'products', filename);
 
+            // Read the file into memory buffer to avoid locking the file descriptor on Windows
+            const fileBuffer = fs.readFileSync(file.path);
+
             // Resize and crop image to 800x800 pixels
-            await sharp(file.path)
+            await sharp(fileBuffer)
                 .resize(800, 800, {
                     fit: 'cover', // Crop to exact dimensions
                     position: 'center'

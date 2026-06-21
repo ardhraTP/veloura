@@ -122,6 +122,21 @@ header {
     margin: 0;
 }
 
+.product-unavailable-badge {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 4px 8px;
+    background: #f5ecec;
+    color: #c62828;
+    border: 1px solid #e57373;
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
 /* Price */
 .item-price {
     font-family: 'Inter', sans-serif;
@@ -152,9 +167,16 @@ header {
     justify-content: center;
 }
 
-.qty-btn:hover {
+.qty-btn:hover:not(:disabled) {
     border-color: #5c1e28;
     color: #5c1e28;
+}
+
+.qty-btn:disabled {
+    background-color: #f5f2ef;
+    color: #ccc;
+    border-color: #e8e4df;
+    cursor: not-allowed;
 }
 
 .qty-input {
@@ -324,6 +346,14 @@ header {
     background: #3b1118;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(92, 30, 40, 0.3);
+}
+
+.checkout-btn:disabled {
+    background: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .checkout-btn i {

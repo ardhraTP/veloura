@@ -11,6 +11,11 @@ const variantSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    hexCode: {
+        type: String,
+        trim: true,
+        default: ''
+    },
     images: [{
         type: String,
         required: true
@@ -40,11 +45,10 @@ const variantSchema = new mongoose.Schema({
 });
 
 // Validation: salePrice should be less than or equal to regularPrice
-variantSchema.pre('save', function(next) {
+variantSchema.pre('save', async function() {
     if (this.salePrice > this.regularPrice) {
-        next(new Error('Sale price cannot be greater than regular price'));
+        throw new Error('Sale price cannot be greater than regular price');
     }
-    next();
 });
 
 const Variant = mongoose.model('Variant', variantSchema);

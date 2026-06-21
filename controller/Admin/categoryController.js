@@ -79,11 +79,10 @@ export const editCategory = async (req,res)=>{
         const categoryId = req.params.id;
         const {name,offer,description} = req.body;
 
-        //check if name is provided
-        if(!name || name.trim() === ''){
-            return res.redirect('/admin/categories?error=Category name is required');
+        // Validate name (safety net — client-side JS also handles this)
+        if (!name || name.trim() === '') {
+            return res.redirect('/admin/categories?error=Category+name+is+required');
         }
-
 
         //check if another category with same name exists
         const existingCategory = await Category.findOne({
@@ -103,7 +102,7 @@ export const editCategory = async (req,res)=>{
             description:description ? description.trim() : ''
         });
 
-        res.redirect('/admin/categories?success=Categpry updated successfully');
+        res.redirect('/admin/categories?success=Category updated successfully');
     }catch(error){
         console.log('Error in editCategory:',error);
         res.redirect('/admin/categories?error=Error updating category');

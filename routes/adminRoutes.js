@@ -13,7 +13,8 @@ import {
     addVariant,
     deleteVariant,
     addImageToVariant,
-    removeImageFromVariant
+    removeImageFromVariant,
+    updateVariantDetails
 } from '../controller/Admin/productController.js';
 
 
@@ -68,6 +69,7 @@ router.post('/products/:id/add-variant', isAdminAuthenticated, uploadVariantImag
 router.delete('/variants/delete/:id', isAdminAuthenticated, deleteVariant);
 router.post('/variants/:id/add-image', isAdminAuthenticated, uploadVariantImages, addImageToVariant);
 router.delete('/variants/:id/remove-image', isAdminAuthenticated, removeImageFromVariant);
+router.post('/variants/update/:id', isAdminAuthenticated, updateVariantDetails);
 
 export default router;
 

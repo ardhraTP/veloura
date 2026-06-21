@@ -2,6 +2,22 @@ import Product from '../../model/Product.js';
 import Variant from '../../model/Variant.js';
 import Category from '../../model/Category.js';
 import { processProductImages, deleteProductImages } from '../../utils/imageProcessor.js';
+import fs from 'fs';
+
+// Helper to cleanup uploaded files in case of error/validation failure
+const cleanupUploadedFiles = (files) => {
+    if (files && files.length > 0) {
+        files.forEach(file => {
+            try {
+                if (fs.existsSync(file.path)) {
+                    fs.unlinkSync(file.path);
+                }
+            } catch (err) {
+                console.error('Error deleting temp file:', err);
+            }
+        });
+    }
+};
 
 // Show admin products list page with variants
 export const getAdminProductsPage = async (req, res) => {
@@ -78,36 +94,46 @@ export const getAddProductPage = async (req, res) => {
 // Add new product with variants
 export const addProduct = async (req, res) => {
     try {
-        const { productName, description, categoryId, status } = req.body;
+        const { productName, brand, description, categoryId, status } = req.body;
 
         // Validate required fields
-        if (!productName || !description || !categoryId) {
+        if (!productName || !brand || !description || !categoryId) {
+            cleanupUploadedFiles(req.files);
             return res.redirect('/admin/products/add?error=All required fields must be filled');
         }
 
-        // Parse variants data from form
+        // Parse variants — multer delivers multipart bracket fields as a nested object:
+        // variants[0][color] → req.body.variants['0'].color
+        const variantsRaw = req.body.variants || {};
         const variantsData = [];
-        let variantIndex = 0;
-        
-        // Extract variant data from req.body
-        while (req.body[`variants[${variantIndex}][color]`]) {
-            variantsData.push({
-                color: req.body[`variants[${variantIndex}][color]`],
-                quantity: req.body[`variants[${variantIndex}][quantity]`],
-                regularPrice: req.body[`variants[${variantIndex}][regularPrice]`],
-                salePrice: req.body[`variants[${variantIndex}][salePrice]`]
-            });
-            variantIndex++;
+
+        // Sort indices numerically so variants are processed in order
+        const variantIndices = Object.keys(variantsRaw).map(Number).sort((a, b) => a - b);
+
+        for (const idx of variantIndices) {
+            const v = variantsRaw[idx];
+            if (v && v.color) {
+                variantsData.push({
+                    color: v.color,
+                    hexCode: v.hexCode || '',
+                    quantity: v.quantity,
+                    regularPrice: v.regularPrice,
+                    salePrice: v.salePrice,
+                    index: idx
+                });
+            }
         }
 
         // Validate at least one variant
         if (variantsData.length === 0) {
+            cleanupUploadedFiles(req.files);
             return res.redirect('/admin/products/add?error=Please add at least one variant');
         }
 
-        // Create product
+        // Create product with brand field
         const newProduct = new Product({
             productName: productName.trim(),
+            brand: brand.trim(),
             description: description.trim(),
             categoryId: categoryId,
             status: status || 'ACTIVE'
@@ -131,11 +157,13 @@ export const addProduct = async (req, res) => {
             }
         });
 
-        // Create variants with images
+        // Create variants with images mapped by original variant index
         for (let i = 0; i < variantsData.length; i++) {
-            const variantFiles = filesByVariant[i] || [];
+            const originalIndex = variantsData[i].index;
+            const variantFiles = filesByVariant[originalIndex] || [];
             
             if (variantFiles.length < 3) {
+                cleanupUploadedFiles(req.files);
                 // Rollback: delete product if variant validation fails
                 await Product.findByIdAndDelete(newProduct._id);
                 return res.redirect('/admin/products/add?error=Each variant must have at least 3 images');
@@ -144,10 +172,15 @@ export const addProduct = async (req, res) => {
             // Process images for this variant
             const processedImages = await processProductImages(variantFiles);
 
+            // Normalise hexCode: ensure it starts with '#' and is uppercase
+            let hexCode = (variantsData[i].hexCode || '').trim().toUpperCase();
+            if (hexCode && !hexCode.startsWith('#')) hexCode = '#' + hexCode;
+
             // Create variant
             const newVariant = new Variant({
                 productId: newProduct._id,
                 color: variantsData[i].color.trim(),
+                hexCode: hexCode,
                 images: processedImages,
                 quantity: parseInt(variantsData[i].quantity),
                 regularPrice: parseFloat(variantsData[i].regularPrice),
@@ -159,8 +192,9 @@ export const addProduct = async (req, res) => {
 
         res.redirect('/admin/products?success=Product added successfully');
     } catch (error) {
-        console.log('Error in addProduct:', error);
-        res.redirect('/admin/products/add?error=Error adding product');
+        console.error('Error in addProduct:', error.message);
+        console.error('Stack:', error.stack);
+        res.redirect('/admin/products/add?error=' + encodeURIComponent(error.message || 'Error adding product'));
     }
 };
 
@@ -197,10 +231,10 @@ export const getEditProductPage = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const productId = req.params.id;
-        const { productName, description, categoryId, status } = req.body;
+        const { productName, brand, description, categoryId, status } = req.body;
 
         // Validate required fields
-        if (!productName || !description || !categoryId) {
+        if (!productName || !brand || !description || !categoryId) {
             return res.redirect(`/admin/products/edit/${productId}?error=All required fields must be filled`);
         }
 
@@ -209,13 +243,37 @@ export const updateProduct = async (req, res) => {
             return res.redirect('/admin/products?error=Product not found');
         }
 
-        // Update product basic fields
+        // Update product fields including brand
         product.productName = productName.trim();
+        product.brand = brand.trim();
         product.description = description.trim();
         product.categoryId = categoryId;
         product.status = status || 'ACTIVE';
 
         await product.save();
+
+        // Update existing variants details
+        const variantsRaw = req.body.variants || {};
+        for (const key of Object.keys(variantsRaw)) {
+            const v = variantsRaw[key];
+            if (v && v._id) {
+                const variant = await Variant.findOne({ _id: v._id, isDeleted: false });
+                if (variant) {
+                    if (v.color !== undefined) variant.color = v.color.trim();
+                    if (v.quantity !== undefined) variant.quantity = parseInt(v.quantity) || 0;
+                    if (v.regularPrice !== undefined) variant.regularPrice = parseFloat(v.regularPrice) || 0;
+                    if (v.salePrice !== undefined) variant.salePrice = parseFloat(v.salePrice) || 0;
+
+                    if (v.hexCode !== undefined) {
+                        let normalizedHex = v.hexCode.trim().toUpperCase();
+                        if (normalizedHex && !normalizedHex.startsWith('#')) normalizedHex = '#' + normalizedHex;
+                        variant.hexCode = normalizedHex;
+                    }
+
+                    await variant.save();
+                }
+            }
+        }
 
         res.redirect('/admin/products?success=Product updated successfully');
     } catch (error) {
@@ -337,11 +395,12 @@ export const deleteProduct = async (req, res) => {
 export const addVariant = async (req, res) => {
     try {
         const productId = req.params.id;
-        const { color, quantity, regularPrice, salePrice } = req.body;
+        const { color, hexCode, quantity, regularPrice, salePrice } = req.body;
 
         // Validate product exists
         const product = await Product.findOne({ _id: productId, isDeleted: false });
         if (!product) {
+            cleanupUploadedFiles(req.files);
             return res.status(404).json({
                 success: false,
                 message: 'Product not found'
@@ -350,6 +409,7 @@ export const addVariant = async (req, res) => {
 
         // Validate required fields
         if (!color || !quantity || !regularPrice || !salePrice) {
+            cleanupUploadedFiles(req.files);
             return res.status(400).json({
                 success: false,
                 message: 'All variant fields are required'
@@ -358,6 +418,7 @@ export const addVariant = async (req, res) => {
 
         // Check if at least 3 images are uploaded
         if (!req.files || req.files.length < 3) {
+            cleanupUploadedFiles(req.files);
             return res.status(400).json({
                 success: false,
                 message: 'Please upload at least 3 images for the variant'
@@ -367,10 +428,15 @@ export const addVariant = async (req, res) => {
         // Process images
         const processedImages = await processProductImages(req.files);
 
+        // Normalize hexCode
+        let normalizedHex = (hexCode || '').trim().toUpperCase();
+        if (normalizedHex && !normalizedHex.startsWith('#')) normalizedHex = '#' + normalizedHex;
+
         // Create new variant
         const newVariant = new Variant({
             productId: productId,
             color: color.trim(),
+            hexCode: normalizedHex,
             images: processedImages,
             quantity: parseInt(quantity),
             regularPrice: parseFloat(regularPrice),
@@ -401,6 +467,7 @@ export const addImageToVariant = async (req, res) => {
         // Validate variant exists
         const variant = await Variant.findOne({ _id: variantId, isDeleted: false });
         if (!variant) {
+            cleanupUploadedFiles(req.files);
             return res.status(404).json({
                 success: false,
                 message: 'Variant not found'
@@ -484,3 +551,45 @@ export const removeImageFromVariant = async (req, res) => {
         });
     }
 };
+
+// Update existing variant details
+export const updateVariantDetails = async (req, res) => {
+    try {
+        const variantId = req.params.id;
+        const { color, hexCode, quantity, regularPrice, salePrice } = req.body;
+
+        const variant = await Variant.findOne({ _id: variantId, isDeleted: false });
+        if (!variant) {
+            return res.status(404).json({
+                success: false,
+                message: 'Variant not found'
+            });
+        }
+
+        if (color !== undefined) variant.color = color.trim();
+        if (quantity !== undefined) variant.quantity = parseInt(quantity) || 0;
+        if (regularPrice !== undefined) variant.regularPrice = parseFloat(regularPrice) || 0;
+        if (salePrice !== undefined) variant.salePrice = parseFloat(salePrice) || 0;
+        
+        if (hexCode !== undefined) {
+            let normalizedHex = hexCode.trim().toUpperCase();
+            if (normalizedHex && !normalizedHex.startsWith('#')) normalizedHex = '#' + normalizedHex;
+            variant.hexCode = normalizedHex;
+        }
+
+        await variant.save();
+
+        res.json({
+            success: true,
+            message: 'Variant updated successfully',
+            variant: variant
+        });
+    } catch (error) {
+        console.log('Error in updateVariantDetails:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error updating variant'
+        });
+    }
+};
+

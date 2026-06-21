@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lakme – Absolute Matte Lipstick | Veloura</title>
-    <meta name="description" content="Shop Lakme Absolute Matte Lipstick — iconic finish, unrivaled pigment. Exclusive at Veloura.">
+    <title><%= product.brand %> – <%= product.productName %> | Veloura</title>
+    <meta name="description" content="Shop <%= product.brand %> <%= product.productName %> — iconic finish, unrivaled pigment. Exclusive at Veloura.">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/navbar.css">
     <link rel="stylesheet" href="/css/product-detail.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/prevent-back.js"></script>
 </head>
 <body>
@@ -20,8 +21,8 @@
     <nav class="breadcrumb">
         <a href="/home">Home</a><span>›</span>
         <a href="/products">Collections</a><span>›</span>
-        <a href="/products">Lakme</a><span>›</span>
-        Absolute Matte Lipstick
+        <a href="/products"><%= product.brand %></a><span>›</span>
+        <%= product.productName %>
     </nav>
 
     <!-- ══════════════════════════════
@@ -33,21 +34,23 @@
         <div class="product-gallery">
 
             <!-- Vertical thumbnails on far left -->
-            <div class="thumb-strip">
-                <div class="thumb-item active" onclick="switchImg(this,'/images/products_mac_1.png')">
-                    <img src="/images/products_mac_1.png" alt="View 1">
-                </div>
-                <div class="thumb-item" onclick="switchImg(this,'/images/maybelline_product.png')">
-                    <img src="/images/maybelline_product.png" alt="View 2">
-                </div>
-                <div class="thumb-item" onclick="switchImg(this,'/images/products_lakme_1.png')">
-                    <img src="/images/products_lakme_1.png" alt="View 3">
-                </div>
+            <div class="thumb-strip" id="thumbStrip">
+                <% if (product.variants && product.variants.length > 0 && product.variants[0].images && product.variants[0].images.length > 0) { %>
+                    <% product.variants[0].images.forEach((img, idx) => { %>
+                        <div class="thumb-item <%= idx === 0 ? 'active' : '' %>" onclick="switchImg(this, '<%= img %>')">
+                            <img src="<%= img %>" alt="View <%= idx + 1 %>">
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="thumb-item active" onclick="switchImg(this, '/images/placeholder.png')">
+                        <img src="/images/placeholder.png" alt="Placeholder">
+                    </div>
+                <% } %>
             </div>
 
             <!-- Main large image -->
-            <div class="main-image-wrap">
-                <img id="mainImg" src="/images/products_mac_1.png" alt="Lakme Absolute Matte Lipstick">
+            <div class="main-image-wrap" style="--variant-hex: <%= product.variants && product.variants.length > 0 && product.variants[0].hexCode ? product.variants[0].hexCode : '#f4eae1' %>;">
+                <img id="mainImg" src="<%= product.variants && product.variants.length > 0 && product.variants[0].images && product.variants[0].images[0] ? product.variants[0].images[0] : '/images/placeholder.png' %>" alt="<%= product.productName %>">
             </div>
 
         </div>
@@ -55,36 +58,47 @@
         <!-- RIGHT: Product Info -->
         <div class="product-info">
 
-            <p class="pd-brand">Lakme</p>
-            <h1 class="pd-title">Absolute Matte<br>Lipstick</h1>
-            <p class="pd-tagline">Iconic Finish. Unrivaled Pigment.</p>
+            <p class="pd-brand"><%= product.brand %></p>
+            <h1 class="pd-title"><%= product.productName %></h1>
+            <p class="pd-tagline" style="font-size: 14px; margin-bottom: 20px; line-height: 1.6; color: #777;"><%= product.description %></p>
 
             <!-- Price -->
             <div class="pd-price-row">
-                <span class="pd-price-now">₹21.00</span>
-                <span class="pd-price-was">₹34.00</span>
+                <span class="pd-price-now" id="salePrice">₹<%= product.variants && product.variants.length > 0 ? product.variants[0].salePrice.toFixed(2) : '0.00' %></span>
+                <span class="pd-price-was" id="regularPrice" style="<%= product.variants && product.variants.length > 0 && product.variants[0].regularPrice > product.variants[0].salePrice ? '' : 'display: none;' %>">
+                    ₹<%= product.variants && product.variants.length > 0 ? product.variants[0].regularPrice.toFixed(2) : '0.00' %>
+                </span>
             </div>
 
             <!-- Stock -->
-            <div class="pd-stock">Stock: 47</div>
+            <div class="pd-stock" id="stockDisplay">Stock: <%= product.variants && product.variants.length > 0 ? product.variants[0].quantity : 0 %></div>
 
             <!-- Color swatches -->
             <div class="pd-color-section">
-                <p class="pd-color-label">Color: <span id="colorName">Ruby Red</span></p>
-                <div class="pd-swatches">
-                    <div class="pd-swatch active" style="background:#c06070;" data-name="Ruby Red" onclick="selectColor(this)"></div>
-                    <div class="pd-swatch" style="background:#e8c4c4;" data-name="Rose Petal" onclick="selectColor(this)"></div>
-                    <div class="pd-swatch" style="background:#d48090;" data-name="Blush Pink" onclick="selectColor(this)"></div>
-                    <div class="pd-swatch" style="background:#5c1e28;" data-name="Deep Bordeaux" onclick="selectColor(this)"></div>
-                    <div class="pd-swatch" style="background:#a05060;" data-name="Coral Dust" onclick="selectColor(this)"></div>
-                </div>
+                <% if (product.variants && product.variants.length > 0) { %>
+                    <p class="pd-color-label">Color: <span id="colorName"><%= product.variants[0].color %></span></p>
+                    <div class="pd-swatches">
+                        <% product.variants.forEach((v, index) => { %>
+                            <div class="pd-swatch <%= index === 0 ? 'active' : '' %>" 
+                                 style="background: <%= v.hexCode || '#ffffff' %>;" 
+                                 data-id="<%= v._id %>"
+                                 data-name="<%= v.color %>" 
+                                 onclick="selectVariant(this)"></div>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <p class="pd-color-label">Color: <span id="colorName">No shades available</span></p>
+                <% } %>
             </div>
 
             <!-- CTA Buttons -->
-            <button class="pd-btn-add" id="addCartBtn" <%= product.stock === 0 ? 'disabled' : '' %>>
-                <%= product.stock === 0 ? 'OUT OF STOCK' : 'ADD TO CART' %>
+            <%
+                const firstVariantStock = product.variants && product.variants.length > 0 ? product.variants[0].quantity : 0;
+            %>
+            <button class="pd-btn-add" id="addCartBtn" <%= firstVariantStock === 0 ? 'disabled' : '' %>>
+                <%= firstVariantStock === 0 ? 'OUT OF STOCK' : 'ADD TO CART' %>
             </button>
-            <button class="pd-btn-buy" <%= product.stock === 0 ? 'disabled' : '' %>>BUY NOW</button>
+            <button class="pd-btn-buy" id="buyNowBtn" <%= firstVariantStock === 0 ? 'disabled' : '' %>>BUY NOW</button>
             <button class="pd-btn-wishlist" id="wishlistBtn" onclick="toggleWishlist()">
                 <i class="far fa-heart"></i> ADD TO WISHLIST
             </button>
@@ -95,7 +109,7 @@
                 <table class="pd-specs-table">
                     <tr>
                         <td>Brand</td>
-                        <td>Lakme</td>
+                        <td><%= product.brand %></td>
                     </tr>
                     <tr>
                         <td>Model ID</td>
@@ -209,6 +223,36 @@
     <%- include('../partials/footer') %>
 
     <script>
+        // Zoom/magnify feature on product main image hover
+        document.addEventListener('DOMContentLoaded', function() {
+            const mainImgWrap = document.querySelector('.main-image-wrap');
+            const mainImg = document.getElementById('mainImg');
+
+            if (mainImgWrap && mainImg) {
+                mainImgWrap.addEventListener('mouseenter', function() {
+                    mainImg.style.transition = 'transform 0.1s ease-out, transform-origin 0.05s ease-out';
+                });
+
+                mainImgWrap.addEventListener('mousemove', function(e) {
+                    const rect = mainImgWrap.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    const xPercent = (x / rect.width) * 100;
+                    const yPercent = (y / rect.height) * 100;
+
+                    mainImg.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+                    mainImg.style.transform = 'scale(2.5)';
+                });
+
+                mainImgWrap.addEventListener('mouseleave', function() {
+                    mainImg.style.transition = 'transform 0.5s ease, transform-origin 0.5s ease';
+                    mainImg.style.transform = 'scale(1)';
+                    mainImg.style.transformOrigin = 'center center';
+                });
+            }
+        });
+
         // Image switcher
         function switchImg(thumb, src) {
             document.getElementById('mainImg').src = src;
@@ -216,42 +260,157 @@
             thumb.classList.add('active');
         }
 
-        // Color selector
-        function selectColor(dot) {
+        // Track selected variantId (default = first variant)
+        const variants = <%- JSON.stringify(product.variants || []) %>;
+        let selectedVariantId = variants.length > 0 ? variants[0]._id : null;
+
+        function selectVariant(element) {
+            const variantId = element.dataset.id;
+            selectedVariantId = variantId;
+
+            // Highlight active swatch
             document.querySelectorAll('.pd-swatch').forEach(d => d.classList.remove('active'));
-            dot.classList.add('active');
-            document.getElementById('colorName').textContent = dot.dataset.name;
+            element.classList.add('active');
+
+            // Find selected variant object
+            const variant = variants.find(v => v._id === variantId);
+            if (!variant) return;
+
+            // Update dynamic background highlight based on selected variant's hex color
+            const mainImgWrap = document.querySelector('.main-image-wrap');
+            if (mainImgWrap && variant.hexCode) {
+                mainImgWrap.style.setProperty('--variant-hex', variant.hexCode);
+            }
+
+            // Update color name
+            document.getElementById('colorName').textContent = variant.color;
+
+            // Update prices
+            document.getElementById('salePrice').textContent = '₹' + variant.salePrice.toFixed(2);
+            const regPriceEl = document.getElementById('regularPrice');
+            if (variant.regularPrice > variant.salePrice) {
+                regPriceEl.textContent = '₹' + variant.regularPrice.toFixed(2);
+                regPriceEl.style.display = 'inline';
+            } else {
+                regPriceEl.style.display = 'none';
+            }
+
+            // Update stock
+            const stockDisplay = document.getElementById('stockDisplay');
+            stockDisplay.textContent = 'Stock: ' + variant.quantity;
+
+            // Update CTA Add to Cart & Buy Now button status/text
+            const addCartBtn = document.getElementById('addCartBtn');
+            const buyNowBtn = document.getElementById('buyNowBtn');
+            if (variant.quantity === 0) {
+                addCartBtn.textContent = 'OUT OF STOCK';
+                addCartBtn.disabled = true;
+                if (buyNowBtn) buyNowBtn.disabled = true;
+            } else {
+                addCartBtn.textContent = 'ADD TO CART';
+                addCartBtn.disabled = false;
+                if (buyNowBtn) buyNowBtn.disabled = false;
+            }
+
+            // Update gallery (thumbnails and main image)
+            const thumbStrip = document.getElementById('thumbStrip');
+            const mainImg = document.getElementById('mainImg');
+            
+            thumbStrip.innerHTML = '';
+            if (variant.images && variant.images.length > 0) {
+                variant.images.forEach((img, idx) => {
+                    const thumbItem = document.createElement('div');
+                    thumbItem.className = 'thumb-item' + (idx === 0 ? ' active' : '');
+                    thumbItem.onclick = function() { switchImg(this, img); };
+                    
+                    const imgEl = document.createElement('img');
+                    imgEl.src = img;
+                    imgEl.alt = 'View ' + (idx + 1);
+                    
+                    thumbItem.appendChild(imgEl);
+                    thumbStrip.appendChild(thumbItem);
+                });
+                mainImg.src = variant.images[0];
+            } else {
+                const thumbItem = document.createElement('div');
+                thumbItem.className = 'thumb-item active';
+                thumbItem.onclick = function() { switchImg(this, '/images/placeholder.png'); };
+                
+                const imgEl = document.createElement('img');
+                imgEl.src = '/images/placeholder.png';
+                imgEl.alt = 'Placeholder';
+                
+                thumbItem.appendChild(imgEl);
+                thumbStrip.appendChild(thumbItem);
+                mainImg.src = '/images/placeholder.png';
+            }
         }
 
-        // Add to cart feedback
+        // Add to cart — sends productId + variantId
         document.getElementById('addCartBtn').addEventListener('click', function () {
             const productId = '<%= product._id %>';
-            const quantity = 1; // Or get from a quantity selector if you add one
-            
-            // Send AJAX request to add to cart
+            const quantity = 1;
+
+            if (!selectedVariantId) {
+                Swal.fire({ 
+                    toast: true, 
+                    position: 'top-end', 
+                    icon: 'warning', 
+                    title: 'Please select a shade first', 
+                    showConfirmButton: false, 
+                    timer: 2500,
+                    timerProgressBar: true
+                });
+                return;
+            }
+
             fetch('/cart/add', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    productId: productId,
-                    quantity: quantity
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId, variantId: selectedVariantId, quantity })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return;
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data) return;
                 if (data.success) {
-                    // Show success message and redirect
-                    alert('Product added to cart!');
-                    window.location.href = '/cart';
+                    Swal.fire({ 
+                        toast: true, 
+                        position: 'top-end', 
+                        icon: 'success', 
+                        title: 'Product added to cart successfully!', 
+                        showConfirmButton: false, 
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
                 } else {
-                    alert(data.message || 'Failed to add to cart');
+                    Swal.fire({ 
+                        toast: true, 
+                        position: 'top-end', 
+                        icon: 'error', 
+                        title: data.message || 'Failed to add to cart', 
+                        showConfirmButton: false, 
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to add to cart');
+                Swal.fire({ 
+                    toast: true, 
+                    position: 'top-end', 
+                    icon: 'error', 
+                    title: 'Failed to add to cart', 
+                    showConfirmButton: false, 
+                    timer: 2500,
+                    timerProgressBar: true
+                });
             });
         });
 
@@ -270,21 +429,52 @@
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    if (!data) return;
                     if (data.success) {
                         icon.classList.remove('fas');
                         icon.classList.add('far');
                         btn.classList.remove('active');
                         btn.innerHTML = '<i class="far fa-heart"></i> ADD TO WISHLIST';
-                        showWishlistFeedback('Removed from wishlist');
+                        Swal.fire({ 
+                            toast: true, 
+                            position: 'top-end', 
+                            icon: 'success', 
+                            title: 'Removed from wishlist', 
+                            showConfirmButton: false, 
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
                     } else {
-                        alert(data.message || 'Failed to remove from wishlist');
+                        Swal.fire({ 
+                            toast: true, 
+                            position: 'top-end', 
+                            icon: 'error', 
+                            title: data.message || 'Failed to remove from wishlist', 
+                            showConfirmButton: false, 
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Failed to remove from wishlist');
+                    Swal.fire({ 
+                        toast: true, 
+                        position: 'top-end', 
+                        icon: 'error', 
+                        title: 'Failed to remove from wishlist', 
+                        showConfirmButton: false, 
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
                 });
             } else {
                 // Add to wishlist
@@ -297,44 +487,54 @@
                         productId: productId
                     })
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    if (!data) return;
                     if (data.success) {
                         icon.classList.remove('far');
                         icon.classList.add('fas');
                         btn.classList.add('active');
                         btn.innerHTML = '<i class="fas fa-heart"></i> ADDED TO WISHLIST';
-                        showWishlistFeedback('Added to wishlist!');
+                        Swal.fire({ 
+                            toast: true, 
+                            position: 'top-end', 
+                            icon: 'success', 
+                            title: 'Added to wishlist!', 
+                            showConfirmButton: false, 
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
                     } else {
-                        alert(data.message || 'Failed to add to wishlist');
+                        Swal.fire({ 
+                            toast: true, 
+                            position: 'top-end', 
+                            icon: 'error', 
+                            title: data.message || 'Failed to add to wishlist', 
+                            showConfirmButton: false, 
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Failed to add to wishlist');
+                    Swal.fire({ 
+                        toast: true, 
+                        position: 'top-end', 
+                        icon: 'error', 
+                        title: 'Failed to add to wishlist', 
+                        showConfirmButton: false, 
+                        timer: 2500,
+                        timerProgressBar: true
+                    });
                 });
             }
-        }
-        
-        function showWishlistFeedback(message) {
-            // Create feedback element
-            const feedback = document.createElement('div');
-            feedback.className = 'wishlist-feedback';
-            feedback.textContent = message;
-            document.body.appendChild(feedback);
-            
-            // Show feedback
-            setTimeout(() => {
-                feedback.classList.add('show');
-            }, 10);
-            
-            // Remove feedback after 2 seconds
-            setTimeout(() => {
-                feedback.classList.remove('show');
-                setTimeout(() => {
-                    feedback.remove();
-                }, 300);
-            }, 2000);
         }
     </script>
 

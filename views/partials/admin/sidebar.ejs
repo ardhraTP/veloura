@@ -1,0 +1,203 @@
+<!-- FontAwesome for Sidebar Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+
+<style>
+    /* --- Admin Sidebar Unified Styling --- */
+    .sidebar {
+        width: 260px;
+        min-width: 260px;
+        background-color: #fcfbf9;
+        border-right: 1px solid #ebe7e5;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 100;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .sidebar-header {
+        padding: 30px 40px;
+        border-bottom: none;
+    }
+
+    .logo {
+        font-family: 'Playfair Display', serif;
+        font-size: 32px;
+        font-weight: 600;
+        color: #5c1e28;
+        text-decoration: none;
+        letter-spacing: -0.5px;
+    }
+
+    .sidebar-menu {
+        flex: 1;
+        overflow-y: auto;
+        list-style: none;
+        padding: 10px 0;
+        margin: 0;
+    }
+
+    .sidebar-menu li {
+        margin-bottom: 5px;
+    }
+
+    .sidebar-menu a {
+        display: flex;
+        align-items: center;
+        padding: 15px 40px;
+        color: #2d2a29;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .sidebar-menu a i {
+        width: 24px;
+        font-size: 16px;
+        color: #888380;
+        margin-right: 15px;
+        text-align: center;
+    }
+
+    .sidebar-menu a:hover {
+        background-color: #f7f1f1;
+        color: #5c1e28;
+    }
+
+    .sidebar-menu a:hover i {
+        color: #5c1e28;
+    }
+
+    .sidebar-menu a.active {
+        background-color: #f7eded;
+        color: #5c1e28;
+        font-weight: 600;
+    }
+
+    .sidebar-menu a.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background-color: #5c1e28;
+    }
+
+    .sidebar-menu a.active i {
+        color: #5c1e28;
+    }
+
+    .logout-li {
+        padding: 20px 40px;
+        margin-top: auto;
+        /* Push log out button to the bottom */
+    }
+
+    .sidebar-menu .logout-btn {
+        display: block;
+        width: 100%;
+        padding: 14px !important;
+        background-color: #c9302c;
+        color: #ffffff !important;
+        text-align: center;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        transition: background-color 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .sidebar-menu .logout-btn:hover {
+        background-color: #ac2925;
+        color: #ffffff !important;
+    }
+
+    /* Standardized Admin Body and Content Layout */
+    body {
+        display: flex;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f4f2f0;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .main-content {
+        margin-left: 260px;
+        /* Accounts for the fixed 260px sidebar */
+        flex: 1;
+        min-width: 0;
+        padding: 40px;
+        box-sizing: border-box;
+    }
+</style>
+
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <a href="/admin/dashboard" class="logo">Veloura</a>
+    </div>
+
+    <ul class="sidebar-menu">
+        <li>
+            <a href="/admin/dashboard"
+                class="<%= typeof selectedTab !== 'undefined' && selectedTab === 'dashboard' ? 'active' : '' %>">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+        </li>
+        <li>
+            <a href="/admin/products"
+                class="<%= typeof selectedTab !== 'undefined' && selectedTab === 'products' ? 'active' : '' %>">
+                <i class="fas fa-box"></i> Products
+            </a>
+        </li>
+        <li>
+            <a href="#" class="<%= typeof selectedTab !== 'undefined' && selectedTab === 'orders' ? 'active' : '' %>">
+                <i class="fas fa-clipboard-list"></i> Order List
+            </a>
+        </li>
+        <li>
+            <a href="/admin/users"
+                class="<%= typeof selectedTab !== 'undefined' && selectedTab === 'users' ? 'active' : '' %>">
+                <i class="fas fa-users"></i> Users
+            </a>
+        </li>
+        <li>
+            <a href="#" class="<%= typeof selectedTab !== 'undefined' && selectedTab === 'sales' ? 'active' : '' %>">
+                <i class="fas fa-chart-line"></i> Sales Report
+            </a>
+        </li>
+        <li>
+            <a href="#" class="<%= typeof selectedTab !== 'undefined' && selectedTab === 'coupons' ? 'active' : '' %>">
+                <i class="fas fa-ticket-alt"></i> Coupons
+            </a>
+        </li>
+        <li>
+            <a href="/admin/categories"
+                class="<%= typeof selectedTab !== 'undefined' && selectedTab === 'categories' ? 'active' : '' %>">
+                <i class="fas fa-list"></i> Category
+            </a>
+        </li>
+        <li>
+            <a href="#" class="<%= typeof selectedTab !== 'undefined' && selectedTab === 'reviews' ? 'active' : '' %>">
+                <i class="fas fa-star"></i> Reviews
+            </a>
+        </li>
+        <li class="logout-li">
+            <a href="/admin/logout" class="logout-btn">Log Out</a>
+        </li>
+    </ul>
+</aside>
