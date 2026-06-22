@@ -62,3 +62,18 @@ export const removeFromWishlist = async (req, res) => {
         });
     }
 };
+
+// Get wishlist count for navbar
+export const getWishlistCount = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.json({ count: 0 });
+        }
+        const wishlist = await wishlistService.getUserWishlist(req.session.userId);
+        const count = wishlist && wishlist.products ? wishlist.products.length : 0;
+        res.json({ count });
+    } catch (error) {
+        console.log('Error in getWishlistCount:', error);
+        res.json({ count: 0 });
+    }
+};

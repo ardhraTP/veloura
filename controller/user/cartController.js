@@ -1,4 +1,5 @@
 import * as cartService from '../../services/cartService.js';
+import Cart from '../../model/Cart.js';
 
 // Get the cart page
 export const getCartPage = async (req, res) => {
@@ -62,5 +63,20 @@ export const removeItem = async (req, res) => {
     } catch (error) {
         console.log('Error in removeItem:', error);
         res.json({ success: false, message: error.message });
+    }
+};
+
+// Get cart count for navbar
+export const getCartCount = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.json({ count: 0 });
+        }
+        const cart = await Cart.findOne({ user: req.session.userId });
+        const count = cart && cart.items ? cart.items.reduce((sum, item) => sum + item.quantity, 0) : 0;
+        res.json({ count });
+    } catch (error) {
+        console.log('Error in getCartCount:', error);
+        res.json({ count: 0 });
     }
 };

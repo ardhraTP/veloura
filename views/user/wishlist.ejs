@@ -164,6 +164,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        if (window.updateWishlistCount) window.updateWishlistCount();
                         Swal.fire({ 
                             toast: true, 
                             position: 'top-end', 
@@ -231,6 +232,8 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    if (window.updateCartCount) window.updateCartCount();
+                    if (window.updateWishlistCount) window.updateWishlistCount();
                     Swal.fire({ 
                         toast: true, 
                         position: 'top-end', 

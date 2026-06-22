@@ -223,6 +223,33 @@
     <%- include('../partials/footer') %>
 
     <script>
+        // ── Auth state from server ────────────────────────────────────
+        const IS_LOGGED_IN = <%= isLoggedIn ? 'true' : 'false' %>;
+
+        // Guest guard: shows a prompt to login/register and returns true if guest
+        function requireAuth() {
+            if (!IS_LOGGED_IN) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Login Required',
+                    text: 'Please log in or create an account to continue.',
+                    showCancelButton: true,
+                    confirmButtonColor: '#5c1e28',
+                    cancelButtonColor: '#aaa',
+                    confirmButtonText: 'Login',
+                    cancelButtonText: 'Register'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/login';
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        window.location.href = '/register';
+                    }
+                });
+                return true;
+            }
+            return false;
+        }
+
         // Zoom/magnify feature on product main image hover
         document.addEventListener('DOMContentLoaded', function() {
             const mainImgWrap = document.querySelector('.main-image-wrap');
@@ -348,6 +375,8 @@
 
         // Add to cart — sends productId + variantId
         document.getElementById('addCartBtn').addEventListener('click', function () {
+            if (requireAuth()) return;
+
             const productId = '<%= product._id %>';
             const quantity = 1;
 
@@ -379,6 +408,7 @@
             .then(data => {
                 if (!data) return;
                 if (data.success) {
+                    if (window.updateCartCount) window.updateCartCount();
                     Swal.fire({ 
                         toast: true, 
                         position: 'top-end', 
@@ -416,6 +446,8 @@
 
         // Toggle wishlist with AJAX
         function toggleWishlist() {
+            if (requireAuth()) return;
+
             const btn = document.getElementById('wishlistBtn');
             const icon = btn.querySelector('i');
             const productId = '<%= product._id %>';
@@ -443,6 +475,7 @@
                         icon.classList.add('far');
                         btn.classList.remove('active');
                         btn.innerHTML = '<i class="far fa-heart"></i> ADD TO WISHLIST';
+                        if (window.updateWishlistCount) window.updateWishlistCount();
                         Swal.fire({ 
                             toast: true, 
                             position: 'top-end', 
@@ -501,6 +534,7 @@
                         icon.classList.add('fas');
                         btn.classList.add('active');
                         btn.innerHTML = '<i class="fas fa-heart"></i> ADDED TO WISHLIST';
+                        if (window.updateWishlistCount) window.updateWishlistCount();
                         Swal.fire({ 
                             toast: true, 
                             position: 'top-end', 

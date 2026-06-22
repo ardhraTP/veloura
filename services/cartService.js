@@ -3,7 +3,6 @@ import Product from '../model/Product.js';
 import Variant from '../model/Variant.js';
 import { removeFromWishlist } from './wishlistService.js';
 
-// ── Get (or create) a user's cart ───────────────────────────────────────────
 export const getUserCart = async (userId) => {
     try {
         let cart = await Cart.findOne({ user: userId })
@@ -21,10 +20,8 @@ export const getUserCart = async (userId) => {
     }
 };
 
-// ── Add a product+variant to cart ────────────────────────────────────────────
 export const addProductToCart = async (userId, productId, variantId, quantity) => {
     try {
-        // Validate product is active
         const product = await Product.findOne({
             _id: productId,
             isDeleted: false,
@@ -32,7 +29,6 @@ export const addProductToCart = async (userId, productId, variantId, quantity) =
         });
         if (!product) throw new Error('Product not found or unavailable');
 
-        // Validate variant exists and has enough stock
         const variant = await Variant.findOne({
             _id: variantId,
             productId: productId,
@@ -45,7 +41,6 @@ export const addProductToCart = async (userId, productId, variantId, quantity) =
 
         let cart = await getUserCart(userId);
 
-        // Check if the same variant is already in the cart
         const existingItem = cart.items.find(item => {
             if (!item.variant) return false;
             const itemVarId = item.variant._id ? item.variant._id.toString() : item.variant.toString();
@@ -103,7 +98,6 @@ export const updateCartQuantity = async (userId, variantId, newQuantity) => {
         });
         if (!item) throw new Error('Product not in cart');
 
-        // Check stock via variant if available
         if (item.variant) {
             const variant = await Variant.findById(item.variant._id);
             if (variant && variant.quantity < newQuantity) {
@@ -123,7 +117,6 @@ export const updateCartQuantity = async (userId, variantId, newQuantity) => {
     }
 };
 
-// ── Remove an item from cart ─────────────────────────────────────────────────
 export const removeFromCart = async (userId, variantId) => {
     try {
         let cart = await getUserCart(userId);

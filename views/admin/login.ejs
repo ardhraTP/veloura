@@ -291,7 +291,7 @@
                 <div class="form-group">
                     <label for="email">Email</label>
                     <div class="input-wrapper">
-                        <input type="email" id="email" name="email" placeholder="Enter email address">
+                        <input type="text" id="email" name="email" placeholder="Enter email address" autocomplete="email">
                     </div>
                     <div class="field-error" id="emailError"></div>
                 </div>
@@ -358,7 +358,13 @@
 
         const allInputs = document.querySelectorAll('#adminLoginForm input');
         allInputs.forEach(input => {
-            input.addEventListener('input', clearAllErrors);
+            input.addEventListener('input', function() {
+                // Clear only this field's error as the user types
+                clearFieldError(this.id);
+                // Also hide server-side error message once user starts correcting
+                const serverError = document.querySelector('.error-message');
+                if (serverError) serverError.style.display = 'none';
+            });
         });
 
         document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
@@ -369,30 +375,52 @@
             const emailEl = document.getElementById('email');
             const passwordEl = document.getElementById('password');
 
-            const email = emailEl.value.trim();
-            const password = passwordEl.value.trim();
+            // Trim email in place so submitted value is clean
+            emailEl.value = emailEl.value.trim();
+            const email = emailEl.value;
+            const password = passwordEl.value;
 
             let hasError = false;
 
             if (!email) {
-                showFieldError('email', 'Email is required');
+                showFieldError('email', 'Email is required.');
+                emailEl.focus();
                 hasError = true;
             } else {
                 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailPattern.test(email)) {
-                    showFieldError('email', 'Please enter a valid email address');
+                    showFieldError('email', 'Please enter a valid email address.');
+                    emailEl.focus();
                     hasError = true;
                 }
             }
 
             if (!password) {
-                showFieldError('password', 'Password is required');
+                showFieldError('password', 'Password is required.');
+                if (!hasError) passwordEl.focus();
                 hasError = true;
+            } else {
+                // Strong password checks
+                if (password.length < 8) {
+                    showFieldError('password', 'Password must be at least 8 characters.');
+                    if (!hasError) passwordEl.focus();
+                    hasError = true;
+                } else if (!/[A-Z]/.test(password)) {
+                    showFieldError('password', 'Password must contain at least one uppercase letter.');
+                    if (!hasError) passwordEl.focus();
+                    hasError = true;
+                } else if (!/[0-9]/.test(password)) {
+                    showFieldError('password', 'Password must contain at least one number.');
+                    if (!hasError) passwordEl.focus();
+                    hasError = true;
+                } else if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+                    showFieldError('password', 'Password must contain at least one special character.');
+                    if (!hasError) passwordEl.focus();
+                    hasError = true;
+                }
             }
 
-            if (hasError) {
-                return;
-            }
+            if (hasError) return;
 
             this.submit();
         });

@@ -440,7 +440,8 @@
                                                                 <div class="shade-swatches">
                                                                     <% product.variants.forEach(v=> { %>
                                                                         <span class="shade-dot"
-                                                                            style="background-color: <%= v.hexCode && v.hexCode.trim() ? v.hexCode : '#cccccc' %>;"
+                                                                            style="background-color: <%= v.hexCode && v.hexCode.trim() ? v.hexCode.trim() : '#cccccc' %>;"
+                                                            
                                                                             title="<%= v.color %>"></span>
                                                                         <% }) %>
                                                                 </div>
@@ -605,13 +606,13 @@
             // Delete product
             async function deleteProduct(productId) {
                 const result = await Swal.fire({
-                    title: 'Delete Product?',
-                    text: 'Are you sure you want to delete this product and all its variants?',
+                    title: 'Remove Product?',
+                    text: 'This product and all its variants will be removed from the catalogue.',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#dc3545',
                     cancelButtonColor: '#999',
-                    confirmButtonText: 'Yes, Delete',
+                    confirmButtonText: 'Yes, Remove',
                     cancelButtonText: 'Cancel'
                 });
 

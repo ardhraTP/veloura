@@ -7,8 +7,64 @@
         <a href="/contact">Contact</a>
     </div>
     <div class="header-icons">
-        <a href="/wishlist" title="Wishlist"><i class="far fa-heart"></i></a>
-        <a href="/cart" title="Cart"><i class="fas fa-shopping-bag"></i></a>
+        <a href="/wishlist" title="Wishlist" style="position:relative; display:inline-block;">
+            <i class="far fa-heart"></i>
+            <span id="wishlist-count" style="position:absolute; top:-8px; right:-10px; background:#ff4757; color:white; border-radius:50%; padding:2px 6px; font-size:11px; font-weight:bold; min-width:18px; text-align:center; display:none;">0</span>
+        </a>
+        <a href="/cart" title="Cart" style="position:relative; display:inline-block;">
+            <i class="fas fa-shopping-bag"></i>
+            <span id="cart-count" style="position:absolute; top:-8px; right:-10px; background:#ff4757; color:white; border-radius:50%; padding:2px 6px; font-size:11px; font-weight:bold; min-width:18px; text-align:center; display:none;">0</span>
+        </a>
         <a href="/profile" title="Profile"><i class="far fa-user"></i></a>
     </div>
 </header>
+
+<script>
+console.log('Navbar script loaded');
+
+window.updateCartCount = function() {
+    fetch('/api/cart-count')
+        .then(response => {
+            console.log('Cart API response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Cart count data:', data);
+            const cartBadge = document.getElementById('cart-count');
+            if (cartBadge) {
+                if (data.count > 0) {
+                    cartBadge.textContent = data.count;
+                    cartBadge.style.display = 'block';
+                } else {
+                    cartBadge.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => console.error('Error fetching cart count:', error));
+};
+
+window.updateWishlistCount = function() {
+    fetch('/api/wishlist-count')
+        .then(response => {
+            console.log('Wishlist API response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Wishlist count data:', data);
+            const wishlistBadge = document.getElementById('wishlist-count');
+            if (wishlistBadge) {
+                if (data.count > 0) {
+                    wishlistBadge.textContent = data.count;
+                    wishlistBadge.style.display = 'block';
+                } else {
+                    wishlistBadge.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => console.error('Error fetching wishlist count:', error));
+};
+
+// Initial load
+window.updateCartCount();
+window.updateWishlistCount();
+</script>

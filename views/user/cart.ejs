@@ -205,6 +205,7 @@
                 if (data.success) {
                     input.value = newQty;
                     updateTotals();
+                    if (window.updateCartCount) window.updateCartCount();
                 } else {
                     Swal.fire({ 
                         toast: true, 
@@ -257,6 +258,7 @@
                 if (data.success) {
                     input.value = newQty;
                     updateTotals();
+                    if (window.updateCartCount) window.updateCartCount();
                 } else {
                     Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: data.message || 'Failed to update quantity', showConfirmButton: false, timer: 2000 });
                 }
@@ -308,6 +310,7 @@
                         setTimeout(() => {
                             item.remove();
                             updateTotals();
+                            if (window.updateCartCount) window.updateCartCount();
                             
                             // Check if cart is empty
                             if (document.querySelectorAll('.cart-item').length === 0) {

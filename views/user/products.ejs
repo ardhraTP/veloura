@@ -228,6 +228,32 @@
         <%- include('../partials/footer', { showSocialLinks: true }) %>
 
     <script>
+        // ── Auth state from server ────────────────────────────────────
+        const IS_LOGGED_IN = <%= isLoggedIn ? 'true' : 'false' %>;
+
+        // Guest guard: shows a prompt to login/register and returns true if guest
+        function requireAuth() {
+            if (!IS_LOGGED_IN) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Login Required',
+                    text: 'Please log in or create an account to continue.',
+                    showCancelButton: true,
+                    confirmButtonColor: '#5c1e28',
+                    cancelButtonColor: '#aaa',
+                    confirmButtonText: 'Login',
+                    cancelButtonText: 'Register'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/login';
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        window.location.href = '/register';
+                    }
+                });
+                return true; // is guest
+            }
+            return false; // is logged in
+        }
         // Apply all filters when changed
         function applyFilters() {
             const search = document.getElementById('searchInput').value.trim();
@@ -310,6 +336,9 @@
 
         // Show/hide clear button dynamically as user types
         document.addEventListener('DOMContentLoaded', function() {
+            // Always start at the top of the page on load (fixes pagination jump)
+            window.scrollTo({ top: 0, behavior: 'instant' });
+
             const searchInput = document.getElementById('searchInput');
             const clearSearchBtn = document.getElementById('clearSearchBtn');
             
@@ -348,6 +377,8 @@
         
         // Wishlist function with AJAX
         function addToWishlist(btn, productId) {
+            if (requireAuth()) return;
+
             const icon = btn.querySelector('i');
             const isInWishlist = icon.classList.contains('fas');
             
@@ -365,6 +396,7 @@
                         icon.classList.remove('fas');
                         icon.classList.add('far');
                         btn.classList.remove('active');
+                        if (window.updateWishlistCount) window.updateWishlistCount();
                         Swal.fire({ 
                             toast: true, 
                             position: 'top-end', 
@@ -415,6 +447,7 @@
                         icon.classList.remove('far');
                         icon.classList.add('fas');
                         btn.classList.add('active');
+                        if (window.updateWishlistCount) window.updateWishlistCount();
                         Swal.fire({ 
                             toast: true, 
                             position: 'top-end', 
@@ -453,6 +486,8 @@
 
         // Add to Cart from collections page
         function addToCartFromCollections(btn, productId, variantId) {
+            if (requireAuth()) return;
+
             if (!variantId) {
                 Swal.fire({ 
                     toast: true, 
@@ -494,6 +529,7 @@
                 btn.disabled = false;
 
                 if (data.success) {
+                    if (window.updateCartCount) window.updateCartCount();
                     Swal.fire({ 
                         toast: true, 
                         position: 'top-end', 

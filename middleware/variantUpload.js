@@ -28,10 +28,8 @@ const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB max file size
+        fileSize: 5 * 1024 * 1024 
     }
 });
 
-// Middleware to handle multiple variants with multiple images each
-// Field name pattern: variants[0][images], variants[1][images], etc.
 export const uploadVariantImages = upload.any();

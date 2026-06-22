@@ -9,9 +9,8 @@ export const getProducts = async (options) => {
         const brand = options.brand || '';
         const sort = options.sort || 'newest';
         const page = options.page || 1;
-        const limit = 3;
+        const limit =3 ;
 
-        // Correct schema fields: isDeleted + status (not isBlocked/isListed)
         let matchFilter = {
             isDeleted: false,
             status: 'ACTIVE'
@@ -33,7 +32,6 @@ export const getProducts = async (options) => {
             { $match: matchFilter }
         ];
 
-        // Lookup active variants
         pipeline.push({
             $lookup: {
                 from: 'variants',
@@ -54,7 +52,6 @@ export const getProducts = async (options) => {
             }
         });
 
-        // Lookup category details
         pipeline.push({
             $lookup: {
                 from: 'categories',
@@ -64,7 +61,6 @@ export const getProducts = async (options) => {
             }
         });
 
-        // Add fields to shape the output and prepare sorting
         pipeline.push({
             $addFields: {
                 categoryId: { $arrayElemAt: ['$categoryInfo', 0] },
@@ -77,7 +73,6 @@ export const getProducts = async (options) => {
             }
         });
 
-        // Add sorting stage
         let sortStage = {};
         if (sort === 'price-low') {
             sortStage = { $sort: { firstVariantPrice: 1 } };
@@ -92,7 +87,6 @@ export const getProducts = async (options) => {
         }
         pipeline.push(sortStage);
 
-        // Pagination skip & limit
         pipeline.push({ $skip: skip });
         pipeline.push({ $limit: limit });
 
@@ -113,7 +107,6 @@ export const getProducts = async (options) => {
     }
 };
 
-// Get single product by ID with variants
 export const getProductById = async (productId) => {
     try {
         const product = await Product.findOne({
@@ -139,7 +132,6 @@ export const getProductById = async (productId) => {
     }
 };
 
-// Check if product/variant stock is available
 export const checkProductAvailability = async (productId, quantity) => {
     try {
         const product = await Product.findOne({
@@ -164,7 +156,6 @@ export const checkProductAvailability = async (productId, quantity) => {
     }
 };
 
-// Get all listed categories for filter dropdown
 export const getAllCategories = async () => {
     try {
         const Category = (await import('../model/Category.js')).default;
@@ -176,7 +167,6 @@ export const getAllCategories = async () => {
     }
 };
 
-// Get all brands from active products
 export const getAllBrands = async () => {
     try {
         const brands = await Product.distinct('brand', {

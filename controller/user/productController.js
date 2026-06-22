@@ -1,6 +1,6 @@
 import * as productService from '../../services/productService.js';
 
-//show products page with filters,search,sort
+
 export const getProductsPage = async (req,res)=>{
     try{
         const search = req.query.search || '';
@@ -10,7 +10,7 @@ export const getProductsPage = async (req,res)=>{
         const page = parseInt(req.query.page) || 1;
 
 
-        //get products with these filters
+        
         const result = await productService.getProducts({
             search:search,
             category:category,
@@ -31,7 +31,8 @@ export const getProductsPage = async (req,res)=>{
             selectedBrand:brand,
             selectedSort:sort,
             categories:allCategories,
-            brands:allBrands
+            brands:allBrands,
+            isLoggedIn: !!(req.session && req.session.userId)
         });
     }catch(error){
         console.log('Error in getProductsPage:',error);
@@ -51,7 +52,8 @@ export const getProductDetail = async (req,res)=>{
         }
 
         res.render('user/product-detail',{
-            product:product
+            product:product,
+            isLoggedIn: !!(req.session && req.session.userId)
         });
     }catch(error){
         console.log('Error in getProductDetail:',error);

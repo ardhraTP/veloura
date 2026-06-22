@@ -2,7 +2,6 @@ import Wishlist from '../model/Wishlist.js';
 import {checkProductAvailability} from './productService.js';
 import Variant from '../model/Variant.js';
 
-// Helper to attach active variants to wishlist products
 const populateWishlistVariants = async (wishlist) => {
     if (!wishlist) return null;
     

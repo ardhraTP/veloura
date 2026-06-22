@@ -4,7 +4,7 @@ import path from 'path';
 // Configure storage for product images
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'public/uploads/temp'); // Temporary storage before processing
+        cb(null, 'public/uploads/temp'); 
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -28,9 +28,9 @@ const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB max file size
+        fileSize: 5 * 1024 * 1024 
     }
 });
 
-// Middleware to handle multiple images (minimum 3, maximum 5)
+
 export const uploadProductImages = upload.array('images', 5);

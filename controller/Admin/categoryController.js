@@ -123,7 +123,6 @@ export const toggleListCategory = async (req,res)=>{
         }
 
 
-        //toggle listing status
         category.isListed = !category.isListed;
         await category.save();
 
@@ -155,7 +154,7 @@ export const deleteCategory = async(req,res)=>{
             });
         }
 
-        //soft delete - mark as deleted
+    
         category.isDeleted = true;
         await category.save();
 

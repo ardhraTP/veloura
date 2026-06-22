@@ -283,6 +283,36 @@
             box-shadow: 0 4px 12px rgba(92, 30, 40, 0.3);
         }
 
+        .btn-update-details {
+            padding: 12px 30px;
+            background-color: #5c1e28;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-update-details:hover {
+            background-color: #4a1620;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(92, 30, 40, 0.3);
+        }
+
+        .btn-update-details:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         .btn-cancel {
             padding: 14px 50px;
             background-color: #6c757d;
@@ -468,7 +498,12 @@
                                 <span class="field-error" id="editDescriptionError">Description is required.</span>
                             </div>
 
-                        </div>
+                            <!-- Update Product Details Button -->
+                            <div style="margin-top: 30px; text-align: right;">
+                                <button type="button" class="btn-update-details" onclick="updateProductDetails()">
+                                    <i class="fas fa-save"></i> UPDATE PRODUCT DETAILS
+                                </button>
+                            </div>
 
                         </div>
 
@@ -825,6 +860,114 @@
                 span.className = 'field-error visible';
             }
             return span;
+        }
+
+        // ── Update Product Details only (name, brand, description, category, status) ──
+        async function updateProductDetails() {
+            const productNameInput  = document.getElementById('editProductName');
+            const brandInput        = document.getElementById('editBrand');
+            const descriptionInput  = document.getElementById('editDescription');
+            const categoryIdInput   = document.getElementById('editCategoryId');
+            const statusSelect      = document.querySelector('select[name="status"]');
+
+            // Helper: show/clear inline errors
+            function showErr(id, errId, show, msg) {
+                const el  = document.getElementById(id);
+                const err = document.getElementById(errId);
+                if (!el || !err) return;
+                el.classList.toggle('input-error', show);
+                err.classList.toggle('visible', show);
+                if (show && msg) err.textContent = msg;
+            }
+
+            // Trim in place
+            productNameInput.value = productNameInput.value.trim();
+            brandInput.value       = brandInput.value.trim();
+            descriptionInput.value = descriptionInput.value.trim();
+
+            const productName = productNameInput.value;
+            const brand       = brandInput.value;
+            const description = descriptionInput.value;
+            const categoryId  = categoryIdInput.value;
+            const status      = statusSelect ? statusSelect.value : 'ACTIVE';
+
+            let hasError = false;
+
+            showErr('editProductName', 'editProductNameError', !productName, 'Product name is required.');
+            showErr('editCategoryId',  'editCategoryIdError',  !categoryId,  'Please select a category.');
+            showErr('editBrand',       'editBrandError',       !brand,       'Brand is required.');
+            showErr('editDescription', 'editDescriptionError', !description, 'Description is required.');
+
+            if (!productName || !categoryId || !brand || !description) {
+                hasError = true;
+            }
+            if (hasError) return;
+
+            // Confirmation
+            const result = await Swal.fire({
+                title: 'Update Product Details?',
+                text: 'Save changes to name, brand, description, category and status?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#5c1e28',
+                cancelButtonColor: '#999',
+                confirmButtonText: 'Yes, Update',
+                cancelButtonText: 'Cancel'
+            });
+
+            if (!result.isConfirmed) return;
+
+            const btn = document.querySelector('.btn-update-details');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> UPDATING...';
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('productName', productName);
+                formData.append('brand', brand);
+                formData.append('description', description);
+                formData.append('categoryId', categoryId);
+                formData.append('status', status);
+
+                const response = await fetch('/admin/products/update-details/<%= product._id %>', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: 'Product details updated successfully.',
+                        confirmButtonColor: '#5c1e28',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    window.location.href = '/admin/products';
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to update product details.',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save"></i> UPDATE PRODUCT DETAILS';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error connecting to server.',
+                    confirmButtonColor: '#5c1e28'
+                });
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> UPDATE PRODUCT DETAILS';
+            }
         }
 
         // Clear errors on input for product-level fields
@@ -1454,7 +1597,7 @@
                             timer: 2000,
                             showConfirmButton: false
                         });
-                        window.location.reload();
+                        window.location.href = '/admin/products';
                     } else {
                         Swal.fire({
                             icon: 'error',

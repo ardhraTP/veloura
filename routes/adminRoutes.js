@@ -8,6 +8,7 @@ import {
     addProduct,
     getEditProductPage,
     updateProduct,
+    updateProductDetails,
     toggleProductStatus,
     deleteProduct,
     addVariant,
@@ -26,7 +27,7 @@ import{
     deleteCategory
 } from '../controller/Admin/categoryController.js';
 
-// Import product upload middleware
+
 import { uploadVariantImages } from '../middleware/variantUpload.js';
 
 const router = express.Router();
@@ -35,17 +36,7 @@ router.get('/login', isAdminGuest, getLogin);
 router.post('/login', isAdminGuest, login);
 
 router.get('/dashboard', isAdminAuthenticated, getDashboard);
-// router.get('/categories', isAdminAuthenticated, (req, res) => {
 
-//     res.render('admin/categories', {
-//         categories: [],
-//         successMessage: null,
-//         errorMessage: null
-//     });
-// });
-// router.get('/test-categories', isAdminAuthenticated, (req, res) => {
-//     res.send('Categories route is working! Your session admin: ' + req.session.adminId);
-// });
 
 router.get('/categories',isAdminAuthenticated,getCategoriesPage);
 router.post('/categories/add',isAdminAuthenticated,addCategory);
@@ -63,6 +54,7 @@ router.get('/products/add', isAdminAuthenticated, getAddProductPage);
 router.post('/products/add', isAdminAuthenticated, uploadVariantImages, addProduct);
 router.get('/products/edit/:id', isAdminAuthenticated, getEditProductPage);
 router.post('/products/edit/:id', isAdminAuthenticated, updateProduct);
+router.post('/products/update-details/:id', isAdminAuthenticated, updateProductDetails);
 router.put('/products/toggle-status/:id', isAdminAuthenticated, toggleProductStatus);
 router.delete('/products/delete/:id', isAdminAuthenticated, deleteProduct);
 router.post('/products/:id/add-variant', isAdminAuthenticated, uploadVariantImages, addVariant);

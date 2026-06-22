@@ -30,9 +30,14 @@ body {
 .sidebar {
     width: 250px;
     flex-shrink: 0;
-    background-color: var(--box-beige, #f4f1ec);
+    background-color: #f0ece5;
     padding: 30px;
     border-radius: 12px;
+    border: 1px solid rgba(92, 30, 40, 0.06);
+    box-shadow: 0 1px 6px rgba(92, 30, 40, 0.05);
+    align-self: flex-start;
+    position: sticky;
+    top: 110px;
 }
 
 .filter-group {
@@ -205,22 +210,34 @@ body {
 .products-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 50px 30px;
+    gap: 30px;
 }
 
 .product-card {
     display: flex;
     flex-direction: column;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 14px 14px 18px;
+    box-shadow: 0 2px 12px rgba(92, 30, 40, 0.07), 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(92, 30, 40, 0.14), 0 4px 10px rgba(0, 0, 0, 0.06);
 }
 
 .product-image-container {
     position: relative;
     width: 100%;
     aspect-ratio: 4/5;
-    background-color: #f5f5f5;
-    margin-bottom: 20px;
+    background-color: #f5f0eb;
+    margin-bottom: 16px;
     overflow: hidden;
-    border-radius: 12px; /* Curved edges */
+    border-radius: 10px;
 }
 
 /* Wishlist Button */
@@ -341,7 +358,7 @@ body {
 }
 
 .product-details {
-    padding-right: 10px;
+    padding: 0 4px;
 }
 
 .product-info-top {
@@ -497,6 +514,7 @@ body {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 20px;
+        position: static;
     }
     
     .filter-group {
