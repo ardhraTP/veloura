@@ -472,4 +472,22 @@ export const logout = (req, res) => {
     });
 };
 
+export const getLandingPage = (req, res) => {
+    res.render('user/landing');
+};
+
+export const getHomePage = (req, res) => {
+    res.render('user/home');
+};
+
+export const googleAuthCallback = (req, res) => {
+    req.session.userId = req.user._id;
+    req.session.user = {
+        id: req.user._id,
+        name: req.user.name,
+        email: req.user.email
+    };
+    res.redirect('/home');
+};
+
 

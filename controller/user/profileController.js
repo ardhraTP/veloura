@@ -469,5 +469,16 @@ export const resendEmailOTP = async (req, res) => {
     }
 };
 
+export const getChangePasswordPage = async (req, res) => {
+    try {
+        const user = await getUserById(req.session.userId);
+        const hasPassword = user && user.authProvider === 'local';
+        res.render('user/change-password', { activeTab: 'password', hasPassword });
+    } catch (error) {
+        console.error('Get password page error:', error);
+        res.redirect('/profile');
+    }
+};
+
 
  

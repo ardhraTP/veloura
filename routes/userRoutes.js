@@ -1,8 +1,7 @@
-﻿import express from 'express';
+import express from 'express';
 import { isAuthenticated, isGuest } from '../middleware/userAuth.js';
 import { upload } from '../middleware/upload.js';
 import passport from 'passport';
-import { getUserById } from '../services/userService.js';
 
 
 import {
@@ -17,7 +16,10 @@ import {
     forgotPassword,
     getResetPassword,
     resetPassword,
-    logout
+    logout,
+    getLandingPage,
+    getHomePage,
+    googleAuthCallback
 } from '../controller/authController.js';
 
 
@@ -30,7 +32,8 @@ import {
     requestEmailChange,
     getEmailOTPVerify,
     verifyEmailChange,
-    resendEmailOTP
+    resendEmailOTP,
+    getChangePasswordPage
 } from '../controller/user/profileController.js';
 
 import {
@@ -70,13 +73,9 @@ const router = express.Router();
 
 console.log('UserRoutes module loaded');
 
-router.get('/', (req, res) => {
-    res.render('user/landing');
-});
+router.get('/', getLandingPage);
 
-router.get('/home', isAuthenticated, (req, res) => {
-    res.render('user/home');
-});
+router.get('/home', isAuthenticated, getHomePage);
 
 
 router.get('/products',getProductsPage);
@@ -109,15 +108,7 @@ router.get('/auth/google',
 
 router.get('/auth/google/callback',
     passport.authenticate('google',{failureRedirect:'/login'}),
-    (req,res) =>{
-        req.session.userId = req.user._id;
-        req.session.user = {
-            id:req.user._id,
-            name:req.user.name,
-            email:req.user.email
-        };
-        res.redirect('/home');
-    }
+    googleAuthCallback
 );
 
 router.get('/verify-otp', getOTPVerify);
@@ -138,16 +129,7 @@ router.post('/profile/update', isAuthenticated, upload.single('profileImage'), u
 
 router.post('/profile/upload-image', isAuthenticated, uploadProfileImage);
 
-router.get('/profile/password', isAuthenticated, async (req, res) => {
-    try {
-        const user = await getUserById(req.session.userId);
-        const hasPassword = user && user.authProvider === 'local';
-        res.render('user/change-password', { activeTab: 'password', hasPassword });
-    } catch (error) {
-        console.error('Get password page error:', error);
-        res.redirect('/profile');
-    }
-});
+router.get('/profile/password', isAuthenticated, getChangePasswordPage);
 router.post('/profile/change-password', isAuthenticated, changePassword);
 
 router.post('/profile/request-email-change', isAuthenticated, requestEmailChange);

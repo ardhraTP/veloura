@@ -1,7 +1,7 @@
 import * as cartService from '../../services/cartService.js';
 import Cart from '../../model/Cart.js';
+import Product from '../../model/Product.js';
 
-// Get the cart page
 export const getCartPage = async (req, res) => {
     try {
         const userId = req.session.userId;
@@ -13,7 +13,7 @@ export const getCartPage = async (req, res) => {
     }
 };
 
-// Add product+variant to cart
+// Add product,variant to cart
 export const addToCart = async (req, res) => {
     try {
         const userId = req.session.userId;
@@ -72,7 +72,7 @@ export const getCartCount = async (req, res) => {
         if (!req.session.userId) {
             return res.json({ count: 0 });
         }
-        const cart = await Cart.findOne({ user: req.session.userId });
+        const cart = await cartService.getUserCart(req.session.userId);
         const count = cart && cart.items ? cart.items.reduce((sum, item) => sum + item.quantity, 0) : 0;
         res.json({ count });
     } catch (error) {

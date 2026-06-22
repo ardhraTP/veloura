@@ -3,6 +3,7 @@ import Variant from '../../model/Variant.js';
 import Category from '../../model/Category.js';
 import { processProductImages, deleteProductImages } from '../../utils/imageProcessor.js';
 import fs from 'fs';
+import { syncCartQuantitiesForVariant } from '../../services/cartService.js';
 
 const cleanupUploadedFiles = (files) => {
     if (files && files.length > 0) {
@@ -295,6 +296,9 @@ export const updateProduct = async (req, res) => {
                         { $set: updateFields },
                         { new: true }
                     );
+                    if (updateFields.quantity !== undefined) {
+                        await syncCartQuantitiesForVariant(v._id, updateFields.quantity);
+                    }
                 }
             }
         }
@@ -581,6 +585,10 @@ export const updateVariantDetails = async (req, res) => {
         }
 
         await variant.save();
+
+        if (quantity !== undefined) {
+            await syncCartQuantitiesForVariant(variantId, variant.quantity);
+        }
 
         res.json({
             success: true,

@@ -12,6 +12,24 @@ export const getUserCart = async (userId) => {
         if (!cart) {
             cart = new Cart({ user: userId, items: [], totalAmount: 0 });
             await cart.save();
+        } else {
+            let cartUpdated = false;
+            for (const item of cart.items) {
+                if (item.variant) {
+                    if (item.quantity > item.variant.quantity) {
+                        item.quantity = Math.max(0, item.variant.quantity);
+                        cartUpdated = true;
+                    }
+                }
+            }
+            if (cartUpdated) {
+                cart.totalAmount = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                await cart.save();
+                // Re-populate to get the updated quantities populated correctly
+                cart = await Cart.findOne({ user: userId })
+                    .populate('items.product')
+                    .populate('items.variant');
+            }
         }
         return cart;
     } catch (error) {
@@ -134,6 +152,30 @@ export const removeFromCart = async (userId, variantId) => {
         return cart;
     } catch (error) {
         console.log('Error removing from cart:', error);
+        throw error;
+    }
+};
+
+export const syncCartQuantitiesForVariant = async (variantId, newQuantity) => {
+    try {
+        const carts = await Cart.find({ "items.variant": variantId });
+        for (const cart of carts) {
+            let updated = false;
+            for (const item of cart.items) {
+                if (item.variant && item.variant.toString() === variantId.toString()) {
+                    if (item.quantity > newQuantity) {
+                        item.quantity = Math.max(0, newQuantity);
+                        updated = true;
+                    }
+                }
+            }
+            if (updated) {
+                cart.totalAmount = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                await cart.save();
+            }
+        }
+    } catch (error) {
+        console.error('Error syncing cart quantities for variant:', error);
         throw error;
     }
 };
