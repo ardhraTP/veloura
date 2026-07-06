@@ -281,32 +281,56 @@
         }
 
         /* Pagination */
-        .pagination {
+        .pagination-area {
             display: flex;
             justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 30px;
-            padding-bottom: 20px;
+            margin-top: auto;
+            margin-bottom: 20px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
         }
 
         .page-btn {
-            padding: 8px 16px;
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border: 1px solid #ddd;
-            background: white;
+            background-color: white;
             color: #333;
-            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 2px;
             cursor: pointer;
             text-decoration: none;
-            font-size: 13px;
-            transition: all 0.3s;
-            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            padding: 0 10px;
         }
 
-        .page-btn:hover, .page-btn.active {
+        .page-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .page-btn.active {
             background-color: #5c1e28;
             color: white;
             border-color: #5c1e28;
+            font-weight: 600;
+        }
+
+        .page-text {
+            color: #666;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
         }
 
         /* Add Category Form */
@@ -532,7 +556,7 @@
                     <% if (categories && categories.length > 0) { %>
                         <% categories.forEach((category, index) => { %>
                             <tr>
-                                <td><%= (typeof currentPage !== 'undefined' ? currentPage - 1 : 0) * 10 + index + 1 %></td>
+                                <td><%= (typeof currentPage !== 'undefined' ? currentPage - 1 : 0) * 5 + index + 1 %></td>
                                 <td class="category-name"><%= category.name %></td>
                                 <td>
                                     <div class="toggle-container">
@@ -583,20 +607,29 @@
 
         <!-- Pagination -->
         <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-            <div class="pagination">
-                <% if (currentPage > 1) { %>
-                    <a href="?page=<%= currentPage - 1 %><%= (typeof search !== 'undefined' && search) ? '&search=' + encodeURIComponent(search) : '' %>" class="page-btn">«</a>
-                <% } %>
-                
-                <% for (let i = 1; i <= totalPages; i++) { %>
-                    <a href="?page=<%= i %><%= (typeof search !== 'undefined' && search) ? '&search=' + encodeURIComponent(search) : '' %>" class="page-btn <%= currentPage === i ? 'active' : '' %>">
-                        <%= i %>
-                    </a>
-                <% } %>
-                
-                <% if (currentPage < totalPages) { %>
-                    <a href="?page=<%= currentPage + 1 %><%= (typeof search !== 'undefined' && search) ? '&search=' + encodeURIComponent(search) : '' %>" class="page-btn">»</a>
-                <% } %>
+            <div class="pagination-area">
+                <div class="pagination-controls">
+                    
+                    <% if (currentPage > 1) { %>
+                        <a href="?page=<%= currentPage - 1 %><%= (typeof search !== 'undefined' && search) ? '&search=' + encodeURIComponent(search) : '' %>" class="page-btn">
+                            <span class="page-text"><i class="fas fa-chevron-left" style="font-size: 10px; margin-right: 5px;"></i> Back</span>
+                        </a>
+                    <% } %>
+
+                    <% for(let i = 1; i <= totalPages; i++) { %>
+                        <a href="?page=<%= i %><%= (typeof search !== 'undefined' && search) ? '&search=' + encodeURIComponent(search) : '' %>" 
+                           class="page-btn <%= currentPage === i ? 'active' : '' %>">
+                           <%= i %>
+                        </a>
+                    <% } %>
+
+                    <% if (currentPage < totalPages) { %>
+                        <a href="?page=<%= currentPage + 1 %><%= (typeof search !== 'undefined' && search) ? '&search=' + encodeURIComponent(search) : '' %>" class="page-btn">
+                            <span class="page-text">Next <i class="fas fa-chevron-right" style="font-size: 10px; margin-left: 5px;"></i></span>
+                        </a>
+                    <% } %>
+                    
+                </div>
             </div>
         <% } %>
 

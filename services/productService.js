@@ -9,7 +9,7 @@ export const getProducts = async (options) => {
         const brand = options.brand || '';
         const sort = options.sort || 'newest';
         const page = options.page || 1;
-        const limit =3 ;
+        const limit = 6;
 
         let matchFilter = {
             isDeleted: false,

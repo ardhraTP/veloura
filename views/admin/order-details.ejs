@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details - Veloura Admin</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary-red: #5c1e28;
+            --main-bg: #f9f7f5;
+            --sidebar-bg: #fcfbf9;
+            --card-bg: #ffffff;
+            --text-dark: #2d2a29;
+            --text-gray: #888380;
+            --border-color: #e5e2e0;
+            --field-bg: #f5f3f1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--main-bg);
+            color: var(--text-dark);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Main Content Layout --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 40px 50px;
+            margin-left: 260px; /* sidebar space */
+        }
+
+        /* --- Top Header Area --- */
+        .page-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .header-title-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--primary-red);
+            letter-spacing: -0.5px;
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            color: var(--text-gray);
+            font-weight: 400;
+        }
+
+        /* Far Top Right Header Admin Info (similar to screenshot) */
+        .admin-header-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .admin-header-profile i {
+            font-size: 18px;
+            color: var(--primary-red);
+        }
+
+        /* --- Order Details Outer Card --- */
+        .details-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* Card Header */
+        .card-header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-order-id {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .card-order-id span {
+            color: var(--text-gray);
+            font-weight: 400;
+        }
+
+        .card-date-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-gray);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-date-info i {
+            color: var(--primary-red);
+        }
+
+        /* --- Two Column Form Grid --- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            column-gap: 50px;
+            row-gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                row-gap: 15px;
+            }
+        }
+
+        /* Form Row Item */
+        .form-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-dark);
+            width: 150px;
+            min-width: 150px;
+            text-align: left;
+        }
+
+        /* Read-only / disabled fields representing values */
+        .form-value-box {
+            flex: 1;
+            background-color: var(--field-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px 15px;
+            font-size: 13px;
+            color: var(--text-dark);
+            font-weight: 500;
+            outline: none;
+            cursor: default;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Change status selector */
+        .status-select {
+            flex: 1;
+            background-color: var(--field-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px 15px;
+            font-size: 13px;
+            color: var(--text-dark);
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            font-family: inherit;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='%232d2a29' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+        }
+
+        .status-select:focus {
+            border-color: var(--primary-red);
+        }
+
+        .status-select:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        /* --- Footer Button Group --- */
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .btn-action {
+            padding: 12px 30px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: capitalize;
+            letter-spacing: 0.5px;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-cancel-order {
+            background-color: #e28a70; /* Soft Peach-Orange color */
+            color: #ffffff;
+        }
+
+        .btn-cancel-order:hover {
+            background-color: #d9775a;
+            box-shadow: 0 4px 12px rgba(226, 138, 112, 0.2);
+        }
+
+        .btn-update-status {
+            background-color: var(--primary-red);
+            color: #ffffff;
+        }
+
+        .btn-update-status:hover {
+            background-color: #40131b;
+            box-shadow: 0 4px 12px rgba(92, 30, 40, 0.15);
+        }
+
+        /* --- Ordered Items Section --- */
+        .items-section-header {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-red);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-top: 10px;
+        }
+
+        .ordered-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ordered-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--main-bg);
+        }
+
+        .item-details-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .item-thumbnail {
+            width: 45px;
+            height: 45px;
+            border-radius: 4px;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+            background-color: #ffffff;
+        }
+
+        .item-text-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .item-title-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .item-subtitle-shade {
+            font-size: 10px;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .item-details-right {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Item Status Badges */
+        .item-status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 9px;
+            font-weight: 700;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+            width: fit-content;
+            margin-top: 4px;
+        }
+
+        .status-ordered {
+            background-color: #E0F2FE;
+            color: #0284c7;
+        }
+
+        .status-processing {
+            background-color: #FDF2E9;
+            color: #B06000;
+        }
+
+        .status-shipped {
+            background-color: #FAF5FF;
+            color: #7c3aed;
+        }
+
+        .status-delivered {
+            background-color: #E6F4EA;
+            color: #137333;
+        }
+
+        .status-cancelled {
+            background-color: #FCE8E6;
+            color: #C5221F;
+        }
+
+        .status-returned {
+            background-color: #F3F4F6;
+            color: #4B5563;
+        }
+
+    </style>
+    <script src="/js/prevent-back.js"></script>
+</head>
+<body>
+
+    <%- include('../partials/admin/sidebar', { selectedTab: 'orders' }) %>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        
+        <!-- Header -->
+        <div class="page-top">
+            <div class="header-title-section">
+                <h1 class="page-title">Order List</h1>
+                <p class="page-subtitle">Manage and track detailed customer transaction information</p>
+            </div>
+            
+            <div class="admin-header-profile">
+                <span><%= typeof user !== 'undefined' ? user.name : 'ARDRA' %></span>
+                <i class="far fa-user-circle"></i>
+            </div>
+        </div>
+
+        <!-- Order Details Card -->
+        <div class="details-card">
+            
+            <!-- Card Header -->
+            <div class="card-header">
+                <h2 class="card-order-id">Orders ID: <span>#<%= order.orderId %></span></h2>
+                <div class="card-date-info">
+                    <i class="far fa-calendar-alt"></i> Placed Date: <%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %>
+                </div>
+            </div>
+
+            <!-- Two-Column Fields Grid -->
+            <div class="form-grid">
+                
+                <!-- Left Column -->
+                <div class="form-row">
+                    <span class="form-label">Coupon :</span>
+                    <div class="form-value-box" title="<%= order.couponCode || 'N/A' %>">
+                        <%= order.couponCode || 'N/A' %>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="form-row">
+                    <span class="form-label">Payment Method :</span>
+                    <div class="form-value-box">
+                        <%= order.paymentMethod %>
+                    </div>
+                </div>
+
+                <!-- Left Column -->
+                <div class="form-row">
+                    <span class="form-label">Customer Name :</span>
+                    <div class="form-value-box" title="<%= order.deliveryAddress.fullName %>">
+                        <%= order.deliveryAddress.fullName %>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="form-row">
+                    <span class="form-label">Mobile Number :</span>
+                    <div class="form-value-box">
+                        <%= order.deliveryAddress.phone %>
+                    </div>
+                </div>
+
+                <!-- Left Column -->
+                <div class="form-row" style="align-items: flex-start;">
+                    <span class="form-label" style="margin-top: 8px;">Shipping address :</span>
+                    <div class="form-value-box" style="white-space: normal; height: auto; min-height: 42px; line-height: 1.4;" title="<%= order.deliveryAddress.address %>, <%= order.deliveryAddress.city %>, <%= order.deliveryAddress.state %> - <%= order.deliveryAddress.pincode %>">
+                        <%= order.deliveryAddress.address %>, <%= order.deliveryAddress.city %>, <%= order.deliveryAddress.state %> - <%= order.deliveryAddress.pincode %>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="form-row">
+                    <span class="form-label">Delivery Date :</span>
+                    <div class="form-value-box">
+                        <% 
+                            // Expected delivery: Order Date + 7 days
+                            const deliveryDate = new Date(order.createdAt);
+                            deliveryDate.setDate(deliveryDate.getDate() + 7);
+                        %>
+                        <%= deliveryDate.toLocaleDateString('en-GB') %>
+                    </div>
+                </div>
+
+                <!-- Left Column -->
+                <div class="form-row">
+                    <span class="form-label">Shipping Cost :</span>
+                    <div class="form-value-box">
+                        <%= order.shippingFee === 0 ? '0' : order.shippingFee %>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="form-row">
+                    <span class="form-label">Discount :</span>
+                    <div class="form-value-box">
+                        <%= order.discount || '0' %>
+                    </div>
+                </div>
+
+                <!-- Left Column -->
+                <div class="form-row">
+                    <span class="form-label" style="font-weight: 700;">Total Amount :</span>
+                    <div class="form-value-box" style="font-weight: 700; color: var(--primary-red);">
+                        <%= order.totalAmount %>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="form-row">
+                    <span class="form-label">Change status :</span>
+                    <select id="adminStatusSelector" class="status-select" <%= (order.orderStatus === 'Cancelled' || order.orderStatus === 'Returned') ? 'disabled' : '' %>>
+                        <option value="Pending" <%= order.orderStatus === 'Pending' ? 'selected' : '' %>>pending</option>
+                        <option value="Processing" <%= order.orderStatus === 'Processing' ? 'selected' : '' %>>processing</option>
+                        <option value="Shipped" <%= order.orderStatus === 'Shipped' ? 'selected' : '' %>>shipped</option>
+                        <option value="Out for Delivery" <%= order.orderStatus === 'Out for Delivery' ? 'selected' : '' %>>out for delivery</option>
+                        <option value="Delivered" <%= order.orderStatus === 'Delivered' ? 'selected' : '' %>>delivered</option>
+                        <option value="Cancelled" <%= order.orderStatus === 'Cancelled' ? 'selected' : '' %>>cancelled</option>
+                        <option value="Returned" <%= order.orderStatus === 'Returned' ? 'selected' : '' %>>returned</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- Ordered items details section (added luxury touch so admin sees the order contents) -->
+            <div class="items-section-header">Ordered Items</div>
+            <div class="ordered-items-list">
+                <% order.items.forEach((item) => { %>
+                    <div class="ordered-item-row">
+                        <div class="item-details-left">
+                            <img src="<%= (item.variant && item.variant.images && item.variant.images.length > 0) ? item.variant.images[0] : '/images/placeholder.png' %>" alt="item" class="item-thumbnail">
+                            <div class="item-text-info">
+                                <span class="item-title-name"><%= item.product ? item.product.productName : 'Product Name' %></span>
+                                <span class="item-subtitle-shade">Shade: <%= item.variant ? item.variant.color : 'N/A' %> — Qty: <%= item.quantity %></span>
+                                <% 
+                                    let itemStatusText = item.itemStatus || 'Ordered';
+                                    let itemStatusClass = 'status-ordered';
+                                    if (itemStatusText === 'Delivered') itemStatusClass = 'status-delivered';
+                                    else if (itemStatusText === 'Processing') itemStatusClass = 'status-processing';
+                                    else if (itemStatusText === 'Shipped') itemStatusClass = 'status-shipped';
+                                    else if (itemStatusText === 'Cancelled') itemStatusClass = 'status-cancelled';
+                                    else if (itemStatusText === 'Returned') itemStatusClass = 'status-returned';
+                                %>
+                                <span class="item-status-badge <%= itemStatusClass %>"><%= itemStatusText %></span>
+                                <% if (itemStatusText === 'Cancelled' && item.cancellationReason) { %>
+                                    <span style="font-size: 10px; color: #c5221f; margin-top: 2px; font-weight: 500;">Reason: <%= item.cancellationReason %></span>
+                                <% } else if (itemStatusText === 'Returned' && item.returnReason) { %>
+                                    <span style="font-size: 10px; color: #4b5563; margin-top: 2px; font-weight: 500;">Reason: <%= item.returnReason %></span>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="item-details-right">
+                            $<%= (item.price * item.quantity).toFixed(2) %>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+
+            <!-- Buttons Group -->
+            <div class="button-group">
+                <% if (order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Returned') { %>
+                    <button class="btn-action btn-cancel-order" onclick="triggerCancelOrder('<%= order._id %>')">Cancel Order</button>
+                    <button class="btn-action btn-update-status" onclick="updateOrderStatus('<%= order._id %>')">Update Status</button>
+                <% } else { %>
+                    <p style="font-size: 12px; color: var(--text-gray); font-style: italic;">This order is closed and cannot be updated.</p>
+                <% } %>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        async function updateOrderStatus(orderId) {
+            const selectedStatus = document.getElementById('adminStatusSelector').value;
+
+            const confirmation = await Swal.fire({
+                title: 'Update Status?',
+                text: `Are you sure you want to change the order status to ${selectedStatus}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#5c1e28',
+                cancelButtonColor: '#888380',
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Cancel'
+            });
+
+            if (!confirmation.isConfirmed) {
+                return;
+            }
+
+            // If selected Cancelled, prompt for cancellation reason
+            let cancellationReason = '';
+            if (selectedStatus === 'Cancelled') {
+                const reasonPrompt = await Swal.fire({
+                    title: 'Cancellation Reason',
+                    input: 'textarea',
+                    inputPlaceholder: 'Type reason here... (Optional)',
+                    showCancelButton: true,
+                    confirmButtonColor: '#5c1e28',
+                    confirmButtonText: 'OK',
+                    cancelButtonText: 'Back'
+                });
+
+                if (reasonPrompt.isDismissed) {
+                    return;
+                }
+                cancellationReason = reasonPrompt.value ? reasonPrompt.value.trim() : 'Cancelled by administrator';
+            }
+
+            submitStatusUpdate(orderId, selectedStatus, cancellationReason);
+        }
+
+        async function triggerCancelOrder(orderId) {
+            const confirmation = await Swal.fire({
+                title: 'Cancel Order?',
+                text: 'Are you sure you want to cancel this order? This will replenish stock levels.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e28a70',
+                cancelButtonColor: '#888380',
+                confirmButtonText: 'OK',
+                cancelButtonText: 'No, Keep'
+            });
+
+            if (!confirmation.isConfirmed) {
+                return;
+            }
+
+            const reasonPrompt = await Swal.fire({
+                title: 'Reason for Cancellation',
+                input: 'textarea',
+                inputPlaceholder: 'Type cancellation reason... (Optional)',
+                showCancelButton: true,
+                confirmButtonColor: '#e28a70',
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Back'
+            });
+
+            if (reasonPrompt.isDismissed) {
+                return;
+            }
+
+            const reason = reasonPrompt.value ? reasonPrompt.value.trim() : 'Cancelled by administrator';
+            submitStatusUpdate(orderId, 'Cancelled', reason);
+        }
+
+        async function submitStatusUpdate(orderId, status, cancellationReason) {
+            try {
+                Swal.fire({
+                    title: 'Processing...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const response = await fetch(`/admin/orders/${orderId}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        status: status,
+                        cancellationReason: cancellationReason 
+                    })
+                });
+
+                const data = await response.json();
+                Swal.close();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Updated',
+                        text: 'Order updated successfully!',
+                        confirmButtonColor: '#5c1e28'
+                    }).then(() => {
+                        window.location.href = '/admin/orders';
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to update order',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                }
+            } catch (error) {
+                Swal.close();
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'An error occurred. Please try again.',
+                    confirmButtonColor: '#5c1e28'
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,4 +1,7 @@
 import * as productService from '../../services/productService.js';
+import { getUserWishlist } from '../../services/wishlistService.js';
+
+
 
 
 export const getProductsPage = async (req,res)=>{
@@ -22,6 +25,20 @@ export const getProductsPage = async (req,res)=>{
         const allCategories = await productService.getAllCategories();
         const allBrands = await productService.getAllBrands();
 
+        let wishlistProductIds = [];
+        if(req.session && req.session.userId){
+            try{
+                const wishlist = await 
+                getUserWishlist(req.session.userId);
+                if(wishlist && wishlist.products){
+                    wishlistProductIds= wishlist.products.map(p => p._id.toString());  
+                }
+
+            }catch(err){
+                console.error('Error fetching wishlist in getProductsPage:',err);
+            }
+        }
+
         res.render('user/products',{
             products:result.products,
             currentPage:result.currentPage,
@@ -32,7 +49,8 @@ export const getProductsPage = async (req,res)=>{
             selectedSort:sort,
             categories:allCategories,
             brands:allBrands,
-            isLoggedIn: !!(req.session && req.session.userId)
+            isLoggedIn: !!(req.session && req.session.userId),
+            wishlistProductIds:wishlistProductIds
         });
     }catch(error){
         console.log('Error in getProductsPage:',error);
@@ -51,9 +69,24 @@ export const getProductDetail = async (req,res)=>{
             return res.redirect('/products');
         }
 
+        //check if the soecific product is in the user's wishlist
+
+        let isInWishlist = false;
+        if(req.session && req.session.userId){
+            try{
+                const wishlist = await getUserWishlist(req.session.userId);
+                if(wishlist && wishlist.products){
+                    isInWishlist = wishlist.products.some(p => p._id.toString() === productId);
+                }
+            }catch(err){
+                console.error('Error checking wishlist in getProductDetail:',err);
+            }
+        }
+
         res.render('user/product-detail',{
             product:product,
-            isLoggedIn: !!(req.session && req.session.userId)
+            isLoggedIn: !!(req.session && req.session.userId),
+            isInWishlist : isInWishlist
         });
     }catch(error){
         console.log('Error in getProductDetail:',error);

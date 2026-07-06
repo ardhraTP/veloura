@@ -2,6 +2,9 @@ import express from 'express';
 import { isAuthenticated, isGuest } from '../middleware/userAuth.js';
 import { upload } from '../middleware/upload.js';
 import passport from 'passport';
+import { getCheckoutPage, placeOrder } from '../controller/user/checkoutController.js';
+import { getUserOrders, getOrderDetails, cancelOrderProduct, returnOrderProduct, downloadInvoice } from '../controller/user/orderContoller.js';
+
 
 
 import {
@@ -46,26 +49,26 @@ import {
     setDefaultAddress
 } from '../controller/user/addressController.js';
 
-import{
+import {
     getProductsPage,
     getProductDetail
-}from '../controller/user/productController.js';
+} from '../controller/user/productController.js';
 
-import{
-    getCartPage, 
+import {
+    getCartPage,
     addToCart,
     updateQuantity,
     removeItem,
     getCartCount
-}from '../controller/user/cartController.js';
+} from '../controller/user/cartController.js';
 import { isAdminAuthenticated } from '../middleware/adminAuth.js';
 
-import{
+import {
     getWishlistPage,
     addToWishlist,
     removeFromWishlist,
     getWishlistCount
-}from '../controller/user/wishlistController.js';
+} from '../controller/user/wishlistController.js';
 
 
 
@@ -78,19 +81,42 @@ router.get('/', getLandingPage);
 router.get('/home', isAuthenticated, getHomePage);
 
 
-router.get('/products',getProductsPage);
-router.get('/product/:id',getProductDetail);
+router.get('/products', getProductsPage);
+router.get('/product/:id', getProductDetail);
 
 //cart routes
-router.get('/cart',isAuthenticated,getCartPage);
-router.post('/cart/add',isAuthenticated,addToCart);
-router.post('/cart/update',isAuthenticated,updateQuantity);
-router.delete('/cart/remove/:variantId',isAuthenticated,removeItem);
+router.get('/cart', isAuthenticated, getCartPage);
+router.post('/cart/add', isAuthenticated, addToCart);
+router.post('/cart/update', isAuthenticated, updateQuantity);
+router.delete('/cart/remove/:variantId', isAuthenticated, removeItem);
+
+
+router.get('/checkout', isAuthenticated, getCheckoutPage);
+
+router.post('/order/place', isAuthenticated, placeOrder);
+
+router.get('/order/success', isAuthenticated, (req, res) => {
+    res.render('user/order-success', {
+        orderId: req.query.orderId || '_HY252711',
+        isLoggedIn: true
+    });
+});
+
+router.get('/profile/orders', isAuthenticated, getUserOrders);
+
+
+
+//order route
+router.get('/profile/orders/:id', isAuthenticated, getOrderDetails);
+router.post('/profile/orders/:id/cancel', isAuthenticated, cancelOrderProduct);
+router.post('/profile/orders/:id/return', isAuthenticated, returnOrderProduct);
+
+router.get('/profile/orders/:id/invoice', isAuthenticated, downloadInvoice);
 
 //wishlist routes
-router.get('/wishlist',isAuthenticated,getWishlistPage);
-router.post('/wishlist/add',isAuthenticated,addToWishlist);
-router.delete('/wishlist/remove/:productId',isAuthenticated,removeFromWishlist);
+router.get('/wishlist', isAuthenticated, getWishlistPage);
+router.post('/wishlist/add', isAuthenticated, addToWishlist);
+router.delete('/wishlist/remove/:productId', isAuthenticated, removeFromWishlist);
 
 // navbar counts
 router.get('/api/cart-count', getCartCount);
@@ -103,11 +129,11 @@ router.get('/login', isGuest, getLogin);
 router.post('/login', isGuest, login);
 
 router.get('/auth/google',
-    passport.authenticate('google',{scope:['profile','email']})
+    passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
 router.get('/auth/google/callback',
-    passport.authenticate('google',{failureRedirect:'/login'}),
+    passport.authenticate('google', { failureRedirect: '/login' }),
     googleAuthCallback
 );
 

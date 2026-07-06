@@ -9,10 +9,13 @@ import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
 
+
+
 dotenv.config();
 
 
 import './config/passport.js';
+import MongoStore from 'connect-mongo';
 
 
 
@@ -43,11 +46,16 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        ttl: 7 * 24 * 60 * 60
+    }),
     cookie: {
         secure: false,
         httpOnly: true,
-        // maxAge: 24 * 60 * 60 * 1000 
-    }
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    },
+    rolling: true
 }));
 
 app.use(passport.initialize());
@@ -80,7 +88,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(` Server running on http://localhost:${PORT}`);
-   
+
 });
 
 export default app;

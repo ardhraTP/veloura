@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Successful | Veloura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <script src="/js/prevent-back.js"></script>
+    <style>
+        body {
+            background-color: #FAF6F0;
+            color: #2C2C2C;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .success-main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 130px;
+            padding-bottom: 80px;
+        }
+
+        .success-container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 20px;
+            text-align: center;
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Checkmark Container */
+        .checkmark-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #19B24B;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(25, 178, 75, 0.2);
+            animation: bounceIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .checkmark-container i {
+            color: #FFFFFF;
+            font-size: 40px;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 0.9;
+                transform: scale(1.1);
+            }
+            80% {
+                transform: scale(0.89);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Large Maroon Title Box */
+        .title-box {
+            background-color: #5C1E28;
+            padding: 24px 60px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(92, 30, 40, 0.1);
+            max-width: 90%;
+        }
+
+        .title-box h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 56px;
+            font-weight: 500;
+            color: #FFFFFF;
+            margin: 0;
+            letter-spacing: 1px;
+            text-transform: none;
+            line-height: 1.1;
+        }
+
+        @media (max-width: 576px) {
+            .title-box {
+                padding: 16px 30px;
+            }
+            .title-box h1 {
+                font-size: 36px;
+            }
+        }
+
+        /* Information Text */
+        .info-text {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #666666;
+            max-width: 560px;
+            margin: 0 auto 35px auto;
+            letter-spacing: 0.2px;
+        }
+
+        .order-details-box {
+            margin-bottom: 50px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .detail-line {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #2C2C2C;
+            text-transform: uppercase;
+        }
+
+        .detail-line.delivery {
+            font-size: 18px;
+            color: #2C2C2C;
+            letter-spacing: 1.2px;
+        }
+
+        /* Buttons Layout */
+        .button-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 576px) {
+            .button-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        .btn-success {
+            padding: 15px 35px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-width: 220px;
+            box-sizing: border-box;
+            display: inline-block;
+        }
+
+        .btn-success.primary {
+            background-color: #5C1E28;
+            color: #FFFFFF;
+            border: 1px solid #5C1E28;
+        }
+
+        .btn-success.primary:hover {
+            background-color: #3B1118;
+            border-color: #3B1118;
+            box-shadow: 0 4px 15px rgba(92, 30, 40, 0.15);
+        }
+
+        .btn-success.secondary {
+            background-color: #5C1E28;
+            color: #FFFFFF;
+            border: 1px solid #5C1E28;
+        }
+
+        .btn-success.secondary:hover {
+            background-color: #3B1118;
+            border-color: #3B1118;
+            box-shadow: 0 4px 15px rgba(92, 30, 40, 0.15);
+        }
+
+        footer {
+            margin-top: auto;
+            border-top: 1px solid #E6DED4;
+            background-color: #EAE5DF;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <main class="success-main">
+        <div class="success-container">
+            <!-- Green check icon box -->
+            <div class="checkmark-container">
+                <i class="far fa-check-circle"></i>
+            </div>
+
+            <!-- Big maroon title -->
+            <div>
+                <div class="title-box">
+                    <h1>Order Success</h1>
+                </div>
+            </div>
+
+            <!-- Helper messages -->
+            <p class="info-text">
+                Thank you for your order. We are processing your order and will update you with your order details in your email.
+            </p>
+
+            <!-- Order info lines -->
+            <div class="order-details-box">
+                <div class="detail-line">
+                    ORDER ID: <%= typeof orderId !== 'undefined' ? orderId : '_HY252711' %>
+                </div>
+                <div class="detail-line delivery">
+                    EXPECTED DELIVERY DATE : WITHIN 7 DAYS
+                </div>
+            </div>
+
+            <!-- Redirection Actions -->
+            <div class="button-group">
+                <a href="/products" class="btn-success primary">Continue Shopping</a>
+                <a href="/profile/orders/<%= typeof orderId !== 'undefined' ? orderId : '' %>" class="btn-success secondary">View Order Details</a>
+            </div>
+        </div>
+    </main>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

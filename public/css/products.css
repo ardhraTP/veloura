@@ -278,6 +278,11 @@ body {
     box-shadow: 0 4px 16px rgba(92, 30, 40, 0.2);
 }
 
+.wishlist-btn.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
 .wishlist-btn.active i {
     color: var(--primary-red);
 }

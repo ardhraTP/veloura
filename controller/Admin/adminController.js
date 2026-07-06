@@ -14,7 +14,7 @@ export const getLogin = (req, res) => {
         error: req.session.adminLoginError || null
     });
 
-    req.session.adminLoginError = null;
+    req.session.adminLoginError = null;     
 };
 
 

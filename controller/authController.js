@@ -30,7 +30,7 @@ export const signup = async (req, res) => {
         }
 
 
-        const validation = validateSignupData({ name,phone,email, password });
+        const validation = validateSignupData({ name, phone, email, password });
         if (!validation.isValid) {
             req.session.signupError = validation.error;
             return res.redirect('/register');
@@ -48,7 +48,7 @@ export const signup = async (req, res) => {
         const newUser = new User({
             name: name.trim(),
             email: email.toLowerCase().trim(),
-            phone:phone.trim(),
+            phone: phone.trim(),
             password: hashedPassword,
             isAdmin: false,
             otp: otp,
@@ -62,7 +62,7 @@ export const signup = async (req, res) => {
 
             req.session.tempUserId = newUser._id;
             req.session.otpSuccess = 'OTP sent to your email';
-            
+
             res.redirect('/verify-otp');
         } catch (emailError) {
             console.error('Email sending failed:', emailError);
@@ -167,12 +167,12 @@ export const getOTPVerify = (req, res) => {
     if (!req.session.tempUserId) {
         return res.redirect('/register');
     }
-    
+
     const error = req.session.otpError || null;
     const success = req.session.otpSuccess || null;
     delete req.session.otpError;
     delete req.session.otpSuccess;
-    
+
     res.render('user/otp-verify', { error, success });
 };
 
@@ -385,7 +385,7 @@ export const getResetPassword = async (req, res) => {
 
 export const resetPassword = async (req, res) => {
     try {
-        const { token, password, confirmPassword } = req.body;  
+        const { token, password, confirmPassword } = req.body;
 
         if (!token) {
             return res.render('user/reset-password', {

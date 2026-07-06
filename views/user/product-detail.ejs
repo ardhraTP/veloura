@@ -99,8 +99,8 @@
                 <%= firstVariantStock === 0 ? 'OUT OF STOCK' : 'ADD TO CART' %>
             </button>
             <button class="pd-btn-buy" id="buyNowBtn" <%= firstVariantStock === 0 ? 'disabled' : '' %>>BUY NOW</button>
-            <button class="pd-btn-wishlist" id="wishlistBtn" onclick="toggleWishlist()">
-                <i class="far fa-heart"></i> ADD TO WISHLIST
+            <button class="pd-btn-wishlist <%= typeof isInWishlist !== 'undefined' && isInWishlist ? 'active' : '' %>" id="wishlistBtn" onclick="toggleWishlist()">
+                <i class="<%= typeof isInWishlist !== 'undefined' && isInWishlist ? 'fas fa-heart' : 'far fa-heart' %>"></i> <%= typeof isInWishlist !== 'undefined' && isInWishlist ? 'ADDED TO WISHLIST' : 'ADD TO WISHLIST' %>
             </button>
 
             <!-- Specifications -->

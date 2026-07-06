@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details | Veloura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/profile.css">
+    <script src="/js/prevent-back.js"></script>
+    <style>
+        body {
+            background-color: #FAF6F0;
+            color: #2C2C2C;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 20px 80px 20px;
+            display: flex;
+            gap: 40px;
+        }
+
+        .content-area {
+            flex: 1;
+            min-width: 0; /* Prevent flex blowout */
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 38px;
+            font-weight: 500;
+            color: #5C1E28;
+            margin-top: 0;
+            margin-bottom: 35px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Product Card Layout */
+        .product-card {
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            border: 1px solid #F0ECE6;
+        }
+
+        .product-info-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex: 1;
+        }
+
+        .product-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            background-color: #FAF6F0;
+        }
+
+        .product-details {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .product-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            font-weight: 500;
+            color: #2C2C2C;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .product-price {
+            font-size: 16px;
+            font-weight: 600;
+            color: #5C1E28;
+            margin: 0;
+        }
+
+        .product-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .badge-pill {
+            background-color: #EAE5DF;
+            color: #666666;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 20px;
+            text-transform: capitalize;
+        }
+
+        .product-action-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 15px;
+            min-width: 180px;
+        }
+
+        /* Status Badge style */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #E8F8EE;
+            color: #19B24B;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .status-badge.cancelled {
+            background-color: #FDE8E8;
+            color: #E02424;
+        }
+
+        .status-badge.returned {
+            background-color: #FEF08A;
+            color: #854D0E;
+        }
+
+        .status-badge.pending, .status-badge.ordered {
+            background-color: #FEF3C7;
+            color: #D97706;
+        }
+
+        .status-badge.processing {
+            background-color: #FDF2E9;
+            color: #B06000;
+        }
+
+        .status-badge.shipped {
+            background-color: #E0F2FE;
+            color: #0284c7;
+        }
+
+        .status-badge.out-for-delivery {
+            background-color: #FAF5FF;
+            color: #7c3aed;
+        }
+
+        /* Cancel/Return Buttons */
+        .btn-order-action {
+            width: 100%;
+            max-width: 180px;
+            padding: 10px 20px;
+            background-color: #D92525;
+            color: #FFFFFF;
+            border: 1px solid #D92525;
+            border-radius: 4px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-order-action:hover {
+            background-color: #B21B1B;
+            border-color: #B21B1B;
+            box-shadow: 0 4px 10px rgba(217, 37, 37, 0.15);
+        }
+
+        /* Two Column Layout details */
+        .details-layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .details-column-stacked {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .info-card {
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            border: 1px solid #F0ECE6;
+        }
+
+        .card-header-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #5C1E28;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #FAF6F0;
+            padding-bottom: 10px;
+        }
+
+        /* Delivered Address styling */
+        .address-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #2C2C2C;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .address-text {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #555555;
+            margin-bottom: 15px;
+        }
+
+        .address-phone {
+            font-size: 14px;
+            color: #2C2C2C;
+            font-weight: 500;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .address-phone i {
+            color: #5C1E28;
+        }
+
+        /* Total Summary Styling */
+        .summary-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #555555;
+        }
+
+        .summary-row.total-row {
+            border-top: 1px solid #F0ECE6;
+            padding-top: 15px;
+            margin-top: 5px;
+            color: #2C2C2C;
+        }
+
+        .total-label {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            font-weight: 500;
+        }
+
+        .total-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            font-weight: 600;
+            color: #5C1E28;
+        }
+
+        .text-green {
+            color: #19B24B;
+            font-weight: 600;
+        }
+
+        /* Review Card Styling (Delivered state) */
+        .review-title-serif {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 500;
+            color: #2C2C2C;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #5C1E28;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* Rating Stars Selector */
+        .rating-selector {
+            display: flex;
+            gap: 8px;
+            font-size: 20px;
+            color: #CCCCCC;
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+
+        .rating-selector i.active {
+            color: #5C1E28;
+        }
+
+        .review-input, .review-textarea {
+            width: 100%;
+            background-color: #FAF6F0;
+            border: 1px solid #EAE5DF;
+            border-radius: 4px;
+            padding: 12px 15px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            color: #2C2C2C;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .review-input:focus, .review-textarea:focus {
+            border-color: #5C1E28;
+        }
+
+        .review-textarea {
+            height: 100px;
+            resize: none;
+        }
+
+        .btn-submit-review {
+            width: 100%;
+            background-color: #5C1E28;
+            color: #FFFFFF;
+            border: 1px solid #5C1E28;
+            border-radius: 4px;
+            padding: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-submit-review:hover {
+            background-color: #3b1118;
+            border-color: #3b1118;
+            box-shadow: 0 4px 10px rgba(92, 30, 40, 0.15);
+        }
+
+        /* Download Invoice Button container */
+        .invoice-download-container {
+            margin-top: 20px;
+        }
+
+        .btn-download-invoice {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            background-color: #5C1E28;
+            color: #FFFFFF;
+            border: 1px solid #5C1E28;
+            border-radius: 4px;
+            padding: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .btn-download-invoice:hover {
+            background-color: #3b1118;
+            border-color: #3b1118;
+            box-shadow: 0 4px 10px rgba(92, 30, 40, 0.15);
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 992px) {
+            .main-container {
+                flex-direction: column;
+                gap: 30px;
+                padding-top: 100px;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .product-card {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+            }
+
+            .product-action-right {
+                width: 100%;
+                align-items: flex-start;
+                min-width: 0;
+            }
+
+            .btn-order-action {
+                max-width: 100%;
+            }
+
+            .details-layout-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        /* Cancel Order Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .cancel-modal-content {
+            background-color: #FFFFFF;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            padding: 40px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close-modal-btn {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 24px;
+            color: #888888;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .close-modal-btn:hover {
+            color: #5C1E28;
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 500;
+            color: #5C1E28;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            font-size: 13px;
+            color: #666666;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+
+        .reasons-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 20px;
+        }
+
+        .reason-option-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background-color: #FFFFFF;
+            border: 1px solid #EAE5DF;
+            border-radius: 6px;
+            padding: 12px 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .reason-option-card:hover {
+            border-color: #5C1E28;
+            background-color: #FAF6F0;
+        }
+
+        .reason-option-card input[type="radio"] {
+            display: none;
+        }
+
+        .custom-radio {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #CCCCCC;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .reason-option-card input[type="radio"]:checked + .custom-radio {
+            border-color: #5C1E28;
+        }
+
+        .reason-option-card input[type="radio"]:checked + .custom-radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background-color: #5C1E28;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .reason-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            color: #2C2C2C;
+        }
+
+        .optional-comment-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label-cancel {
+            font-size: 11px;
+            font-weight: 600;
+            color: #5C1E28;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .cancel-textarea {
+            width: 100%;
+            height: 70px;
+            background-color: #FAF6F0;
+            border: 1px solid #EAE5DF;
+            border-radius: 6px;
+            padding: 10px 15px;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            outline: none;
+            resize: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .cancel-textarea:focus {
+            border-color: #5C1E28;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-modal-submit {
+            flex: 1;
+            background-color: #5C1E28;
+            color: #FFFFFF;
+            border: 1px solid #5C1E28;
+            border-radius: 4px;
+            padding: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-modal-submit:hover {
+            background-color: #3b1118;
+            border-color: #3b1118;
+        }
+
+        .btn-modal-cancel {
+            flex: 1;
+            background-color: #FFFFFF;
+            color: #5C1E28;
+            border: 1px solid #5C1E28;
+            border-radius: 4px;
+            padding: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-modal-cancel:hover {
+            background-color: #FAF6F0;
+        }
+
+        /* Custom Checkbox Outline Styling for Return reasons */
+        .custom-checkbox-outline {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #CCCCCC;
+            border-radius: 3px;
+            display: inline-block;
+            position: relative;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .reason-option-card input[type="radio"]:checked + .custom-checkbox-outline {
+            border-color: #5C1E28;
+            background-color: #5C1E28;
+        }
+
+        .reason-option-card input[type="radio"]:checked + .custom-checkbox-outline::after {
+            content: '✔';
+            font-size: 10px;
+            color: #FFFFFF;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .btn-modal-text-cancel {
+            background: none;
+            border: none;
+            color: #888888;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: color 0.2s ease;
+            padding: 0;
+        }
+
+        .btn-modal-text-cancel:hover {
+            color: #5C1E28;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="main-container">
+        <%- include('../partials/profile-sidebar') %>
+
+        <main class="content-area">
+            <h1 class="page-title">Order Details</h1>
+
+            <!-- Handle order status variable mapping safety -->
+            <% 
+               const isDelivered = order.orderStatus === 'Delivered'; 
+            %>
+
+            <!-- Loop through order items. We can group them or render each item card as requested. -->
+            <% if (order.items && order.items.length > 0) { %>
+                <% order.items.forEach(function(item) { %>
+                    <!-- Product Card -->
+                    <div class="product-card">
+                        <div class="product-info-left">
+                            <img src="<%= (item.variant && item.variant.images && item.variant.images.length > 0) ? item.variant.images[0] : '/images/default.jpg' %>" alt="<%= (item.product && item.product.productName) ? item.product.productName : 'Product Image' %>" class="product-image">
+                            
+                            <div class="product-details">
+                                <h3 class="product-name"><%= (item.product && item.product.productName) ? item.product.productName : 'Product Name' %></h3>
+                                <p class="product-price">$<%= item.price ? item.price.toFixed(2) : '0.00' %></p>
+                                
+                                <div class="product-badges">
+                                    <% if (item.variant && item.variant.color) { %>
+                                        <span class="badge-pill">Shade: <%= item.variant.color %></span>
+                                    <% } %>
+                                    <span class="badge-pill">Qty: <%= item.quantity %></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="product-action-right">
+                            <!-- Product Status Badge -->
+                            <% if (item.itemStatus === 'Delivered' || (typeof item.itemStatus === 'undefined' && isDelivered)) { %>
+                                <div class="status-badge">
+                                    <i class="fas fa-check-circle"></i> Delivered
+                                </div>
+                                <button class="btn-order-action" onclick="handleReturnOrder('<%= order._id %>', '<%= item._id %>')">Return</button>
+                            <% } else if (item.itemStatus === 'Cancelled') { %>
+                                <div class="status-badge cancelled">
+                                    <i class="fas fa-times-circle"></i> Cancelled
+                                </div>
+                            <% } else if (item.itemStatus === 'Returned') { %>
+                                <div class="status-badge returned">
+                                    <i class="fas fa-undo-alt"></i> Returned
+                                </div>
+                            <% } else if (item.itemStatus === 'Out for Delivery') { %>
+                                <div class="status-badge out-for-delivery">
+                                    <i class="fas fa-truck"></i> Out for Delivery
+                                </div>
+                            <% } else { %>
+                                <% 
+                                    const currentStatus = item.itemStatus || order.orderStatus || 'Ordered';
+                                    let statusClass = '';
+                                    if (currentStatus === 'Processing') statusClass = 'processing';
+                                    else if (currentStatus === 'Shipped') statusClass = 'shipped';
+                                    else if (currentStatus === 'Pending' || currentStatus === 'Ordered') statusClass = 'pending';
+                                %>
+                                <div class="status-badge <%= statusClass %>">
+                                    <i class="fas fa-check-circle"></i> <%= currentStatus %>
+                                </div>
+                                <button class="btn-order-action" onclick="handleCancelOrder('<%= order._id %>', '<%= item._id %>')">Cancel Order</button>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p>No items found in this order.</p>
+            <% } %>
+
+            <!-- Conditional layouts -->
+            <% if (!isDelivered) { %>
+                <!-- IN PROGRESS STATE: Delivered Address and Total Summary Side-by-Side -->
+                <div class="details-layout-grid">
+                    <!-- Delivered Address Card -->
+                    <div class="info-card">
+                        <h4 class="card-header-title">Delivered Address</h4>
+                        <% if (order.deliveryAddress) { %>
+                            <h5 class="address-name"><%= order.deliveryAddress.fullName %></h5>
+                            <p class="address-text">
+                                <%= order.deliveryAddress.address %><br>
+                                <%= order.deliveryAddress.city %>, <%= order.deliveryAddress.state %><br>
+                                - <%= order.deliveryAddress.pincode %>
+                            </p>
+                            <p class="address-phone">
+                                <i class="fas fa-phone-alt"></i> +91 <%= order.deliveryAddress.phone %>
+                            </p>
+                        <% } else { %>
+                            <p>No address information available.</p>
+                        <% } %>
+                    </div>
+
+                    <!-- Total Summary Card -->
+                    <div class="info-card">
+                        <h4 class="card-header-title">Total Summary</h4>
+                        <div class="summary-list">
+                            <div class="summary-row">
+                                <span>Subtotal</span>
+                                <span>$<%= order.subtotal ? order.subtotal.toFixed(2) : '0.00' %></span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Shipping</span>
+                                <span class="text-green"><%= (!order.shippingFee || order.shippingFee === 0) ? 'FREE' : '$' + order.shippingFee.toFixed(2) %></span>
+                            </div>
+                            <% if (order.discount && order.discount > 0) { %>
+                                <div class="summary-row">
+                                    <span>Discount</span>
+                                    <span>-$<%= order.discount.toFixed(2) %></span>
+                                </div>
+                            <% } %>
+                            <div class="summary-row total-row">
+                                <span class="total-label">Total</span>
+                                <span class="total-value">$<%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% } else { %>
+                <!-- DELIVERED STATE: Stacked Left (Address & Summary), Share Your Experience and Invoice Right -->
+                <div class="details-layout-grid">
+                    <!-- Left Stacked Column -->
+                    <div class="details-column-stacked">
+                        <!-- Delivered Address Card -->
+                        <div class="info-card">
+                            <h4 class="card-header-title">Delivered Address</h4>
+                            <% if (order.deliveryAddress) { %>
+                                <h5 class="address-name"><%= order.deliveryAddress.fullName %></h5>
+                                <p class="address-text">
+                                    <%= order.deliveryAddress.address %><br>
+                                    <%= order.deliveryAddress.city %>, <%= order.deliveryAddress.state %><br>
+                                    - <%= order.deliveryAddress.pincode %>
+                                </p>
+                                <p class="address-phone">
+                                    <i class="fas fa-phone-alt"></i> +91 <%= order.deliveryAddress.phone %>
+                                </p>
+                            <% } else { %>
+                                <p>No address information available.</p>
+                            <% } %>
+                        </div>
+
+                        <!-- Total Summary Card -->
+                        <div class="info-card">
+                            <h4 class="card-header-title">Total Summary</h4>
+                            <div class="summary-list">
+                                <div class="summary-row">
+                                    <span>Subtotal</span>
+                                    <span>$<%= order.subtotal ? order.subtotal.toFixed(2) : '0.00' %></span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Shipping</span>
+                                    <span class="text-green"><%= (!order.shippingFee || order.shippingFee === 0) ? 'FREE' : '$' + order.shippingFee.toFixed(2) %></span>
+                                </div>
+                                <% if (order.discount && order.discount > 0) { %>
+                                    <div class="summary-row">
+                                        <span>Discount</span>
+                                        <span>-$<%= order.discount.toFixed(2) %></span>
+                                    </div>
+                                <% } %>
+                                <div class="summary-row total-row">
+                                    <span class="total-label">Total</span>
+                                    <span class="total-value">$<%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column (Review & Invoice) -->
+                    <div>
+                        <!-- Share Your Experience Card -->
+                        <div class="info-card">
+                            <h4 class="review-title-serif">Share Your Experience</h4>
+                            
+                            <form action="/profile/orders/<%= order._id %>/review" method="POST" id="review-submit-form">
+                                <div class="form-group">
+                                    <label class="form-label">Overall Rating</label>
+                                    <div class="rating-selector" id="rating-star-container">
+                                        <i class="far fa-star rating-star-btn" data-value="1"></i>
+                                        <i class="far fa-star rating-star-btn" data-value="2"></i>
+                                        <i class="far fa-star rating-star-btn" data-value="3"></i>
+                                        <i class="far fa-star rating-star-btn" data-value="4"></i>
+                                        <i class="far fa-star rating-star-btn" data-value="5"></i>
+                                    </div>
+                                    <input type="hidden" name="rating" id="selected-rating-value" value="0" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Review Title</label>
+                                    <input type="text" name="title" class="review-input" placeholder="Summarize your thoughts" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Your Review</label>
+                                    <textarea name="comment" class="review-textarea" placeholder="Tell us what you loved (or didn't) about this product..." required></textarea>
+                                </div>
+
+                                <button type="submit" class="btn-submit-review">Submit Review</button>
+                            </form>
+                        </div>
+
+                        <!-- Download Invoice Button -->
+                        <div class="invoice-download-container">
+                            <a href="/profile/orders/<%= order._id %>/invoice" class="btn-download-invoice">
+                                Download Invoice PDF <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Return Order Modal Pop -->
+            <div id="return-order-modal" class="modal-overlay" style="display: none;">
+                <div class="cancel-modal-content">
+                    <span class="close-modal-btn" onclick="closeReturnModal()">&times;</span>
+                    <h2 class="modal-title" style="font-family: 'Playfair Display', serif; color: #5C1E28;">Return Reason</h2>
+                    <p class="modal-subtitle">Please select why you are returning this item.</p>
+                    
+                    <form id="return-order-form" onsubmit="submitReturnOrderForm(event)">
+                        <input type="hidden" id="return-modal-order-id">
+                        <input type="hidden" id="return-modal-item-id">
+                        
+                        <div class="reasons-list">
+                            <label class="reason-option-card" style="justify-content: space-between;">
+                                <span class="reason-text">Damaged or defective item</span>
+                                <input type="radio" name="returnReason" value="Damaged or defective item" checked>
+                                <span class="custom-checkbox-outline"></span>
+                            </label>
+                            <label class="reason-option-card" style="justify-content: space-between;">
+                                <span class="reason-text">Incorrect item received</span>
+                                <input type="radio" name="returnReason" value="Incorrect item received">
+                                <span class="custom-checkbox-outline"></span>
+                            </label>
+                            <label class="reason-option-card" style="justify-content: space-between;">
+                                <span class="reason-text">Quality not as expected</span>
+                                <input type="radio" name="returnReason" value="Quality not as expected">
+                                <span class="custom-checkbox-outline"></span>
+                            </label>
+                            <label class="reason-option-card" style="justify-content: space-between;">
+                                <span class="reason-text">Changed my mind</span>
+                                <input type="radio" name="returnReason" value="Changed my mind">
+                                <span class="custom-checkbox-outline"></span>
+                            </label>
+                            <label class="reason-option-card" style="justify-content: space-between;">
+                                <span class="reason-text">Arrived too late</span>
+                                <input type="radio" name="returnReason" value="Arrived too late">
+                                <span class="custom-checkbox-outline"></span>
+                            </label>
+                            <label class="reason-option-card" style="justify-content: space-between;">
+                                <span class="reason-text">Other reason</span>
+                                <input type="radio" name="returnReason" value="Other">
+                                <span class="custom-checkbox-outline"></span>
+                            </label>
+                        </div>
+                        
+                        <!-- other reason (mandatory reason if 'Other' selected) -->
+                        <div class="optional-comment-group" style="margin-top: 15px;">
+                            <label class="form-label-cancel" style="text-transform: lowercase;">other reason</label>
+                            <textarea id="return-modal-other-comment" class="cancel-textarea" placeholder="Please specify your return reason... (Mandatory if 'Other reason' is selected)"></textarea>
+                        </div>
+                        
+                        <div class="modal-actions" style="justify-content: flex-end; align-items: center; gap: 20px;">
+                            <button type="button" class="btn-modal-text-cancel" onclick="closeReturnModal()">CANCEL</button>
+                            <button type="submit" class="btn-modal-submit" style="flex: 0 0 auto; min-width: 180px;">SUBMIT REQUEST</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Cancel Order Modal Pop -->
+            <div id="cancel-order-modal" class="modal-overlay" style="display: none;">
+                <div class="cancel-modal-content">
+                    <span class="close-modal-btn" onclick="closeCancelModal()">&times;</span>
+                    <h2 class="modal-title">Cancel Order</h2>
+                    <p class="modal-subtitle">Choose a reason for cancelling your order</p>
+                    
+                    <form id="cancel-order-form" onsubmit="submitCancelOrderForm(event)">
+                        <input type="hidden" id="cancel-modal-order-id">
+                        <input type="hidden" id="cancel-modal-item-id">
+                        
+                        <div class="reasons-list">
+                            <label class="reason-option-card">
+                                <input type="radio" name="reason" value="Ordered by mistake" checked>
+                                <span class="custom-radio"></span>
+                                <span class="reason-text">Ordered by mistake</span>
+                            </label>
+                            <label class="reason-option-card">
+                                <input type="radio" name="reason" value="Found a better price elsewhere">
+                                <span class="custom-radio"></span>
+                                <span class="reason-text">Found a better price elsewhere</span>
+                            </label>
+                            <label class="reason-option-card">
+                                <input type="radio" name="reason" value="Delivery is taking too long">
+                                <span class="custom-radio"></span>
+                                <span class="reason-text">Delivery is taking too long</span>
+                            </label>
+                            <label class="reason-option-card">
+                                <input type="radio" name="reason" value="Changed my mind">
+                                <span class="custom-radio"></span>
+                                <span class="reason-text">Changed my mind</span>
+                            </label>
+                            <label class="reason-option-card">
+                                <input type="radio" name="reason" value="Want to change shade or variant">
+                                <span class="custom-radio"></span>
+                                <span class="reason-text">Want to change shade or variant</span>
+                            </label>
+                            <label class="reason-option-card">
+                                <input type="radio" name="reason" value="Incorrect address entered">
+                                <span class="custom-radio"></span>
+                                <span class="reason-text">Incorrect address entered</span>
+                            </label>
+                            <label class="reason-option-card">
+                                <input type="radio" name="reason" value="Payment issue">
+                                <span class="custom-radio"></span>
+                                <span class="reason-text">Payment issue</span>
+                            </label>
+                            <label class="reason-option-card">
+                                <input type="radio" name="reason" value="No longer needed">
+                                <span class="custom-radio"></span>
+                                <span class="reason-text">No longer needed</span>
+                            </label>
+                        </div>
+                        
+                        <!-- Reason optional for cancellation -->
+                        <div class="optional-comment-group">
+                            <label class="form-label-cancel">Reason (optional) for cancellation</label>
+                            <textarea id="cancel-modal-comment" class="cancel-textarea" placeholder="Tell us more (optional)"></textarea>
+                        </div>
+                        
+                        <div class="modal-actions">
+                            <button type="submit" class="btn-modal-submit">Submit</button>
+                            <button type="button" class="btn-modal-cancel" onclick="closeCancelModal()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <%- include('../partials/footer') %>
+
+    <!-- Inline JavaScript Helpers for Ratings and Dynamic Popups -->
+    <script>
+        // Interactive Star Rating Selectors
+        document.addEventListener('DOMContentLoaded', function() {
+            const stars = document.querySelectorAll('.rating-star-btn');
+            const ratingInput = document.getElementById('selected-rating-value');
+            
+            if (stars.length > 0 && ratingInput) {
+                stars.forEach(function(star) {
+                    star.addEventListener('click', function() {
+                        const val = parseInt(star.getAttribute('data-value'));
+                        ratingInput.value = val;
+                        updateStars(val);
+                    });
+                    
+                    star.addEventListener('mouseover', function() {
+                        const val = parseInt(star.getAttribute('data-value'));
+                        highlightStars(val);
+                    });
+                    
+                    star.addEventListener('mouseout', function() {
+                        const currentVal = parseInt(ratingInput.value) || 0;
+                        updateStars(currentVal);
+                    });
+                });
+            }
+
+            function highlightStars(val) {
+                stars.forEach(function(s) {
+                    const sVal = parseInt(s.getAttribute('data-value'));
+                    if (sVal <= val) {
+                        s.className = 'fas fa-star rating-star-btn active';
+                    } else {
+                        s.className = 'far fa-star rating-star-btn';
+                    }
+                });
+            }
+
+            function updateStars(val) {
+                stars.forEach(function(s) {
+                    const sVal = parseInt(s.getAttribute('data-value'));
+                    if (sVal <= val) {
+                        s.className = 'fas fa-star rating-star-btn active';
+                    } else {
+                        s.className = 'far fa-star rating-star-btn';
+                    }
+                });
+            }
+        });
+
+        // Cancel order modal toggle handlers
+        function handleCancelOrder(orderId, itemId) {
+            document.getElementById('cancel-modal-order-id').value = orderId;
+            document.getElementById('cancel-modal-item-id').value = itemId;
+            document.getElementById('cancel-order-modal').style.display = 'flex';
+        }
+
+        function closeCancelModal() {
+            document.getElementById('cancel-order-modal').style.display = 'none';
+            document.getElementById('cancel-modal-comment').value = '';
+        }
+
+        function submitCancelOrderForm(event) {
+            event.preventDefault();
+            const orderId = document.getElementById('cancel-modal-order-id').value;
+            const itemId = document.getElementById('cancel-modal-item-id').value;
+            const reason = document.querySelector('input[name="reason"]:checked').value;
+            const comment = document.getElementById('cancel-modal-comment').value;
+
+            fetch('/profile/orders/' + orderId + '/cancel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    itemId: itemId,
+                    reason: reason,
+                    comment: comment
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    closeCancelModal();
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Cancelled',
+                            text: 'Your order item has been cancelled.',
+                            icon: 'success',
+                            confirmButtonColor: '#5C1E28'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        alert('Order item cancelled successfully.');
+                        window.location.reload();
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Error', data.message || 'Failed to cancel order.', 'error');
+                    } else {
+                        alert(data.message || 'Failed to cancel order.');
+                    }
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+                } else {
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        }
+
+        // Return order modal toggle handlers
+        function handleReturnOrder(orderId, itemId) {
+            document.getElementById('return-modal-order-id').value = orderId;
+            document.getElementById('return-modal-item-id').value = itemId;
+            document.getElementById('return-order-modal').style.display = 'flex';
+        }
+
+        function closeReturnModal() {
+            document.getElementById('return-order-modal').style.display = 'none';
+            document.getElementById('return-modal-other-comment').value = '';
+        }
+
+        function submitReturnOrderForm(event) {
+            event.preventDefault();
+            const orderId = document.getElementById('return-modal-order-id').value;
+            const itemId = document.getElementById('return-modal-item-id').value;
+            const selectedRadio = document.querySelector('input[name="returnReason"]:checked');
+            const otherComment = document.getElementById('return-modal-other-comment').value.trim();
+
+            if (!selectedRadio) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Error', 'Please select a reason for return.', 'warning');
+                } else {
+                    alert('Please select a reason for return.');
+                }
+                return;
+            }
+
+            let reason = selectedRadio.value;
+
+            // Validation logic for Mandatory Other reason
+            if (reason === 'Other') {
+                if (!otherComment) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Required', 'Please fill out the reason description field.', 'warning');
+                    } else {
+                        alert('Please fill out the reason description field.');
+                    }
+                    return;
+                }
+                reason = otherComment;
+            } else if (otherComment) {
+                // Append optional comment to selected reason if provided
+                reason += ' - ' + otherComment;
+            }
+
+            fetch('/profile/orders/' + orderId + '/return', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    itemId: itemId,
+                    reason: reason
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    closeReturnModal();
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Submitted',
+                            text: 'Your return request has been submitted successfully.',
+                            icon: 'success',
+                            confirmButtonColor: '#5C1E28'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        alert('Return request submitted successfully.');
+                        window.location.reload();
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Error', data.message || 'Failed to submit return request.', 'error');
+                    } else {
+                        alert(data.message || 'Failed to submit return request.');
+                    }
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Error', 'An error occurred. Please try again.', 'error');
+                } else {
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -4,7 +4,7 @@ export const getCategoriesPage = async (req,res)=>{
     try{
         const search = req.query.search || '';
         const page = parseInt(req.query.page) || 1;
-        const limit = 10;
+        const limit = 5;
         const skip = (page - 1) * limit;
 
 
@@ -79,7 +79,6 @@ export const editCategory = async (req,res)=>{
         const categoryId = req.params.id;
         const {name,offer,description} = req.body;
 
-        // Validate name (safety net — client-side JS also handles this)
         if (!name || name.trim() === '') {
             return res.redirect('/admin/categories?error=Category+name+is+required');
         }

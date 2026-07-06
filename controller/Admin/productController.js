@@ -29,7 +29,7 @@ export const getAdminProductsPage = async (req, res) => {
 
         const search = req.query.search || '';
        const page = parseInt(req.query.page) || 1;
-        const limit = 10; 
+        const limit = 5; 
         const skip = (page - 1) * limit;
 
        
@@ -44,7 +44,7 @@ export const getAdminProductsPage = async (req, res) => {
         }
 
    
-        const totalProducts = await Product.countDocuments({isDeleted:false});
+        const totalProducts = await Product.countDocuments(searchFilter);
         const totalPages = Math.ceil(totalProducts / limit);
 
         const products = await Product.find(searchFilter)

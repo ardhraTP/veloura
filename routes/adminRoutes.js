@@ -1,6 +1,7 @@
 import express from 'express';
 import { isAdminAuthenticated, isAdminGuest } from '../middleware/adminAuth.js';
 import { getLogin, login, getDashboard, getUsers, toggleBlockUser, logout } from '../controller/Admin/adminController.js';
+import { getAdminOrdersPage, getAdminOrderDetail, updateAdminOrderStatus } from '../controller/Admin/orderController.js';
 
 import {
     getAdminProductsPage,
@@ -19,7 +20,7 @@ import {
 } from '../controller/Admin/productController.js';
 
 
-import{
+import {
     getCategoriesPage,
     addCategory,
     editCategory,
@@ -29,6 +30,7 @@ import{
 
 
 import { uploadVariantImages } from '../middleware/variantUpload.js';
+import { isAuthenticated } from '../middleware/userAuth.js';
 
 const router = express.Router();
 
@@ -38,11 +40,13 @@ router.post('/login', isAdminGuest, login);
 router.get('/dashboard', isAdminAuthenticated, getDashboard);
 
 
-router.get('/categories',isAdminAuthenticated,getCategoriesPage);
-router.post('/categories/add',isAdminAuthenticated,addCategory);
-router.post('/categories/:id/edit',isAdminAuthenticated,editCategory);
-router.patch('/categories/:id/toggle-list',isAdminAuthenticated,toggleListCategory);
-router.delete('/categories/:id/delete',isAdminAuthenticated,deleteCategory);
+
+
+router.get('/categories', isAdminAuthenticated, getCategoriesPage);
+router.post('/categories/add', isAdminAuthenticated, addCategory);
+router.post('/categories/:id/edit', isAdminAuthenticated, editCategory);
+router.patch('/categories/:id/toggle-list', isAdminAuthenticated, toggleListCategory);
+router.delete('/categories/:id/delete', isAdminAuthenticated, deleteCategory);
 
 
 router.get('/users', isAdminAuthenticated, getUsers);
@@ -62,6 +66,12 @@ router.delete('/variants/delete/:id', isAdminAuthenticated, deleteVariant);
 router.post('/variants/:id/add-image', isAdminAuthenticated, uploadVariantImages, addImageToVariant);
 router.delete('/variants/:id/remove-image', isAdminAuthenticated, removeImageFromVariant);
 router.post('/variants/update/:id', isAdminAuthenticated, updateVariantDetails);
+
+router.get('/orders', isAdminAuthenticated, getAdminOrdersPage);
+
+
+router.get('/orders/:id', isAdminAuthenticated, getAdminOrderDetail);
+router.post('/orders/:id/status', isAdminAuthenticated, updateAdminOrderStatus);
 
 export default router;
 

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders | Veloura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/profile.css">
+    <script src="/js/prevent-back.js"></script>
+    <style>
+        body {
+            background-color: #FAF6F0;
+            color: #2C2C2C;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 20px 80px 20px;
+            display: flex;
+            gap: 40px;
+        }
+
+        .content-area {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 38px;
+            font-weight: 500;
+            color: #5C1E28;
+            margin-top: 0;
+            margin-bottom: 35px;
+            letter-spacing: 0.5px;
+        }
+
+        .orders-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Order Card Style */
+        .order-card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            transition: transform 0.2s ease;
+        }
+
+        .order-card-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .order-item-card {
+            background: #FFFFFF;
+            border-radius: 8px;
+            padding: 24px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            border: 1px solid #F0ECE6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .order-item-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex: 1;
+        }
+
+        .order-item-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            background-color: #FAF6F0;
+        }
+
+        .order-item-details {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .order-item-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 500;
+            color: #2C2C2C;
+            margin: 0;
+        }
+
+        .order-item-shade {
+            font-size: 10px;
+            font-weight: 600;
+            color: #888888;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .order-item-price-center {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            color: #2C2C2C;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .order-item-status-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            min-width: 220px;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Indicator Dot Colors */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.yellow {
+            background-color: #F59E0B;
+        }
+
+        .status-dot.green {
+            background-color: #10B981;
+        }
+
+        .status-dot.red {
+            background-color: #EF4444;
+        }
+
+        /* Status subtext styling */
+        .status-subtext {
+            font-size: 11px;
+            color: #888888;
+            margin: 0;
+        }
+
+        .status-subtext.rate-link {
+            color: #C02626;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .empty-orders-card {
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 50px 30px;
+            text-align: center;
+            border: 1px solid #F0ECE6;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .empty-orders-card i {
+            font-size: 48px;
+            color: #EAE5DF;
+            margin-bottom: 20px;
+        }
+
+        .empty-orders-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #2C2C2C;
+        }
+
+        .empty-orders-card p {
+            color: #666666;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .btn-shop-now {
+            display: inline-block;
+            background-color: #5C1E28;
+            color: #FFFFFF;
+            padding: 12px 30px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .btn-shop-now:hover {
+            background-color: #3b1118;
+            box-shadow: 0 4px 10px rgba(92, 30, 40, 0.15);
+        }
+
+        @media (max-width: 992px) {
+            .main-container {
+                flex-direction: column;
+                gap: 30px;
+                padding-top: 100px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .order-item-card {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+                gap: 15px;
+            }
+
+            .order-item-price-center {
+                text-align: left;
+                min-width: 0;
+            }
+
+            .order-item-status-right {
+                align-items: flex-start;
+                min-width: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <div class="main-container">
+        <%- include('../partials/profile-sidebar') %>
+
+        <main class="content-area">
+            <h1 class="page-title">My Orders</h1>
+
+            <!-- Search bar for orders -->
+            <div class="search-container" style="margin-bottom: 25px;">
+                <form action="/profile/orders" method="GET" style="display: flex; gap: 10px;">
+                    <input type="text" name="search" placeholder="Search by Order ID, Product Name, Brand, or Status..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>" style="flex: 1; padding: 12px 16px; border: 1px solid #E6DED4; border-radius: 6px; background-color: #FFFFFF; font-family: inherit; font-size: 14px; outline: none;">
+                    <button type="submit" style="background-color: #5C1E28; color: #FFFFFF; border: none; border-radius: 6px; padding: 12px 24px; font-weight: 600; font-size: 13px; text-transform: uppercase; cursor: pointer;">Search</button>
+                    <% if (typeof searchQuery !== 'undefined' && searchQuery) { %>
+                        <a href="/profile/orders" style="display: flex; align-items: center; justify-content: center; background-color: #EAE5DF; color: #5C1E28; border: 1px solid #5C1E28; border-radius: 6px; padding: 12px 20px; font-weight: 600; font-size: 13px; text-transform: uppercase; text-decoration: none;">Clear</a>
+                    <% } %>
+                </form>
+            </div>
+
+            <div class="orders-list-container">
+                <% if (orders && orders.length > 0) { %>
+                    <% orders.forEach(function(order) { %>
+                        <% if (order.items && order.items.length > 0) { %>
+                            <% order.items.forEach(function(item) { %>
+                                <!-- Render each product item in this order as an individual card -->
+                                <a href="/profile/orders/<%= order._id %>" class="order-card-link">
+                                    <div class="order-item-card">
+                                        <div class="order-item-left">
+                                            <img src="<%= (item.variant && item.variant.images && item.variant.images.length > 0) ? item.variant.images[0] : '/images/default.jpg' %>" alt="<%= (item.product && item.product.productName) ? item.product.productName : 'Product Image' %>" class="order-item-image">
+                                            
+                                            <div class="order-item-details">
+                                                <h3 class="order-item-name"><%= (item.product && item.product.productName) ? item.product.productName : 'Product Name' %></h3>
+                                                <% if (item.variant && item.variant.color) { %>
+                                                    <p class="order-item-shade">SHADE: <%= item.variant.color %></p>
+                                                <% } %>
+                                            </div>
+                                        </div>
+
+                                        <div class="order-item-price-center">
+                                            $<%= item.price ? item.price.toFixed(2) : '0.00' %>
+                                        </div>
+
+                                        <!-- Status Indicator area based on item or order status -->
+                                        <% 
+                                            const status = item.itemStatus || order.orderStatus;
+                                            let dotColor = 'yellow';
+                                            let statusText = 'Pending';
+                                            let subText = 'Processing your order';
+                                            let isRateLink = false;
+
+                                            if (status === 'Delivered') {
+                                                dotColor = 'green';
+                                                statusText = 'DELIVERED ON ' + (order.updatedAt ? new Date(order.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'RECENTLY');
+                                                subText = 'RATE & REVIEW PRODUCT';
+                                                isRateLink = true;
+                                            } else if (status === 'Cancelled') {
+                                                dotColor = 'red';
+                                                statusText = 'CANCELLED ON ' + (order.updatedAt ? new Date(order.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'RECENTLY');
+                                                subText = 'Your order was cancelled';
+                                            } else if (status === 'Returned') {
+                                                dotColor = 'red';
+                                                statusText = 'RETURNED';
+                                                subText = 'Item returned successfully';
+                                            } else if (status === 'Shipped') {
+                                                dotColor = 'yellow';
+                                                statusText = 'ITEM SHIPPED';
+                                                // Dynamic arrival date: order date + 5 days
+                                                const estDate = new Date(order.createdAt || Date.now());
+                                                estDate.setDate(estDate.getDate() + 5);
+                                                subText = 'Arriving by ' + estDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                            } else if (status === 'Processing') {
+                                                dotColor = 'yellow';
+                                                statusText = 'PROCESSING';
+                                                subText = 'Preparing to ship';
+                                            } else if (status === 'Ordered' || status === 'Pending') {
+                                                dotColor = 'yellow';
+                                                statusText = 'ORDER PLACED';
+                                                const estDate = new Date(order.createdAt || Date.now());
+                                                estDate.setDate(estDate.getDate() + 7);
+                                                subText = 'Arriving by ' + estDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                            }
+                                        %>
+
+                                        <div class="order-item-status-right">
+                                            <div class="status-header">
+                                                <span class="status-dot <%= dotColor %>"></span>
+                                                <span><%= statusText %></span>
+                                            </div>
+                                            <p class="status-subtext <%= isRateLink ? 'rate-link' : '' %>">
+                                                <%= subText %>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </a>
+                            <% }); %>
+                        <% } %>
+                    <% }); %>
+                <% } else { %>
+                    <div class="empty-orders-card">
+                        <i class="fas fa-box-open"></i>
+                        <h3>No Orders Yet</h3>
+                        <p>Explore our premium cosmetics collection and make your first purchase!</p>
+                        <a href="/products" class="btn-shop-now">Continue Shopping</a>
+                    </div>
+                <% } %>
+            </div>
+        </main>
+    </div>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

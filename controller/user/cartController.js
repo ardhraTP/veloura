@@ -20,7 +20,7 @@ export const addToCart = async (req, res) => {
         const { productId, variantId } = req.body;
         const quantity = parseInt(req.body.quantity) || 1;
 
-   
+
 
         if (!productId || !variantId) {
             return res.json({ success: false, message: 'Product and variant are required' });

@@ -139,10 +139,13 @@
                                             <% if (hasDiscount) { %>
                                                 <span class="badge">SALE</span>
                                             <% } %>
-                                            <button class="wishlist-btn" 
+                                            <% 
+                                                const isWishlisted = typeof wishlistProductIds !== 'undefined' && wishlistProductIds.includes(product._id.toString());
+                                            %>
+                                            <button class="wishlist-btn <%= isWishlisted ? 'active' : '' %>" 
                                                     onclick="event.preventDefault(); addToWishlist(this, '<%= product._id %>');" 
-                                                    title="Add to Wishlist">
-                                                <i class="far fa-heart"></i>
+                                                    title="<%= isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' %>">
+                                                <i class="<%= isWishlisted ? 'fas fa-heart' : 'far fa-heart' %>"></i>
                                             </button>
                                             <% if (productImage) { %>
                                                 <img src="<%= productImage %>" alt="<%= product.productName %>">
