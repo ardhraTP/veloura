@@ -832,7 +832,7 @@
                                         item.variant.regularPrice) * 100)
                                         : 0;
                                         %>
-                                        <div class="product-card" id="card_<%= item.variant._id %>">
+                                        <div class="product-card" id="card_<%= item.variant._id %>" data-price="<%= itemPrice %>">
                                             <img src="<%= variantImg %>" alt="<%= item.product.productName %>"
                                                 class="product-image">
 
@@ -853,14 +853,14 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="quantity-controller">
-                                                    <button
-                                                        onclick="changeQuantity('<%= item.variant._id %>', <%= item.quantity - 1 %>)">-</button>
-                                                    <span>
+                                                <div class="quantity-controller" id="qty_controller_<%= item.variant._id %>">
+                                                    <button type="button"
+                                                        onclick="event.preventDefault(); changeQuantity('<%= item.variant._id %>', -1)">-</button>
+                                                    <span class="qty-span">
                                                         <%= item.quantity %>
                                                     </span>
-                                                    <button
-                                                        onclick="changeQuantity('<%= item.variant._id %>', <%= item.quantity + 1 %>)">+</button>
+                                                    <button type="button"
+                                                        onclick="event.preventDefault(); changeQuantity('<%= item.variant._id %>', 1)">+</button>
                                                 </div>
                                             </div>
 
@@ -875,8 +875,8 @@
                                                         <% } %>
                                                 </div>
 
-                                                <button class="remove-btn"
-                                                    onclick="removeItem('<%= item.variant._id %>')">
+                                                <button type="button" class="remove-btn"
+                                                    onclick="event.preventDefault(); removeItem('<%= item.variant._id %>')">
                                                     <i class="fas fa-trash-alt"></i> Remove
                                                 </button>
                                             </div>
@@ -910,8 +910,8 @@
                                                     <% if (addr.isDefault) { %>
                                                         <span class="default-badge">Default</span>
                                                         <% } else { %>
-                                                            <button class="btn-set-default"
-                                                                onclick="event.stopPropagation(); makeAddressDefault('<%= addr._id %>')">
+                                                            <button type="button" class="btn-set-default"
+                                                                onclick="event.preventDefault(); event.stopPropagation(); makeAddressDefault('<%= addr._id %>')">
                                                                 Set As Default
                                                             </button>
                                                             <% } %>
@@ -970,10 +970,10 @@
                         <div class="checkout-card">
                             <div class="coupon-wrapper">
                                 <input type="text" class="coupon-input" placeholder="Coupon Code" id="couponCode">
-                                <button class="btn-apply-coupon" onclick="applyCoupon()">Apply Coupon</button>
+                                <button type="button" class="btn-apply-coupon" onclick="event.preventDefault(); applyCoupon()">Apply Coupon</button>
                             </div>
 
-                            <button class="toggle-coupons-btn" onclick="toggleCouponsDropdown()"
+                            <button type="button" class="toggle-coupons-btn" onclick="event.preventDefault(); toggleCouponsDropdown()"
                                 style="margin-top: 10px;">
                                 Show Available Coupons <i class="fas fa-chevron-down" id="couponsChevron"></i>
                             </button>
@@ -985,28 +985,28 @@
                                         <span class="coupon-code-badge">VELOURA10</span>
                                         <span class="coupon-code-desc">Save 10% off your bag subtotal.</span>
                                     </div>
-                                    <button class="coupon-apply-action-btn">Apply</button>
+                                    <button type="button" class="coupon-apply-action-btn">Apply</button>
                                 </div>
                                 <div class="coupon-option-card" onclick="applyCouponCode('WELCOME50')">
                                     <div class="coupon-option-details">
                                         <span class="coupon-code-badge">WELCOME50</span>
                                         <span class="coupon-code-desc">Get flat ₹50 discount on your order.</span>
                                     </div>
-                                    <button class="coupon-apply-action-btn">Apply</button>
+                                    <button type="button" class="coupon-apply-action-btn">Apply</button>
                                 </div>
                                 <div class="coupon-option-card" onclick="applyCouponCode('LUXURY200')">
                                     <div class="coupon-option-details">
                                         <span class="coupon-code-badge">LUXURY200</span>
                                         <span class="coupon-code-desc">Get ₹200 discount for orders above ₹2000.</span>
                                     </div>
-                                    <button class="coupon-apply-action-btn">Apply</button>
+                                    <button type="button" class="coupon-apply-action-btn">Apply</button>
                                 </div>
                                 <div class="coupon-option-card" onclick="applyCouponCode('FREESHIP')">
                                     <div class="coupon-option-details">
                                         <span class="coupon-code-badge">FREESHIP</span>
                                         <span class="coupon-code-desc">Enjoy free delivery on your parcel.</span>
                                     </div>
-                                    <button class="coupon-apply-action-btn">Apply</button>
+                                    <button type="button" class="coupon-apply-action-btn">Apply</button>
                                 </div>
                             </div>
                         </div>
@@ -1022,10 +1022,10 @@
                                 <span>Subtotal:</span>
                                 <span id="subtotalVal">₹<%= subtotal.toFixed(2) %></span>
                             </div>
-                            <div class="breakdown-item">
-                                <span>Taxes (5%):</span>
-                                <span>₹<%= tax.toFixed(2) %></span>
-                            </div>
+                             <div class="breakdown-item">
+                                 <span>Taxes (5%):</span>
+                                 <span id="taxVal">₹<%= tax.toFixed(2) %></span>
+                             </div>
                             <div class="breakdown-item">
                                 <span>Shipping:</span>
                                 <span id="shippingVal">
@@ -1045,7 +1045,7 @@
                                 <span class="total-amount" id="finalTotalVal">₹<%= finalPrice.toFixed(2) %></span>
                             </div>
 
-                            <button class="btn-confirm-order" onclick="placeOrder()">Confirm Order</button>
+                            <button type="button" class="btn-confirm-order" onclick="event.preventDefault(); placeOrder()">Confirm Order</button>
                         </div>
                     </div>
 
@@ -1055,8 +1055,8 @@
 
         <script>
             // Calculations setup from template
-            const baseSubtotal = <%= subtotal %>;
-            const baseTax = <%= tax %>;
+            let baseSubtotal = <%= subtotal %>;
+            let baseTax = <%= tax %>;
             let baseShippingFee = <%= shippingFee %>;
             let currentDiscount = <%= discount %>;
             let currentShipping = baseShippingFee;
@@ -1170,6 +1170,64 @@
                 applyCoupon();
             }
 
+            // Recalculate totals dynamically on the client side
+            function recalculateCheckoutTotals() {
+                // 1. Calculate base values
+                baseTax = Math.round(baseSubtotal * 0.05);
+                baseShippingFee = baseSubtotal > 1000 ? 0 : 50;
+
+                // 2. Adjust coupon discount / shipping based on activeCoupon
+                let newDiscount = 0;
+                let newShipping = baseShippingFee;
+
+                if (activeCoupon === 'VELOURA10') {
+                    newDiscount = Math.round(baseSubtotal * 0.10);
+                } else if (activeCoupon === 'WELCOME50') {
+                    newDiscount = 50;
+                } else if (activeCoupon === 'LUXURY200') {
+                    if (baseSubtotal >= 2000) {
+                        newDiscount = 200;
+                    } else {
+                        // Coupon condition no longer satisfied, reset it
+                        newDiscount = 0;
+                        activeCoupon = '';
+                        document.getElementById('couponCode').value = '';
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'warning',
+                            title: 'LUXURY200 coupon removed (Subtotal fell below ₹2000)',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                    }
+                } else if (activeCoupon === 'FREESHIP') {
+                    newShipping = 0;
+                    newDiscount = 0;
+                } else {
+                    newDiscount = 0;
+                }
+
+                currentDiscount = newDiscount;
+                currentShipping = newShipping;
+
+                // 3. Calculate final total
+                const finalTotal = baseSubtotal + currentShipping + baseTax - currentDiscount;
+
+                // 4. Update the DOM elements
+                document.getElementById('subtotalVal').textContent = `₹${baseSubtotal.toFixed(2)}`;
+                
+                const taxEl = document.getElementById('taxVal');
+                if (taxEl) {
+                    taxEl.textContent = `₹${baseTax.toFixed(2)}`;
+                }
+
+                document.getElementById('discountRow').style.display = currentDiscount > 0 ? 'flex' : 'none';
+                document.getElementById('discountVal').textContent = `-₹${currentDiscount.toFixed(2)}`;
+                document.getElementById('shippingVal').textContent = currentShipping === 0 ? 'FREE' : `₹${currentShipping.toFixed(2)}`;
+                document.getElementById('finalTotalVal').textContent = `₹${Math.max(0, finalTotal).toFixed(2)}`;
+            }
+
             // Calculate and apply coupon values dynamically on the client side
             function applyCoupon() {
                 const code = document.getElementById('couponCode').value.trim().toUpperCase();
@@ -1185,31 +1243,7 @@
                     return;
                 }
 
-                let newDiscount = 0;
-                let newShipping = baseShippingFee;
-
-                if (code === 'VELOURA10') {
-                    newDiscount = Math.round(baseSubtotal * 0.10);
-                } else if (code === 'WELCOME50') {
-                    newDiscount = 50;
-                } else if (code === 'LUXURY200') {
-                    if (baseSubtotal >= 2000) {
-                        newDiscount = 200;
-                    } else {
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'error',
-                            title: 'Minimum purchase of ₹2000 required for LUXURY200',
-                            showConfirmButton: false,
-                            timer: 2500
-                        });
-                        return;
-                    }
-                } else if (code === 'FREESHIP') {
-                    newShipping = 0;
-                    newDiscount = 0;
-                } else {
+                if (code !== 'VELOURA10' && code !== 'WELCOME50' && code !== 'LUXURY200' && code !== 'FREESHIP') {
                     Swal.fire({
                         toast: true,
                         position: 'top-end',
@@ -1221,17 +1255,20 @@
                     return;
                 }
 
-                currentDiscount = newDiscount;
-                currentShipping = newShipping;
+                if (code === 'LUXURY200' && baseSubtotal < 2000) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: 'Minimum purchase of ₹2000 required for LUXURY200',
+                        showConfirmButton: false,
+                        timer: 2500
+                    });
+                    return;
+                }
+
                 activeCoupon = code;
-
-                // Update Breakdown display
-                const finalTotal = baseSubtotal + currentShipping + baseTax - currentDiscount;
-
-                document.getElementById('discountRow').style.display = currentDiscount > 0 ? 'flex' : 'none';
-                document.getElementById('discountVal').textContent = `-₹${currentDiscount.toFixed(2)}`;
-                document.getElementById('shippingVal').textContent = currentShipping === 0 ? 'FREE' : `₹${currentShipping.toFixed(2)}`;
-                document.getElementById('finalTotalVal').textContent = `₹${Math.max(0, finalTotal).toFixed(2)}`;
+                recalculateCheckoutTotals();
 
                 Swal.fire({
                     toast: true,
@@ -1244,7 +1281,17 @@
             }
 
             // Change quantity of cart items from checkout page
-            function changeQuantity(variantId, newQty) {
+            function changeQuantity(variantId, change) {
+                const controller = document.getElementById(`qty_controller_${variantId}`);
+                if (!controller) return;
+
+                const qtySpan = controller.querySelector('.qty-span');
+                const buttons = controller.querySelectorAll('button');
+                if (!qtySpan) return;
+
+                const currentQty = parseInt(qtySpan.textContent.trim());
+                const newQty = currentQty + change;
+
                 if (newQty < 1) {
                     removeItem(variantId);
                     return;
@@ -1261,13 +1308,8 @@
                     return;
                 }
 
-                Swal.fire({
-                    title: 'Updating...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+                // Disable buttons to prevent double click while updating
+                buttons.forEach(btn => btn.disabled = true);
 
                 fetch('/cart/update', {
                     method: 'POST',
@@ -1276,9 +1318,28 @@
                 })
                     .then(res => res.json())
                     .then(data => {
-                        Swal.close();
+                        // Re-enable buttons
+                        buttons.forEach(btn => btn.disabled = false);
+
                         if (data.success) {
-                            window.location.reload();
+                            // Update quantity text
+                            qtySpan.textContent = newQty;
+
+                            // Update price for this product card
+                            const productCard = document.getElementById('card_' + variantId);
+                            if (productCard) {
+                                const itemPrice = parseFloat(productCard.getAttribute('data-price') || '0');
+                                const priceValSpan = productCard.querySelector('.price-value');
+                                if (priceValSpan) {
+                                    priceValSpan.textContent = '₹' + (itemPrice * newQty).toFixed(2);
+                                }
+                            }
+
+                            // Update baseSubtotal and recalculate all totals
+                            baseSubtotal = data.cart.totalAmount;
+                            recalculateCheckoutTotals();
+
+                            if (window.updateCartCount) window.updateCartCount();
                         } else {
                             Swal.fire({
                                 toast: true,
@@ -1291,7 +1352,8 @@
                         }
                     })
                     .catch(error => {
-                        Swal.close();
+                        // Re-enable buttons
+                        buttons.forEach(btn => btn.disabled = false);
                         console.error(error);
                     });
             }
@@ -1309,22 +1371,29 @@
                     cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Removing...',
-                            allowOutsideClick: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
-
                         fetch('/cart/remove/' + variantId, {
                             method: 'DELETE'
                         })
                             .then(res => res.json())
                             .then(data => {
-                                Swal.close();
                                 if (data.success) {
-                                    window.location.reload();
+                                    // If cart is empty now, redirect back to cart page
+                                    if (!data.cart || !data.cart.items || data.cart.items.length === 0) {
+                                        window.location.href = '/cart';
+                                        return;
+                                    }
+
+                                    // Remove the element from the DOM
+                                    const productCard = document.getElementById('card_' + variantId);
+                                    if (productCard) {
+                                        productCard.remove();
+                                    }
+
+                                    // Update baseSubtotal and recalculate totals
+                                    baseSubtotal = data.cart.totalAmount;
+                                    recalculateCheckoutTotals();
+
+                                    if (window.updateCartCount) window.updateCartCount();
                                 } else {
                                     Swal.fire({
                                         toast: true,
@@ -1337,7 +1406,6 @@
                                 }
                             })
                             .catch(error => {
-                                Swal.close();
                                 console.error(error);
                             });
                     }

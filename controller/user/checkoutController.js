@@ -9,10 +9,38 @@ export const getCheckoutPage = async (req, res) => {
     try {
         const userId = req.session.userId;
 
-
         const cart = await cartService.getUserCart(userId);
 
         if (!cart || !cart.items || cart.items.length === 0) {
+            return res.redirect('/cart');
+        }
+
+        // Validate stock availability for all items in the cart
+        let hasStockError = false;
+        for (const item of cart.items) {
+            if (!item.product || item.product.status === 'INACTIVE' || item.product.isDeleted) {
+                hasStockError = true;
+                req.session.cartError = `Product "${item.product ? item.product.productName : 'Unavailable'}" is no longer available.`;
+                break;
+            }
+            if (!item.variant || item.variant.isDeleted) {
+                hasStockError = true;
+                req.session.cartError = `Selected variant of "${item.product.productName}" is no longer available.`;
+                break;
+            }
+            if (item.variant.quantity === 0 || item.quantity <= 0) {
+                hasStockError = true;
+                req.session.cartError = `"${item.product.productName} (${item.variant.color})" is out of stock.`;
+                break;
+            }
+            if (item.variant.quantity < item.quantity) {
+                hasStockError = true;
+                req.session.cartError = `Only ${item.variant.quantity} items left in stock for "${item.product.productName} (${item.variant.color})".`;
+                break;
+            }
+        }
+
+        if (hasStockError) {
             return res.redirect('/cart');
         }
 
@@ -62,10 +90,16 @@ export const placeOrder = async (req, res) => {
         // 3. Check stock availability for all items in the cart
         for (const item of cart.items) {
             const variant = await Variant.findById(item.variant._id);
-            if (!variant) {
+            if (!variant || variant.isDeleted) {
                 return res.json({
                     success: false,
-                    message: `Product variant not found: ${item.product.productName}`
+                    message: `Product variant not found or unavailable: ${item.product.productName}`
+                });
+            }
+            if (variant.quantity === 0 || item.quantity <= 0) {
+                return res.json({
+                    success: false,
+                    message: `${item.product.productName} (${variant.color}) is out of stock. Please update your cart.`
                 });
             }
             if (variant.quantity < item.quantity) {

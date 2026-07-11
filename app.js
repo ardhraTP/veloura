@@ -9,8 +9,6 @@ import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
 
-
-
 dotenv.config();
 
 
@@ -48,12 +46,12 @@ app.use(session({
     saveUninitialized: false,
     store: MongoStore.create({
         mongoUrl: process.env.MONGODB_URI,
-        ttl: 7 * 24 * 60 * 60
+        ttl: 3 * 60 * 60
     }),
     cookie: {
         secure: false,
         httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        maxAge: 3 * 60 * 60 * 1000
     },
     rolling: true
 }));

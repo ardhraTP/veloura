@@ -22,6 +22,17 @@
 <script>
 console.log('Navbar script loaded');
 
+// Enable close button on all toasts globally
+if (typeof Swal !== 'undefined') {
+    const originalFire = Swal.fire;
+    Swal.fire = function(options) {
+        if (options && options.toast) {
+            options.showCloseButton = true;
+        }
+        return originalFire.apply(this, arguments);
+    };
+}
+
 window.updateCartCount = function() {
     fetch('/api/cart-count')
         .then(response => {

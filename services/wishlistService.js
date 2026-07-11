@@ -63,33 +63,33 @@ export const addToWishlist = async(userId,productId)=>{
         }
 
         const alreadyExists = wishlist.products.some(
-            p => p.toString() === productId 
+            p => p.toString() === productId.toString()
         );
-
+ 
         if(alreadyExists){
             throw new Error('Product already in wishlist');
         }
-
+ 
         wishlist.products.push(productId);
         await wishlist.save();
-
+ 
         wishlist = await Wishlist.findById(wishlist._id).populate('products');
-
+ 
         return await populateWishlistVariants(wishlist);
     }catch(error){
         console.log('Error adding to wishlist:',error);
         throw error;
     }
 };
-
-
+ 
+ 
 //remove from wishlist
 export const removeFromWishlist = async (userId,productId)=>{
     try{
         let wishlist = await Wishlist.findOne({user:userId});
         if (wishlist) {
             wishlist.products = wishlist.products.filter(
-                p => p.toString() !== productId
+                p => p.toString() !== productId.toString()
             );
             await wishlist.save();
         }

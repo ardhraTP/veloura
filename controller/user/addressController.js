@@ -9,6 +9,7 @@ import {
     setDefaultAddress as setDefaultAddressService
 } from '../../services/addressService.js';
 import User from "../../model/User.js";
+import Address from "../../model/Address.js";
 
 
 
@@ -16,9 +17,10 @@ import User from "../../model/User.js";
 export const getAddresses = async (req, res) => {
     try {
         const userId = req.session.userId;
+
         const addresses = await getUserAddresses(userId);
 
-        res.render('user/manage-addresses', { addresses,activeTab: 'addresses' });
+        res.render('user/manage-addresses', { addresses, activeTab: 'addresses' });
     } catch (error) {
         console.error('get addresses error:', error);
         res.redirect('/profile');
@@ -126,15 +128,15 @@ export const deleteAddress = async (req, res) => {
         }
 
         const wasDefault = address.isDefault;
-        
+
         // Delete the address
         await deleteAddressService(id);
 
-       
+
         if (wasDefault) {
             const remainingAddresses = await getUserAddresses(userId);
             if (remainingAddresses.length > 0) {
-                
+
                 await setDefaultAddressService(userId, remainingAddresses[0]._id);
             }
         }

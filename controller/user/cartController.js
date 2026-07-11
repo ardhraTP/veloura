@@ -6,7 +6,12 @@ export const getCartPage = async (req, res) => {
     try {
         const userId = req.session.userId;
         const cart = await cartService.getUserCart(userId);
-        res.render('user/cart', { cart });
+        
+    
+        const cartError = req.session.cartError || null;
+        delete req.session.cartError;
+
+        res.render('user/cart', { cart, cartError });
     } catch (error) {
         console.error('Error in getCartPage:', error);
         res.status(500).render('error/500');

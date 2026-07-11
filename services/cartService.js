@@ -92,6 +92,7 @@ export const addProductToCart = async (userId, productId, variantId, quantity) =
         try {
             await removeFromWishlist(userId, productId);
         } catch (e) {
+            console.error('Error removing from wishlist in addProductToCart:', e);
         }
 
         cart = await Cart.findById(cart._id).populate('items.product').populate('items.variant');

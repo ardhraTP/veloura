@@ -21,7 +21,7 @@ export const isAdminAuthenticated = async (req, res, next) => {
                 return res.redirect('/admin/login?error=blocked');
             }
 
-            return next();
+          return next();
         } catch (error) {
             console.error('Admin auth middleware error:', error);
             req.session.destroy();
@@ -30,7 +30,7 @@ export const isAdminAuthenticated = async (req, res, next) => {
     }   
 
     return res.redirect('/admin/login?session=expired');
-};
+}; 
 
 
 export const isAdminGuest = (req, res, next) => {

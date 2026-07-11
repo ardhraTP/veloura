@@ -125,6 +125,18 @@ export const updateAdminOrderStatus = async (req, res) => {
             if (order.paymentMethod !== 'COD') {
                 order.paymentStatus = 'Refunded';
             }
+        } else if (status === 'Returned') {
+            for (const item of order.items) {
+                if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
+                    await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
+                    item.itemStatus = 'Returned';
+                }
+            }
+            order.orderStatus = 'Returned';
+
+            if (order.paymentMethod !== 'COD') {
+                order.paymentStatus = 'Refunded';
+            }
         } else {
             order.items.forEach(item => {
                 if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {

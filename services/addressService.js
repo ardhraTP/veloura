@@ -1,8 +1,7 @@
-import Address from '../model/address.js';
+import Address from '../model/Address.js';
 
 
 import { isValidName, isValidPhone, isValidPincode, isValidCity, isValidState, isValidAddress } from '../utils/helpers.js';
-
 
 export const validateAddressData = (data) => {
     const { fullName, phone, pincode, address, city, state, addressType } = data;
@@ -22,15 +21,15 @@ export const validateAddressData = (data) => {
     if (!isValidAddress(address)) {
         return { isValid: false, error: 'Address must be 10-200 characters' };
     }
-    
+
     if (!isValidCity(city)) {
         return { isValid: false, error: 'City must be 2-50 characters and contain only letters' };
     }
-    
+
     if (!isValidState(state)) {
         return { isValid: false, error: 'State must be 2-50 characters and contain only letters' };
     }
-    
+
     if (!addressType || !['home', 'work'].includes(addressType)) {
         return { isValid: false, error: 'Please select a valid address type' };
     }
@@ -54,14 +53,8 @@ export const getAddressById = async (addressId, userId) => {
 export const createAddress = async (userId, addressData) => {
     const { fullName, phone, pincode, address, city, state, addressType } = addressData;
 
-    
-  
-
     const existingAddresses = await Address.find({ userId });
-    const isFirstAddress = existingAddresses.length === 0;
-   
-
-    
+    const isFirstAddress = existingAddresses.length === 0; 
 
     const newAddress = new Address({
         userId,
@@ -93,23 +86,23 @@ export const updateAddress = async (addressId, addressData) => {
             addressType,
         },
         { new: true }
-);
+    );
 };
 
 
-export const deleteAddress = async(addressId) =>{
+export const deleteAddress = async (addressId) => {
     return await Address.findByIdAndDelete(addressId);
 };
 
 
-export const setDefaultAddress = async(userId,addressId) =>{
-   
-    await Address.updateMany({userId},{isDefault:false});
+export const setDefaultAddress = async (userId, addressId) => {
 
-   return await Address.findByIdAndUpdate(addressId,{isDefault:true});
+    await Address.updateMany({ userId }, { isDefault: false });
+
+    return await Address.findByIdAndUpdate(addressId, { isDefault: true });
 };
 
 
-export const getDefaultAddress =  async(userId) =>{
-    return await Address.findOne({userId,isDefault:true});
+export const getDefaultAddress = async (userId) => {
+    return await Address.findOne({ userId, isDefault: true });
 }

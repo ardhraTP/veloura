@@ -1,3 +1,4 @@
+import Product from '../../model/Product.js';
 import Order from '../../model/Order.js';
 import User from '../../model/User.js';
 import Variant from '../../model/Variant.js';
@@ -12,6 +13,8 @@ export const getUserOrders = async (req, res) => {
         const searchQuery = req.query.search ? req.query.search.trim() : '';
 
         const user = await User.findById(userId);
+        
+
 
         let query = { user: userId };
 
@@ -172,6 +175,11 @@ export const returnOrderProduct = async (req, res) => {
         item.returnReason = reason;
 
         await order.save();
+
+        // Increment the variant stock quantity when returned
+        await Variant.findByIdAndUpdate(item.variant, {
+            $inc: { quantity: item.quantity }
+        });
 
         const allReturnedOrCancelled = order.items.every(i => i.itemStatus === 'Returned' || i.itemStatus === 'Cancelled');
         if (allReturnedOrCancelled) {

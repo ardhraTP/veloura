@@ -27,6 +27,16 @@
                     cartLink.classList.add('active-cart');
                 }
                 updateTotals();
+
+                // If cart has a stock/cancellation error passed from session, show SweetAlert alert
+                <% if (typeof cartError !== 'undefined' && cartError) { %>
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Stock Updated',
+                        text: '<%= cartError %>',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                <% } %>
             });
         </script>
 
@@ -51,7 +61,8 @@
                     <% cart.items.forEach(item=> { %>
                         <div class="cart-item" data-product-id="<%= item.product._id %>"
                             data-variant-id="<%= item.variant ? item.variant._id : '' %>"
-                            data-inactive="<%= item.product && item.product.status === 'INACTIVE' ? 'true' : 'false' %>">
+                            data-inactive="<%= item.product && item.product.status === 'INACTIVE' ? 'true' : 'false' %>"
+                            data-stock="<%= item.variant ? item.variant.quantity : 0 %>">
                             <div class="item-product">
                                 <div class="item-image">
                                     <img src="<%= item.variant && item.variant.images && item.variant.images[0] ? item.variant.images[0] : '/images/placeholder.png' %>"
@@ -70,6 +81,11 @@
                                             <% if (item.product && item.product.status==='INACTIVE' ) { %>
                                                 <span class="product-unavailable-badge">PRODUCT UNAVAILABLE</span>
                                                 <% } %>
+                                            <% if (item.variant && item.variant.quantity === 0) { %>
+                                                <span class="product-unavailable-badge" style="background-color: #721c24; color: white; border-color: #721c24;">OUT OF STOCK</span>
+                                            <% } else if (item.variant && item.variant.quantity < item.quantity) { %>
+                                                <span class="product-unavailable-badge" style="background-color: #856404; color: white; border-color: #856404;">ONLY <%= item.variant.quantity %> LEFT IN STOCK</span>
+                                            <% } %>
                                 </div>
                             </div>
                             <div class="item-price">₹<%= item.price.toFixed(2) %>
@@ -77,13 +93,13 @@
                             <div class="item-quantity">
                                 <button class="qty-btn"
                                     onclick="decreaseQty(this, '<%= item.variant ? (item.variant._id ? item.variant._id : item.variant) : '' %>')"
-                                    <%=(item.product && item.product.status==='INACTIVE' ) || item.quantity <=1
+                                    <%=(item.product && item.product.status==='INACTIVE') || (item.variant && item.variant.quantity === 0) || item.quantity <= 1
                                     ? 'disabled' : '' %>>−</button>
                                 <input type="number" value="<%= item.quantity %>" min="1"
                                     max="<%= item.variant ? item.variant.quantity : 1 %>" class="qty-input" readonly>
                                 <button class="qty-btn"
                                     onclick="increaseQty(this, '<%= item.variant ? (item.variant._id ? item.variant._id : item.variant) : '' %>', <%= item.variant ? item.variant.quantity : 1 %>)"
-                                    <%=(item.product && item.product.status==='INACTIVE' ) || item.quantity>= 5 ?
+                                    <%=(item.product && item.product.status==='INACTIVE') || item.quantity >= 5 ?
                                     'disabled' : '' %>>+</button>
                             </div>
                             <div class="item-subtotal">₹<%= (item.price * item.quantity).toFixed(2) %>
@@ -139,8 +155,8 @@
                         <span class="summary-value" id="total">₹<%= cart.totalAmount.toFixed(2) %></span>
                     </div>
 
-                    <button class="checkout-btn" onclick="proceedToCheckout()" <%=cart.items.some(item=> item.product &&
-                        item.product.status === 'INACTIVE') ? 'disabled' : '' %>>
+                    <button class="checkout-btn" onclick="proceedToCheckout()" 
+                        <%= (cart.items.some(item => !item.product || item.product.status === 'INACTIVE' || !item.variant || item.variant.quantity === 0 || item.quantity <= 0 || item.variant.quantity < item.quantity)) ? 'disabled' : '' %>>
                         PROCEED TO CHECKOUT <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
@@ -155,6 +171,9 @@
             <script>
                 function updateTotals() {
                     let subtotal = 0;
+                    let hasStockError = false;
+                    let hasInactive = false;
+
                     document.querySelectorAll('.cart-item').forEach(item => {
                         const price = parseFloat(item.querySelector('.item-price').textContent.replace('₹', ''));
                         const qtyInput = item.querySelector('.qty-input');
@@ -163,13 +182,20 @@
                         item.querySelector('.item-subtotal').textContent = '₹' + itemSubtotal.toFixed(2);
                         subtotal += itemSubtotal;
 
-                       
                         const decreaseBtn = qtyInput.previousElementSibling;
                         const increaseBtn = qtyInput.nextElementSibling;
                         const isInactive = item.getAttribute('data-inactive') === 'true';
+                        const stock = parseInt(item.getAttribute('data-stock') || '0');
 
-                        if (!isInactive) {
-                            decreaseBtn.disabled = (qty <= 1);
+                        if (isInactive) {
+                            hasInactive = true;
+                            decreaseBtn.disabled = true;
+                            increaseBtn.disabled = true;
+                        } else {
+                            if (stock === 0 || qty <= 0 || stock < qty) {
+                                hasStockError = true;
+                            }
+                            decreaseBtn.disabled = (qty <= 1 || stock === 0);
                             increaseBtn.disabled = (qty >= 5);
                         }
                     });
@@ -179,10 +205,9 @@
                     if (subtotalEl) subtotalEl.textContent = '₹' + subtotal.toFixed(2);
                     if (totalEl) totalEl.textContent = '₹' + subtotal.toFixed(2);
 
-                    const hasInactive = Array.from(document.querySelectorAll('.cart-item')).some(item => item.getAttribute('data-inactive') === 'true');
                     const checkoutBtn = document.querySelector('.checkout-btn');
                     if (checkoutBtn) {
-                        checkoutBtn.disabled = hasInactive;
+                        checkoutBtn.disabled = hasInactive || hasStockError;
                     }
                 }
 
