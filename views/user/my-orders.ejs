@@ -59,71 +59,120 @@
             transform: translateY(-2px);
         }
 
-        .order-item-card {
+        /* Grouped Order Card Styles */
+        .order-card {
             background: #FFFFFF;
-            border-radius: 8px;
-            padding: 24px 30px;
+            border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
             border: 1px solid #F0ECE6;
+            margin-bottom: 25px;
+            overflow: hidden;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .order-card:hover {
+            box-shadow: 0 6px 24px rgba(92, 30, 40, 0.05);
+            border-color: #E6DED4;
+        }
+
+        .order-header {
+            background-color: #FAF8F5;
+            padding: 18px 30px;
+            border-bottom: 1px solid #F0ECE6;
+            display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
+            align-items: center;
             gap: 20px;
         }
 
-        .order-item-left {
+        .order-meta-info {
             display: flex;
-            align-items: center;
-            gap: 24px;
-            flex: 1;
+            flex-direction: column;
+            gap: 4px;
         }
 
-        .order-item-image {
-            width: 100px;
-            height: 100px;
+        .meta-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #999999;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .meta-value {
+            font-size: 14px;
+            color: #2C2C2C;
+            font-weight: 600;
+        }
+
+        .order-status-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .order-body {
+            padding: 24px 30px;
+        }
+
+        .order-products-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .order-product-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #FAF6F0;
+        }
+
+        .order-product-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .order-product-img {
+            width: 70px;
+            height: 70px;
             object-fit: cover;
-            border-radius: 4px;
+            border-radius: 6px;
+            border: 1px solid #F0ECE6;
             background-color: #FAF6F0;
         }
 
-        .order-item-details {
+        .order-product-info {
+            flex: 1;
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
 
-        .order-item-name {
+        .order-product-title {
             font-family: 'Playfair Display', serif;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 500;
             color: #2C2C2C;
             margin: 0;
         }
 
-        .order-item-shade {
-            font-size: 10px;
-            font-weight: 600;
-            color: #888888;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin: 0;
-        }
-
-        .order-item-price-center {
-            font-family: 'Inter', sans-serif;
-            font-size: 16px;
-            font-weight: 500;
-            color: #2C2C2C;
-            min-width: 100px;
-            text-align: center;
-        }
-
-        .order-item-status-right {
+        .order-product-meta {
             display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-            min-width: 220px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .product-meta-badge {
+            font-size: 11px;
+            color: #666666;
+            background-color: #FAF6F0;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 500;
         }
 
         .status-header {
@@ -252,7 +301,7 @@
 
         <main class="content-area">
             <h1 class="page-title">My Orders</h1>
-
+         
             <!-- Search bar for orders -->
             <div class="search-container" style="margin-bottom: 25px;">
                 <form action="/profile/orders" method="GET" style="display: flex; gap: 10px;">
@@ -267,80 +316,75 @@
             <div class="orders-list-container">
                 <% if (orders && orders.length > 0) { %>
                     <% orders.forEach(function(order) { %>
-                        <% if (order.items && order.items.length > 0) { %>
-                            <% order.items.forEach(function(item) { %>
-                                <!-- Render each product item in this order as an individual card -->
-                                <a href="/profile/orders/<%= order._id %>" class="order-card-link">
-                                    <div class="order-item-card">
-                                        <div class="order-item-left">
-                                            <img src="<%= (item.variant && item.variant.images && item.variant.images.length > 0) ? item.variant.images[0] : '/images/default.jpg' %>" alt="<%= (item.product && item.product.productName) ? item.product.productName : 'Product Image' %>" class="order-item-image">
-                                            
-                                            <div class="order-item-details">
-                                                <h3 class="order-item-name"><%= (item.product && item.product.productName) ? item.product.productName : 'Product Name' %></h3>
-                                                <% if (item.variant && item.variant.color) { %>
-                                                    <p class="order-item-shade">SHADE: <%= item.variant.color %></p>
-                                                <% } %>
-                                            </div>
-                                        </div>
-
-                                        <div class="order-item-price-center">
-                                            $<%= item.price ? item.price.toFixed(2) : '0.00' %>
-                                        </div>
-
-                                        <!-- Status Indicator area based on item or order status -->
-                                        <% 
-                                            const status = item.itemStatus || order.orderStatus;
-                                            let dotColor = 'yellow';
-                                            let statusText = 'Pending';
-                                            let subText = 'Processing your order';
-                                            let isRateLink = false;
-
-                                            if (status === 'Delivered') {
-                                                dotColor = 'green';
-                                                statusText = 'DELIVERED ON ' + (order.updatedAt ? new Date(order.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'RECENTLY');
-                                                subText = 'RATE & REVIEW PRODUCT';
-                                                isRateLink = true;
-                                            } else if (status === 'Cancelled') {
-                                                dotColor = 'red';
-                                                statusText = 'CANCELLED ON ' + (order.updatedAt ? new Date(order.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'RECENTLY');
-                                                subText = 'Your order was cancelled';
-                                            } else if (status === 'Returned') {
-                                                dotColor = 'red';
-                                                statusText = 'RETURNED';
-                                                subText = 'Item returned successfully';
-                                            } else if (status === 'Shipped') {
-                                                dotColor = 'yellow';
-                                                statusText = 'ITEM SHIPPED';
-                                                // Dynamic arrival date: order date + 5 days
-                                                const estDate = new Date(order.createdAt || Date.now());
-                                                estDate.setDate(estDate.getDate() + 5);
-                                                subText = 'Arriving by ' + estDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                                            } else if (status === 'Processing') {
-                                                dotColor = 'yellow';
-                                                statusText = 'PROCESSING';
-                                                subText = 'Preparing to ship';
-                                            } else if (status === 'Ordered' || status === 'Pending') {
-                                                dotColor = 'yellow';
-                                                statusText = 'ORDER PLACED';
-                                                const estDate = new Date(order.createdAt || Date.now());
-                                                estDate.setDate(estDate.getDate() + 7);
-                                                subText = 'Arriving by ' + estDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                                            }
-                                        %>
-
-                                        <div class="order-item-status-right">
-                                            <div class="status-header">
-                                                <span class="status-dot <%= dotColor %>"></span>
-                                                <span><%= statusText %></span>
-                                            </div>
-                                            <p class="status-subtext <%= isRateLink ? 'rate-link' : '' %>">
-                                                <%= subText %>
-                                            </p>
+                        <a href="/profile/orders/<%= order._id %>" class="order-card-link">
+                            <div class="order-card">
+                                <!-- Order Card Header -->
+                                <div class="order-header">
+                                    <div class="order-meta-info">
+                                        <span class="meta-label">ORDER PLACED</span>
+                                        <span class="meta-value"><%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                                    </div>
+                                    <% 
+                                        let displayTotal = order.totalAmount;
+                                        if (order.orderStatus === 'Cancelled' || order.totalAmount === 0) {
+                                            const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                                            const shipping = order.shippingFee || 0;
+                                            const tax = Math.round(subtotal * 0.05);
+                                            const discount = order.discount || 0;
+                                            displayTotal = Math.max(0, subtotal + shipping + tax - discount);
+                                        }
+                                    %>
+                                    <div class="order-meta-info">
+                                        <span class="meta-label">TOTAL AMOUNT</span>
+                                        <span class="meta-value">₹<%= displayTotal.toFixed(2) %></span>
+                                    </div>
+                                    <div class="order-meta-info">
+                                        <span class="meta-label">ORDER ID</span>
+                                        <span class="meta-value" style="color: #5C1E28; font-weight: 600;"><%= order.orderId %></span>
+                                    </div>
+                                    
+                                    <!-- Status Indicator -->
+                                    <% 
+                                        let dotColor = 'yellow';
+                                        let statusText = order.orderStatus || 'Pending';
+                                        if (order.orderStatus === 'Delivered') {
+                                            dotColor = 'green';
+                                        } else if (order.orderStatus === 'Cancelled' || order.orderStatus === 'Returned') {
+                                            dotColor = 'red';
+                                        }
+                                    %>
+                                    <div class="order-status-right">
+                                        <div class="status-header">
+                                            <span class="status-dot <%= dotColor %>"></span>
+                                            <span><%= statusText.toUpperCase() %></span>
                                         </div>
                                     </div>
-                                </a>
-                            <% }); %>
-                        <% } %>
+                                </div>
+
+                                <!-- Order Card Body (Grouped Products) -->
+                                <div class="order-body">
+                                    <% if (order.items && order.items.length > 0) { %>
+                                        <div class="order-products-list">
+                                            <% order.items.forEach(function(item) { %>
+                                                <div class="order-product-row">
+                                                    <img src="<%= (item.variant && item.variant.images && item.variant.images.length > 0) ? item.variant.images[0] : '/images/default.jpg' %>" alt="Product Image" class="order-product-img">
+                                                    <div class="order-product-info">
+                                                        <h4 class="order-product-title"><%= (item.product && item.product.productName) ? item.product.productName : 'Product Name' %></h4>
+                                                        <div class="order-product-meta">
+                                                            <% if (item.variant && item.variant.color) { %>
+                                                                <span class="product-meta-badge">Shade: <%= item.variant.color %></span>
+                                                            <% } %>
+                                                            <span class="product-meta-badge">Qty: <%= item.quantity %></span>
+                                                            <span class="product-meta-badge">Price: ₹<%= item.price.toFixed(2) %></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <% }); %>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </a>
                     <% }); %>
                 <% } else { %>
                     <div class="empty-orders-card">

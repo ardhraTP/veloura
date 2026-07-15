@@ -12,8 +12,6 @@ import User from "../../model/User.js";
 import Address from "../../model/Address.js";
 
 
-
-// manage address page
 export const getAddresses = async (req, res) => {
     try {
         const userId = req.session.userId;

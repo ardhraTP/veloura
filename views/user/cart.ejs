@@ -61,7 +61,7 @@
                     <% cart.items.forEach(item=> { %>
                         <div class="cart-item" data-product-id="<%= item.product._id %>"
                             data-variant-id="<%= item.variant ? item.variant._id : '' %>"
-                            data-inactive="<%= item.product && item.product.status === 'INACTIVE' ? 'true' : 'false' %>"
+                            data-inactive="<%= (item.product && (item.product.status === 'INACTIVE' || item.product.isDeleted)) || !item.variant || item.variant.isDeleted || item.variant.status === 'INACTIVE' ? 'true' : 'false' %>"
                             data-stock="<%= item.variant ? item.variant.quantity : 0 %>">
                             <div class="item-product">
                                 <div class="item-image">
@@ -78,10 +78,11 @@
                                         <p class="item-shade">SHADE: <%= item.variant.color.toUpperCase() %>
                                         </p>
                                         <% } %>
-                                            <% if (item.product && item.product.status==='INACTIVE' ) { %>
+                                            <% if (item.product && (item.product.status === 'INACTIVE' || item.product.isDeleted)) { %>
                                                 <span class="product-unavailable-badge">PRODUCT UNAVAILABLE</span>
-                                                <% } %>
-                                            <% if (item.variant && item.variant.quantity === 0) { %>
+                                            <% } else if (!item.variant || item.variant.isDeleted || item.variant.status === 'INACTIVE') { %>
+                                                <span class="product-unavailable-badge" style="background-color: #721c24; color: white; border-color: #721c24;">SHADE UNAVAILABLE</span>
+                                            <% } else if (item.variant && item.variant.quantity === 0) { %>
                                                 <span class="product-unavailable-badge" style="background-color: #721c24; color: white; border-color: #721c24;">OUT OF STOCK</span>
                                             <% } else if (item.variant && item.variant.quantity < item.quantity) { %>
                                                 <span class="product-unavailable-badge" style="background-color: #856404; color: white; border-color: #856404;">ONLY <%= item.variant.quantity %> LEFT IN STOCK</span>
@@ -145,18 +146,18 @@
 
                     <div class="summary-row">
                         <span>Shipping</span>
-                        <span class="summary-value summary-free">FREE</span>
+                        <span class="summary-value" id="shipping"><%=cart.totalAmount > 1000 ? 'FREE' : '₹50.00'%></span>
                     </div>
 
                     <div class="summary-divider"></div>
 
                     <div class="summary-row summary-total">
                         <span>Total</span>
-                        <span class="summary-value" id="total">₹<%= cart.totalAmount.toFixed(2) %></span>
+                        <span class="summary-value" id="total">₹<%=(cart.totalAmount > 1000 ? cart.totalAmount : cart.totalAmount + 50).toFixed(2) %></span>
                     </div>
 
                     <button class="checkout-btn" onclick="proceedToCheckout()" 
-                        <%= (cart.items.some(item => !item.product || item.product.status === 'INACTIVE' || !item.variant || item.variant.quantity === 0 || item.quantity <= 0 || item.variant.quantity < item.quantity)) ? 'disabled' : '' %>>
+                        <%= (cart.items.some(item => !item.product || item.product.status === 'INACTIVE' || item.product.isDeleted || !item.variant || item.variant.isDeleted || item.variant.status === 'INACTIVE' || item.variant.quantity === 0 || item.quantity <= 0 || item.variant.quantity < item.quantity)) ? 'disabled' : '' %>>
                         PROCEED TO CHECKOUT <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
@@ -201,9 +202,16 @@
                     });
 
                     const subtotalEl = document.getElementById('subtotal');
+                    const shippingEl = document.getElementById('shipping');
                     const totalEl = document.getElementById('total');
+
+                    const shippingFee  = subtotal > 1000 ? 0 : 50;
+                    const grandTotal = subtotal + shippingFee;
                     if (subtotalEl) subtotalEl.textContent = '₹' + subtotal.toFixed(2);
-                    if (totalEl) totalEl.textContent = '₹' + subtotal.toFixed(2);
+                    if(shippingEl){
+                        shippingEl.textContent = shippingFee === 0 ? 'FREE' :  '₹' + shippingFee.toFixed(2);
+                    }   
+                    if (totalEl) totalEl.textContent = '₹' + grandTotal.toFixed(2);
 
                     const checkoutBtn = document.querySelector('.checkout-btn');
                     if (checkoutBtn) {
@@ -398,6 +406,44 @@
                 }
 
                 function proceedToCheckout() {
+                    let hasStockError = false;
+                    let hasInactive = false;
+                    let inactiveNames = [];
+                    let stockErrorNames = [];
+
+                    document.querySelectorAll('.cart-item').forEach(item => {
+                        const name = item.querySelector('.item-name').textContent.trim();
+                        const isInactive = item.getAttribute('data-inactive') === 'true';
+                        const qty = parseInt(item.querySelector('.qty-input').value);
+                        const stock = parseInt(item.getAttribute('data-stock') || '0');
+
+                        if (isInactive) {
+                            hasInactive = true;
+                            inactiveNames.push(name);
+                        } else if (stock === 0 || qty <= 0 || stock < qty) {
+                            hasStockError = true;
+                            stockErrorNames.push(name);
+                        }
+                    });
+
+                    if (hasInactive || hasStockError) {
+                        let msg = "";
+                        if (inactiveNames.length > 0) {
+                            msg += "The following items or shades are unavailable: " + inactiveNames.join(", ") + ". Please remove them from your cart.<br>";
+                        }
+                        if (stockErrorNames.length > 0) {
+                            msg += "The following items do not have enough stock: " + stockErrorNames.join(", ") + ". Please adjust quantity or remove them.";
+                        }
+
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Cannot Proceed to Checkout',
+                            html: msg,
+                            confirmButtonColor: '#5c1e28'
+                        });
+                        return;
+                    }
+
                     window.location.href = '/checkout';
                 }
             </script>

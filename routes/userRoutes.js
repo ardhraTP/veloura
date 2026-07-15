@@ -1,9 +1,10 @@
-﻿import express from 'express';
+import express from 'express';
 import { isAuthenticated, isGuest } from '../middleware/userAuth.js';
 import { upload } from '../middleware/upload.js';
 import passport from 'passport';
 import { getCheckoutPage, placeOrder } from '../controller/user/checkoutController.js';
 import { getUserOrders, getOrderDetails, cancelOrderProduct, returnOrderProduct, downloadInvoice } from '../controller/user/orderContoller.js';
+import Order from '../model/Order.js';
 
 
 
@@ -46,7 +47,7 @@ import {
     getEditAddress,
     updateAddress,
     deleteAddress,
-    setDefaultAddress
+    setDefaultAddress,
 } from '../controller/user/addressController.js';
 
 import {
@@ -95,11 +96,25 @@ router.get('/checkout', isAuthenticated, getCheckoutPage);
 
 router.post('/order/place', isAuthenticated, placeOrder);
 
-router.get('/order/success', isAuthenticated, (req, res) => {
-    res.render('user/order-success', {
-        orderId: req.query.orderId || '_HY252711',
-        isLoggedIn: true
-    });
+router.get('/order/success', isAuthenticated, async (req, res) => {
+    try {
+        const orderId = req.query.orderId;
+        const order = await Order.findOne({ orderId: orderId })
+            .populate('items.product')
+            .populate('items.variant');
+        res.render('user/order-success', {
+            order: order,
+            orderId: orderId || '_HY252711',
+            isLoggedIn: true
+        });
+    } catch (error) {
+        console.error('Error fetching order for success page:', error);
+        res.render('user/order-success', {
+            order: null,
+            orderId: req.query.orderId || '_HY252711',
+            isLoggedIn: true
+        });
+    }
 });
 
 router.get('/profile/orders', isAuthenticated, getUserOrders);

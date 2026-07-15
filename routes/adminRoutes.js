@@ -16,7 +16,8 @@ import {
     deleteVariant,
     addImageToVariant,
     removeImageFromVariant,
-    updateVariantDetails
+    updateVariantDetails,
+    toggleVariantStatus
 } from '../controller/Admin/productController.js';
 
 
@@ -66,6 +67,7 @@ router.delete('/variants/delete/:id', isAdminAuthenticated, deleteVariant);
 router.post('/variants/:id/add-image', isAdminAuthenticated, uploadVariantImages, addImageToVariant);
 router.delete('/variants/:id/remove-image', isAdminAuthenticated, removeImageFromVariant);
 router.post('/variants/update/:id', isAdminAuthenticated, updateVariantDetails);
+router.put('/variants/toggle-status/:id', isAdminAuthenticated, toggleVariantStatus);
 
 router.get('/orders', isAdminAuthenticated, getAdminOrdersPage);
 

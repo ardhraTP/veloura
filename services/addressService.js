@@ -3,6 +3,7 @@ import Address from '../model/Address.js';
 
 import { isValidName, isValidPhone, isValidPincode, isValidCity, isValidState, isValidAddress } from '../utils/helpers.js';
 
+
 export const validateAddressData = (data) => {
     const { fullName, phone, pincode, address, city, state, addressType } = data;
 

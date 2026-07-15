@@ -42,7 +42,8 @@ export const getProducts = async (options) => {
                             $expr: {
                                 $and: [
                                     { $eq: ['$productId', '$$productId'] },
-                                    { $eq: ['$isDeleted', false] }
+                                    { $eq: ['$isDeleted', false] },
+                                    { $ne: ['$status', 'INACTIVE'] }
                                 ]
                             }
                         }
@@ -119,7 +120,8 @@ export const getProductById = async (productId) => {
 
         const variants = await Variant.find({
             productId: product._id,
-            isDeleted: false
+            isDeleted: false,
+            status: { $ne: 'INACTIVE' }
         });
 
         return {
@@ -144,7 +146,7 @@ export const checkProductAvailability = async (productId, quantity) => {
             return { available: false, message: 'Product not found' };
         }
 
-        const variant = await Variant.findOne({ productId: product._id, isDeleted: false });
+        const variant = await Variant.findOne({ productId: product._id, isDeleted: false, status: { $ne: 'INACTIVE' } });
         if (!variant || variant.quantity < quantity) {
             return { available: false, message: 'Not enough stock' };
         }

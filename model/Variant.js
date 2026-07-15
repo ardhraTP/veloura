@@ -39,6 +39,11 @@ const variantSchema = new mongoose.Schema({
     isDeleted: {
         type: Boolean,
         default: false
+    },
+    status: {
+        type: String,
+        enum: ['ACTIVE', 'INACTIVE'],
+        default: 'ACTIVE'
     }
 }, {
     timestamps: true

@@ -718,6 +718,16 @@
             <!-- Handle order status variable mapping safety -->
             <% 
                const isDelivered = order.orderStatus === 'Delivered'; 
+               
+               let displaySubtotal = order.subtotal;
+               let displayTax = order.tax;
+               let displayTotal = order.totalAmount;
+
+               if (order.orderStatus === 'Cancelled' || order.totalAmount === 0) {
+                   displaySubtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                   displayTax = Math.round(displaySubtotal * 0.05);
+                   displayTotal = Math.max(0, displaySubtotal + (order.shippingFee || 0) + displayTax - (order.discount || 0));
+               }
             %>
 
             <!-- Loop through order items. We can group them or render each item card as requested. -->
@@ -730,7 +740,7 @@
                             
                             <div class="product-details">
                                 <h3 class="product-name"><%= (item.product && item.product.productName) ? item.product.productName : 'Product Name' %></h3>
-                                <p class="product-price">$<%= item.price ? item.price.toFixed(2) : '0.00' %></p>
+                                <p class="product-price">₹<%= item.price ? item.price.toFixed(2) : '0.00' %></p>
                                 
                                 <div class="product-badges">
                                     <% if (item.variant && item.variant.color) { %>
@@ -808,21 +818,27 @@
                         <div class="summary-list">
                             <div class="summary-row">
                                 <span>Subtotal</span>
-                                <span>$<%= order.subtotal ? order.subtotal.toFixed(2) : '0.00' %></span>
+                                <span>₹<%= displaySubtotal ? displaySubtotal.toFixed(2) : '0.00' %></span>
                             </div>
                             <div class="summary-row">
                                 <span>Shipping</span>
-                                <span class="text-green"><%= (!order.shippingFee || order.shippingFee === 0) ? 'FREE' : '$' + order.shippingFee.toFixed(2) %></span>
+                                <span class="text-green"><%= (!order.shippingFee || order.shippingFee === 0) ? 'FREE' : '₹' + order.shippingFee.toFixed(2) %></span>
                             </div>
+                            <% if (displayTax && displayTax > 0) { %>
+                                <div class="summary-row">
+                                    <span>Tax (5%)</span>
+                                    <span>₹<%= displayTax.toFixed(2) %></span>
+                                </div>
+                            <% } %>
                             <% if (order.discount && order.discount > 0) { %>
                                 <div class="summary-row">
                                     <span>Discount</span>
-                                    <span>-$<%= order.discount.toFixed(2) %></span>
+                                    <span>-₹<%= order.discount.toFixed(2) %></span>
                                 </div>
                             <% } %>
                             <div class="summary-row total-row">
                                 <span class="total-label">Total</span>
-                                <span class="total-value">$<%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %></span>
+                                <span class="total-value">₹<%= displayTotal ? displayTotal.toFixed(2) : '0.00' %></span>
                             </div>
                         </div>
                     </div>
@@ -856,21 +872,27 @@
                             <div class="summary-list">
                                 <div class="summary-row">
                                     <span>Subtotal</span>
-                                    <span>$<%= order.subtotal ? order.subtotal.toFixed(2) : '0.00' %></span>
+                                    <span>₹<%= displaySubtotal ? displaySubtotal.toFixed(2) : '0.00' %></span>
                                 </div>
                                 <div class="summary-row">
                                     <span>Shipping</span>
-                                    <span class="text-green"><%= (!order.shippingFee || order.shippingFee === 0) ? 'FREE' : '$' + order.shippingFee.toFixed(2) %></span>
+                                    <span class="text-green"><%= (!order.shippingFee || order.shippingFee === 0) ? 'FREE' : '₹' + order.shippingFee.toFixed(2) %></span>
                                 </div>
+                                <% if (displayTax && displayTax > 0) { %>
+                                    <div class="summary-row">
+                                        <span>Tax (5%)</span>
+                                        <span>₹<%= displayTax.toFixed(2) %></span>
+                                    </div>
+                                <% } %>
                                 <% if (order.discount && order.discount > 0) { %>
                                     <div class="summary-row">
                                         <span>Discount</span>
-                                        <span>-$<%= order.discount.toFixed(2) %></span>
+                                        <span>-₹<%= order.discount.toFixed(2) %></span>
                                     </div>
                                 <% } %>
                                 <div class="summary-row total-row">
                                     <span class="total-label">Total</span>
-                                    <span class="total-value">$<%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %></span>
+                                    <span class="total-value">₹<%= displayTotal ? displayTotal.toFixed(2) : '0.00' %></span>
                                 </div>
                             </div>
                         </div>

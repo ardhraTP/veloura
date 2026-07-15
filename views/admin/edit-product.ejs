@@ -385,6 +385,57 @@
             background-color: #0056b3;
         }
 
+        .btn-list,
+        .btn-unlist {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-list.action-btn {
+            background-color: transparent;
+            color: #2e7d32;
+            border: 1.5px solid #2e7d32;
+        }
+        .btn-list.action-btn:hover {
+            background-color: #2e7d32;
+            color: #ffffff;
+        }
+
+        .btn-unlist.action-btn {
+            background-color: transparent;
+            color: #c62828;
+            border: 1.5px solid #c62828;
+        }
+        .btn-unlist.action-btn:hover {
+            background-color: #c62828;
+            color: #ffffff;
+        }
+
+        .btn-list.status-badge {
+            background-color: #2e7d32;
+            color: #ffffff;
+            border: 1.5px solid #2e7d32;
+            cursor: default;
+            pointer-events: none;
+            box-shadow: 0 1px 4px rgba(46, 125, 50, 0.15);
+        }
+
+        .btn-unlist.status-badge {
+            background-color: #c62828;
+            color: #ffffff;
+            border: 1.5px solid #c62828;
+            cursor: default;
+            pointer-events: none;
+            box-shadow: 0 1px 4px rgba(198, 40, 40, 0.15);
+        }
+
         /* Shade swatch styles */
         .shade-row {
             display: flex;
@@ -514,22 +565,32 @@
 
                             <% if (variants && variants.length> 0) { %>
                                 <% variants.forEach((variant, index)=> { %>
-                                    <div class="variant-card" data-variant-id="<%= variant._id %>">
-                                        <div class="variant-header">
-                                            <span class="variant-number">Variant <%= index + 1 %> - <%= variant.color %>
-                                                        </span>
-                                            <div style="display: flex; gap: 10px;">
-                                                <button type="button" class="btn-edit-variant"
-                                                    style="background-color: #28a745;"
-                                                    onclick="updateVariantDirect('<%= variant._id %>')">
-                                                    UPDATE
-                                                </button>
-                                                <button type="button" class="btn-delete-variant"
-                                                    onclick="deleteVariant('<%= variant._id %>')">
-                                                    Delete Variant
-                                                </button>
-                                            </div>
-                                        </div>
+                                     <div class="variant-card" data-variant-id="<%= variant._id %>">
+                                         <div class="variant-header">
+                                             <span class="variant-number">Variant <%= index + 1 %> - <%= variant.color %>
+                                                         </span>
+                                             <div style="display: flex; gap: 10px; align-items: center;">
+                                                 <!-- List / Unlist Toggle for Variant -->
+                                                 <div class="variant-status-area" id="statusArea-<%= variant._id %>" style="display: flex; gap: 5px; align-items: center; margin-right: 5px;">
+                                                     <% if (variant.status === 'ACTIVE' || !variant.status) { %>
+                                                         <button type="button" class="btn-list status-badge">LISTED</button>
+                                                         <button type="button" class="btn-unlist action-btn" onclick="toggleVariantStatus('<%= variant._id %>', 'ACTIVE')">UNLIST</button>
+                                                     <% } else { %>
+                                                         <button type="button" class="btn-list action-btn" onclick="toggleVariantStatus('<%= variant._id %>', 'INACTIVE')">LIST</button>
+                                                         <button type="button" class="btn-unlist status-badge">UNLISTED</button>
+                                                     <% } %>
+                                                 </div>
+                                                 <button type="button" class="btn-edit-variant"
+                                                     style="background-color: #28a745;"
+                                                     onclick="updateVariantDirect('<%= variant._id %>')">
+                                                     UPDATE
+                                                 </button>
+                                                 <button type="button" class="btn-delete-variant"
+                                                     onclick="deleteVariant('<%= variant._id %>')">
+                                                     Delete Variant
+                                                 </button>
+                                             </div>
+                                         </div>
 
                                         <div class="form-row">
                                             <input type="hidden" name="variants[<%= variant._id %>][_id]"
@@ -1159,6 +1220,64 @@
                         icon: 'error',
                         title: 'Error',
                         text: 'Error removing image',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                }
+            }
+
+            // Toggle variant status
+            async function toggleVariantStatus(variantId, currentStatus) {
+                // Show confirmation dialog when deactivating (unlisting)
+                if (currentStatus === 'ACTIVE') {
+                    const result = await Swal.fire({
+                        title: 'Unlist Shade?',
+                        text: 'Are you sure you want to unlist this shade/variant?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#5c1e28',
+                        cancelButtonColor: '#999',
+                        confirmButtonText: 'Yes, Unlist',
+                        cancelButtonText: 'Cancel'
+                    });
+
+                    if (!result.isConfirmed) {
+                        return;
+                    }
+                }
+
+                try {
+                    const response = await fetch(`/admin/variants/toggle-status/${variantId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: data.status === 'ACTIVE' ? 'Listed!' : 'Unlisted!',
+                            text: data.message,
+                            confirmButtonColor: '#5c1e28',
+                            showConfirmButton: true
+                        });
+                        window.location.href = '/admin/products';
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Error updating shade status',
+                            confirmButtonColor: '#5c1e28'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error updating shade status',
                         confirmButtonColor: '#5c1e28'
                     });
                 }

@@ -23,9 +23,9 @@ export const getCheckoutPage = async (req, res) => {
                 req.session.cartError = `Product "${item.product ? item.product.productName : 'Unavailable'}" is no longer available.`;
                 break;
             }
-            if (!item.variant || item.variant.isDeleted) {
+            if (!item.variant || item.variant.isDeleted || item.variant.status === 'INACTIVE') {
                 hasStockError = true;
-                req.session.cartError = `Selected variant of "${item.product.productName}" is no longer available.`;
+                req.session.cartError = `Selected shade of "${item.product.productName}" is no longer available.`;
                 break;
             }
             if (item.variant.quantity === 0 || item.quantity <= 0) {
@@ -77,35 +77,46 @@ export const placeOrder = async (req, res) => {
     try {
         const userId = req.session.userId;
         const { addressId, paymentMethod, couponCode, discount } = req.body;
-        // 1. Fetch user's cart
+       
         const cart = await cartService.getUserCart(userId);
         if (!cart || !cart.items || cart.items.length === 0) {
             return res.json({ success: false, message: 'Your cart is empty' });
         }
-        // 2. Fetch delivery address details
+        
         const selectedAddress = await addressService.getAddressById(addressId, userId);
         if (!selectedAddress) {
             return res.json({ success: false, message: 'Selected delivery address not found' });
         }
-        // 3. Check stock availability for all items in the cart
+       
         for (const item of cart.items) {
-            const variant = await Variant.findById(item.variant._id);
-            if (!variant || variant.isDeleted) {
+            // Check if product is available
+            if (!item.product || item.product.status === 'INACTIVE' || item.product.isDeleted) {
                 return res.json({
                     success: false,
-                    message: `Product variant not found or unavailable: ${item.product.productName}`
+                    message: `Product "${item.product ? item.product.productName : 'Unavailable'}" is no longer available. Please update your cart.`
                 });
             }
+
+            const variant = await Variant.findById(item.variant._id);
+            // Check if variant/shade is available
+            if (!variant || variant.isDeleted || variant.status === 'INACTIVE') {
+                return res.json({
+                    success: false,
+                    message: `Selected shade of "${item.product.productName}" is no longer available. Please update your cart.`
+                });
+            }
+
+            // Check stock quantity
             if (variant.quantity === 0 || item.quantity <= 0) {
                 return res.json({
                     success: false,
-                    message: `${item.product.productName} (${variant.color}) is out of stock. Please update your cart.`
+                    message: `"${item.product.productName} (${variant.color})" is out of stock. Please update your cart.`
                 });
             }
             if (variant.quantity < item.quantity) {
                 return res.json({
                     success: false,
-                    message: `Only ${variant.quantity} units left in stock for ${item.product.productName} (${variant.color})`
+                    message: `Only ${variant.quantity} units left in stock for "${item.product.productName} (${variant.color})". Please update your cart.`
                 });
             }
         }

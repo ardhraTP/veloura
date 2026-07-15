@@ -7,7 +7,28 @@ export const getCartPage = async (req, res) => {
         const userId = req.session.userId;
         const cart = await cartService.getUserCart(userId);
         
-    
+        // Check availability and stock for each item in the cart
+        if (cart && cart.items) {
+            for (const item of cart.items) {
+                item.isAvailable = true;
+                item.availabilityMessage = '';
+
+                if (!item.product || item.product.status === 'INACTIVE' || item.product.isDeleted) {
+                    item.isAvailable = false;
+                    item.availabilityMessage = 'Product Unavailable';
+                } else if (!item.variant || item.variant.isDeleted || item.variant.status === 'INACTIVE') {
+                    item.isAvailable = false;
+                    item.availabilityMessage = 'Shade Unavailable';
+                } else if (item.variant.quantity === 0) {
+                    item.isAvailable = false;
+                    item.availabilityMessage = 'Out of Stock';
+                } else if (item.variant.quantity < item.quantity) {
+                    item.isAvailable = false;
+                    item.availabilityMessage = `Only ${item.variant.quantity} left in stock`;
+                }
+            }
+        }
+        
         const cartError = req.session.cartError || null;
         delete req.session.cartError;
 

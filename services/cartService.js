@@ -25,7 +25,7 @@ export const getUserCart = async (userId) => {
             if (cartUpdated) {
                 cart.totalAmount = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
                 await cart.save();
-                // Re-populate to get the updated quantities populated correctly
+                
                 cart = await Cart.findOne({ user: userId })
                     .populate('items.product')
                     .populate('items.variant');
@@ -50,7 +50,8 @@ export const addProductToCart = async (userId, productId, variantId, quantity) =
         const variant = await Variant.findOne({
             _id: variantId,
             productId: productId,
-            isDeleted: false
+            isDeleted: false,
+            status: { $ne: 'INACTIVE' }
         });
         if (!variant) throw new Error('Variant not found');
         if (variant.quantity < quantity) throw new Error('Not enough stock available');
@@ -119,8 +120,13 @@ export const updateCartQuantity = async (userId, variantId, newQuantity) => {
 
         if (item.variant) {
             const variant = await Variant.findById(item.variant._id);
-            if (variant && variant.quantity < newQuantity) {
-                throw new Error('Not enough stock available');
+            if (variant) {
+                if (variant.isDeleted || variant.status === 'INACTIVE') {
+                    throw new Error('Product variant is no longer available');
+                }
+                if (variant.quantity < newQuantity) {
+                    throw new Error('Not enough stock available');
+                }
             }
         }
 

@@ -604,3 +604,32 @@ export const updateVariantDetails = async (req, res) => {
     }
 };
 
+export const toggleVariantStatus = async (req, res) => {
+    try {
+        const variantId = req.params.id;
+        const variant = await Variant.findOne({ _id: variantId, isDeleted: false });
+
+        if (!variant) {
+            return res.status(404).json({
+                success: false,
+                message: 'Variant not found'
+            });
+        }
+
+        variant.status = (variant.status === 'ACTIVE' || !variant.status) ? 'INACTIVE' : 'ACTIVE';
+        await variant.save();
+
+        res.json({
+            success: true,
+            status: variant.status,
+            message: `Shade status ${variant.status === 'ACTIVE' ? 'listed' : 'unlisted'} successfully`
+        });
+    } catch (error) {
+        console.log('Error in toggleVariantStatus:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error toggling shade status'
+        });
+    }
+};
+

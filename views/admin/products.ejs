@@ -432,6 +432,22 @@
             display: inline-block;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
             title: attr(data-color);
+            position: relative;
+        }
+
+        .shade-dot.unlisted {
+            opacity: 0.35;
+        }
+
+        .shade-dot.unlisted::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 1.5px;
+            background: #ff0000;
+            transform: translate(-50%, -50%) rotate(45deg);
         }
     </style>
 </head>
@@ -500,13 +516,11 @@
                                                                 <%= product.variants ? product.variants.length : 0 %>
                                                                     Variants
                                                             </p>
-                                                            <% if (product.variants && product.variants.length> 0) { %>
-                                                                <div class="shade-swatches">
+                                                            <% if (product.variants && product.variants.length> 0) { %>                                                                <div class="shade-swatches">
                                                                     <% product.variants.forEach(v=> { %>
-                                                                        <span class="shade-dot"
+                                                                        <span class="shade-dot <%= v.status === 'INACTIVE' ? 'unlisted' : '' %>"
                                                                             style="background-color: <%= v.hexCode && v.hexCode.trim() ? v.hexCode.trim() : '#cccccc' %>;"
-                                                            
-                                                                            title="<%= v.color %>"></span>
+                                                                            title="<%= v.color %><%= v.status === 'INACTIVE' ? ' (Unlisted)' : '' %>"></span>
                                                                         <% }) %>
                                                                 </div>
                                                                 <% } %>
@@ -652,8 +666,7 @@
                             title: data.status === 'ACTIVE' ? 'Listed!' : 'Unlisted!',
                             text: data.message,
                             confirmButtonColor: '#5c1e28',
-                            timer: 2000,
-                            showConfirmButton: false
+                            showConfirmButton: true
                         });
                         location.reload();
                     } else {

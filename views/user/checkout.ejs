@@ -798,6 +798,14 @@
         .swal2-container {
             z-index: 1500 !important;
         }
+
+        .field-error {
+            color: #d92525;
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 4px;
+            display: none;
+        }
     </style>
 </head>
 
@@ -1500,6 +1508,34 @@
             // Modal action functions
             let currentEditAddressId = null;
 
+            function clearAllFieldErrors() {
+                document.querySelectorAll('.field-error').forEach(el => {
+                    el.textContent = '';
+                    el.style.display = 'none';
+                });
+            }
+
+            function showFieldError(fieldId, message) {
+                const errEl = document.getElementById('error-' + fieldId);
+                if (errEl) {
+                    errEl.textContent = message;
+                    errEl.style.display = 'block';
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const inputIds = ['fullName', 'phone', 'pincode', 'addressType', 'city', 'state', 'address'];
+                inputIds.forEach(id => {
+                    const inputEl = document.getElementById(id);
+                    if (inputEl) {
+                        const eventType = inputEl.tagName === 'SELECT' ? 'change' : 'input';
+                        inputEl.addEventListener(eventType, function() {
+                            clearAllFieldErrors();
+                        });
+                    }
+                });
+            });
+
             function openAddressModal() {
                 currentEditAddressId = null;
                 document.getElementById('addressModal').style.display = 'flex';
@@ -1507,6 +1543,7 @@
                 document.getElementById('modalSubmitBtn').textContent = 'Save Address';
                 document.getElementById('addAddressForm').reset();
                 document.getElementById('modalError').style.display = 'none';
+                clearAllFieldErrors();
             }
 
             function openEditAddressModal(btnElement) {
@@ -1517,6 +1554,7 @@
                 document.getElementById('modalTitle').textContent = 'Edit Delivery Address';
                 document.getElementById('modalSubmitBtn').textContent = 'Save Changes';
                 document.getElementById('modalError').style.display = 'none';
+                clearAllFieldErrors();
 
                 // Pre-populate fields
                 document.getElementById('fullName').value = card.getAttribute('data-fullname');
@@ -1542,32 +1580,39 @@
                 formData.forEach((value, key) => { data[key] = value.trim() });
 
                 // Custom validation checks matching add-address rules
+                clearAllFieldErrors();
+                let isValid = true;
+
                 if (!/^[a-zA-Z\s]{2,50}$/.test(data.fullName)) {
-                    showModalError('Name must be 2-50 characters and contain only letters.');
-                    return;
+                    showFieldError('fullName', 'Name must be 2-50 characters and contain only letters.');
+                    isValid = false;
                 }
                 if (!/^[0-9]{10}$/.test(data.phone)) {
-                    showModalError('Please enter a valid 10-digit phone number.');
-                    return;
+                    showFieldError('phone', 'Please enter a valid 10-digit phone number.');
+                    isValid = false;
                 }
                 if (!/^[0-9]{6}$/.test(data.pincode)) {
-                    showModalError('Please enter a valid 6-digit pincode.');
-                    return;
+                    showFieldError('pincode', 'Please enter a valid 6-digit pincode.');
+                    isValid = false;
                 }
                 if (data.address.length < 10 || data.address.length > 200) {
-                    showModalError('Address must be between 10 and 200 characters.');
-                    return;
+                    showFieldError('address', 'Address must be between 10 and 200 characters.');
+                    isValid = false;
                 }
                 if (!/^[a-zA-Z\s]{2,50}$/.test(data.city)) {
-                    showModalError('City must be 2-50 characters and contain only letters.');
-                    return;
+                    showFieldError('city', 'City must be 2-50 characters and contain only letters.');
+                    isValid = false;
                 }
                 if (!/^[a-zA-Z\s]{2,50}$/.test(data.state)) {
-                    showModalError('State must be 2-50 characters and contain only letters.');
-                    return;
+                    showFieldError('state', 'State must be 2-50 characters and contain only letters.');
+                    isValid = false;
                 }
                 if (!data.addressType) {
-                    showModalError('Please select an address type.');
+                    showFieldError('addressType', 'Please select an address type.');
+                    isValid = false;
+                }
+
+                if (!isValid) {
                     return;
                 }
 
@@ -1639,14 +1684,17 @@
                         <div class="form-group-modal">
                             <label for="fullName">Full Name *</label>
                             <input type="text" id="fullName" name="fullName" required placeholder="e.g. Ardra">
+                            <span class="field-error" id="error-fullName"></span>
                         </div>
                         <div class="form-group-modal">
                             <label for="phone">Phone Number *</label>
                             <input type="tel" id="phone" name="phone" required placeholder="10-digit mobile number">
+                            <span class="field-error" id="error-phone"></span>
                         </div>
                         <div class="form-group-modal">
                             <label for="pincode">Pincode *</label>
                             <input type="text" id="pincode" name="pincode" required placeholder="6-digit pincode">
+                            <span class="field-error" id="error-pincode"></span>
                         </div>
                         <div class="form-group-modal">
                             <label for="addressType">Address Type *</label>
@@ -1655,19 +1703,23 @@
                                 <option value="home">Home</option>
                                 <option value="work">Work</option>
                             </select>
+                            <span class="field-error" id="error-addressType"></span>
                         </div>
                         <div class="form-group-modal">
                             <label for="city">City *</label>
                             <input type="text" id="city" name="city" required placeholder="e.g. Palakkad">
+                            <span class="field-error" id="error-city"></span>
                         </div>
                         <div class="form-group-modal">
                             <label for="state">State *</label>
                             <input type="text" id="state" name="state" required placeholder="e.g. Kerala">
+                            <span class="field-error" id="error-state"></span>
                         </div>
                         <div class="form-group-modal full-width">
                             <label for="address">Address *</label>
                             <textarea id="address" name="address" rows="3" required
                                 placeholder="House No., Building Name, Street, Area"></textarea>
+                            <span class="field-error" id="error-address"></span>
                         </div>
                     </div>
                     <div id="modalError" class="modal-error-message" style="display: none;"></div>

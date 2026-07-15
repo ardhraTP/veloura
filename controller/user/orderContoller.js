@@ -126,12 +126,6 @@ export const cancelOrderProduct = async (req, res) => {
         item.itemStatus = 'Cancelled';
         item.cancellationReason = comment ? `${reason} - ${comment}` : reason;
 
-        // Reduce price for the cancelled item
-        const itemCost = item.price * item.quantity;
-        order.subtotal = Math.max(0, order.subtotal - itemCost);
-        order.tax = Math.round(order.subtotal * 0.05);
-        order.totalAmount = Math.max(0, order.subtotal + (order.shippingFee || 0) + (order.tax || 0) - (order.discount || 0));
-
         await order.save();
 
         await Variant.findByIdAndUpdate(item.variant, {

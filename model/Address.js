@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose, { mongo } from 'mongoose';
 
 const addressSchema = new mongoose.Schema({
     userId: {
@@ -42,4 +42,3 @@ const addressSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 export default mongoose.model('Address', addressSchema);
-

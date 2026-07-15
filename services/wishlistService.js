@@ -10,7 +10,8 @@ const populateWishlistVariants = async (wishlist) => {
             if (!product) return null;
             const variants = await Variant.find({
                 productId: product._id,
-                isDeleted: false
+                isDeleted: false,
+                status: { $ne: 'INACTIVE' }
             });
             return {
                 ...product.toObject(),
