@@ -60,6 +60,28 @@ const userSchema = new mongoose.Schema({
     resetExpiry: {
         type: Date,
         default: null
+    },
+    walletBalance: {
+        type: Number,
+        default: 0
+    },
+    walletHistory: [{
+        amount: { type: Number, required: true },
+        type: { type: String, enum: ['Credited', 'Debited'], required: true },
+        description: { type: String },
+        date: { type: Date, default: Date.now }
+    }],
+    referralCode: {
+        type: String,
+        default: null
+    },
+    referralEarnings: {
+        type: Number,
+        default: 0
+    },
+    referredCount: {
+        type: Number,
+        default: 0
     }
 }, { timestamps: true });
 

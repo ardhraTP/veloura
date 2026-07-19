@@ -320,13 +320,10 @@
             <div class="section-header">
                 <h2 class="section-title">Sales Details</h2>
                 <div class="chart-filters">
-                    <select class="chart-filter">
-                        <option>Today</option>
-                        <option>This Week</option>
-                    </select>
-                    <select class="chart-filter">
-                        <option>October</option>
-                        <option>November</option>
+                    <select class="chart-filter" id="periodSelect" onchange="updateChart()">
+                        <option value="weekly">This Week</option>
+                        <option value="monthly">This Month</option>
+                        <option value="yearly" selected>This Year</option>
                     </select>
                 </div>
             </div>
@@ -383,80 +380,75 @@
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('salesChart').getContext('2d');
+        let salesChart = null;
+
+        async function updateChart() {
+            const period = document.getElementById('periodSelect').value;
             
-           
-            const gradientFill = ctx.createLinearGradient(0, 0, 0, 300);
-            gradientFill.addColorStop(0, 'rgba(92, 30, 40, 0.2)');  
-            gradientFill.addColorStop(1, 'rgba(92, 30, 40, 0)');    
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
-                    datasets: [{
-                        label: 'Sales',
-                        data: [2100, 2400, 3100, 2800, 4356.77, 3000, 3200, 3500, 2700, 3300],
-                        borderColor: '#5c1e28',
-                        borderWidth: 2,
-                        backgroundColor: gradientFill,
-                        fill: true,
-                        pointBackgroundColor: '#5c1e28',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        tension: 0.4 
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: '#222',
-                            titleFont: { size: 11, family: 'Inter' },
-                            bodyFont: { size: 13, family: 'Inter', weight: 'bold' },
-                            padding: 10,
-                            displayColors: false,
-                            callbacks: {
-                                label: function(context) {
-                                    return '$' + context.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 2});
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: {
-                                display: false,
-                                drawBorder: false
-                            },
-                            ticks: {
-                                display: false 
-                            }
-                        },
-                        y: {
-                            grid: {
-                                color: '#f0f0f0',
-                                drawBorder: false,
-                            },
-                            ticks: {
-                                display: false, 
-                                beginAtZero: true
-                            }
-                        }
-                    },
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    }
+            try {
+                const response = await fetch(`/admin/api/dashboard-data?period=${period}`);
+                const data = await response.json();
+                
+                if (!data.success) return;
+
+                const ctx = document.getElementById('salesChart').getContext('2d');
+                const gradientFill = ctx.createLinearGradient(0, 0, 0, 300);
+                gradientFill.addColorStop(0, 'rgba(92, 30, 40, 0.2)');  
+                gradientFill.addColorStop(1, 'rgba(92, 30, 40, 0)');    
+
+                // If chart already exists, destroy it before rendering a new one
+                if (salesChart) {
+                    salesChart.destroy();
                 }
-            });
+
+                salesChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.chartLabels,
+                        datasets: [{
+                            label: 'Sales Revenue',
+                            data: data.chartValues,
+                            borderColor: '#5c1e28',
+                            borderWidth: 2,
+                            backgroundColor: gradientFill,
+                            fill: true,
+                            pointBackgroundColor: '#5c1e28',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            tension: 0.4 
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: { grid: { color: '#f0f0f0' }, beginAtZero: true }
+                        }
+                    }
+                });
+
+                // Optional: Update Top Selling Products/Categories list in DOM if templates exist
+                renderTopSellers(data.topProducts, data.topCategories, data.topBrands);
+
+            } catch (error) {
+                console.error('Error loading chart data:', error);
+            }
+        }
+
+        // Function to render Best Selling tables on the dashboard
+        function renderTopSellers(products, categories, brands) {
+            // You can populate your Top 10 tables dynamically here if you define their containers in HTML.
+            console.log("Top Products:", products);
+        }
+
+        // Load chart on DOM Content ready
+        document.addEventListener('DOMContentLoaded', () => {
+            updateChart();
         });
     </script>
 </body>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - Veloura</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .success-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 50px;
+            text-align: center;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            animation: scaleIn 0.5s ease 0.2s both;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .success-icon svg {
+            width: 50px;
+            height: 50px;
+            stroke: white;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .order-info {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .order-row:last-child {
+            border-bottom: none;
+        }
+
+        .order-label {
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .order-value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .total-amount {
+            font-size: 24px;
+            color: #5c1e28;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #5c1e28;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4a1820;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(92, 30, 40, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #5c1e28;
+            border: 2px solid #5c1e28;
+        }
+
+        .btn-secondary:hover {
+            background: #5c1e28;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 600px) {
+            .success-container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-icon">
+            <svg viewBox="0 0 52 52">
+                <polyline points="14 27 22 35 38 19"/>
+            </svg>
+        </div>
+
+        <h1>Payment Successful!</h1>
+        <p class="subtitle">Thank you for your order. Your payment has been processed successfully.</p>
+
+        <div class="order-info">
+            <div class="order-row">
+                <span class="order-label">Order ID:</span>
+                <span class="order-value"><%= order.orderId %></span>
+            </div>
+            <div class="order-row">
+                <span class="order-label">Payment Method:</span>
+                <span class="order-value"><%= order.paymentMethod %></span>
+            </div>
+            <div class="order-row">
+                <span class="order-label">Order Date:</span>
+                <span class="order-value"><%= new Date(order.createdAt).toLocaleDateString('en-IN') %></span>
+            </div>
+            <div class="order-row">
+                <span class="order-label">Total Amount:</span>
+                <span class="order-value total-amount">₹<%= order.totalAmount.toFixed(2) %></span>
+            </div>
+        </div>
+
+        <p style="color: #718096; font-size: 14px; margin: 20px 0;">
+            A confirmation email has been sent to your registered email address.
+        </p>
+
+        <div class="buttons">
+            <a href="/profile/orders/<%= order.orderId %>" class="btn btn-primary">View Order Details</a>
+            <a href="/products" class="btn btn-secondary">Continue Shopping</a>
+        </div>
+    </div>
+</body>
+</html>

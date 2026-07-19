@@ -291,6 +291,46 @@
                 min-width: 0;
             }
         }
+
+        /* Pagination */
+        .pagination-area {
+            display: flex;
+            justify-content: center;
+            margin-top: 35px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .page-btn {
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #E6DED4;
+            background-color: white;
+            color: #2C2C2C;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            background-color: #FAF6F0;
+        }
+
+        .page-btn.active {
+            background-color: #5C1E28;
+            color: white;
+            border-color: #5C1E28;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -395,6 +435,32 @@
                     </div>
                 <% } %>
             </div>
+
+            <!-- Pagination -->
+            <% if (locals.totalPages && totalPages > 1) { %>
+                <div class="pagination-area">
+                    <div class="pagination-controls">
+                        <% if (currentPage > 1) { %>
+                            <a href="?page=<%= currentPage - 1 %><%= typeof searchQuery !== 'undefined' && searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>" class="page-btn">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        <% } %>
+
+                        <% for(let i = 1; i <= totalPages; i++) { %>
+                            <a href="?page=<%= i %><%= typeof searchQuery !== 'undefined' && searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>" 
+                               class="page-btn <%= currentPage === i ? 'active' : '' %>">
+                               <%= i %>
+                            </a>
+                        <% } %>
+
+                        <% if (currentPage < totalPages) { %>
+                            <a href="?page=<%= currentPage + 1 %><%= typeof searchQuery !== 'undefined' && searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>" class="page-btn">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        <% } %>
+                    </div>
+                </div>
+            <% } %>
         </main>
     </div>
 

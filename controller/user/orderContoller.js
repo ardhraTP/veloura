@@ -14,7 +14,7 @@ export const getUserOrders = async (req, res) => {
 
         const user = await User.findById(userId);
         
-
+ 
 
         let query = { user: userId };
 
@@ -47,10 +47,19 @@ export const getUserOrders = async (req, res) => {
             });
         }
 
+        const page = parseInt(req.query.page) || 1;
+        const limit = 4;
+        const totalOrders = orders.length;
+        const totalPages = Math.ceil(totalOrders / limit);
+        const startIndex = (page - 1) * limit;
+        const paginatedOrders = orders.slice(startIndex, startIndex + limit);
+
         res.render('user/my-orders', {
-            orders: orders,
+            orders: paginatedOrders,
             user: user || { name: req.session.user?.name || 'User' },
             searchQuery: searchQuery,
+            currentPage: page,
+            totalPages: totalPages,
             activeTab: 'orders',
             isLoggedIn: true
         });
@@ -345,3 +354,100 @@ export const downloadInvoice = async (req, res) => {
         res.status(500).send('Error generating PDF invoice.');
     }
 }
+
+
+export const getPaymentSuccess = async (req,res)=>{
+    try{
+        const orderId = req.query.orderId;
+        const userId = req.session.userId;
+
+        if(!orderId){
+            return res.redirect('/profile/orders');
+        }
+
+        const order = await Order.findOne({orderId: orderId,user:userId})
+        .populate('items.product')
+        .populate('items.variant');
+
+        if(!order){
+            return res.redirect('/profile/orders');
+        }
+
+        res.render('user/payment-success',{
+            order:order,
+            isLoggedIn:true
+        });
+    }catch(error){
+        console.error('Error loading payment success page:',error);
+        res.status(500).render('error/500');
+    }
+};
+
+
+export const getPaymentFailed = async (req,res)=>{
+    try{
+        const orderId = req.query.orderId;
+
+        res.render('user/payment-failed',{
+            orderId:orderId || null,
+            isLoggedIn:true
+        });
+    }catch(error){
+        console.error('Error loading payment failed page:',error);
+        res.status(500).render('error/500');
+    }
+};
+
+export const retryPayment = async (req,res)=>{
+    try{
+        const {orderId} = req.body;
+        const userId = req.session.userId;
+
+        const order = await Order.findOne({orderId: orderId,user:userId});
+
+        if(!order){
+            return res.json({
+                success:false,
+                message:'Order not found'
+            });
+        }
+
+        if(order.paymentStatus === 'Completed'){
+            return res.json({
+                success:false,
+                message:'Payment already completed'
+            });
+        }
+
+
+        const razorpayInstance = (await import('../../config/razorpay.js')).default;
+
+        const razorpayOrder = await razorpayInstance.orders.create({
+            amount:Math.round(order.totalAmount * 100),
+            currency: 'INR',
+            receipt: order.orderId,
+            notes:{
+                orderId: order.orderId
+            }
+        });
+
+        // Update order with new Razorpay order ID
+        order.razorpayOrderId = razorpayOrder.id;
+        await order.save();
+
+        res.json({
+            success: true,
+            razorpayOrderId: razorpayOrder.id,
+            amount: order.totalAmount,
+            keyId: process.env.RAZORPAY_KEY_ID,
+            orderId: order.orderId
+        });
+
+    }catch(error){
+        console.error('Error retrying payment:',error);
+        res.json({
+            success:false,
+            message:'Failed to retry payment'
+        });
+    }
+};

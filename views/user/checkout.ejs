@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/navbar.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="/js/prevent-back.js"></script>
     <style>
         body {
@@ -955,18 +956,28 @@
                             <i class="far fa-check-circle"></i> PAYMENT OPTIONS
                         </div>
                         <div class="checkout-card">
+                            <!-- Wallet Balance Display -->
+                            <% if (user && user.walletBalance > 0) { %>
+                                <div style="background: rgba(92, 30, 40, 0.05); border: 1px solid #5c1e28; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; color: #5c1e28; letter-spacing: 1px; text-transform: uppercase;">
+                                        <i class="fas fa-wallet"></i>
+                                        <span>Available Wallet Balance: ₹<%= user.walletBalance.toFixed(2) %></span>
+                                    </div>
+                                </div>
+                            <% } %>
+                            
                             <div class="payment-options-row">
                                 <div class="payment-card selected" onclick="selectPayment(this, 'COD')">
                                     <input type="radio" name="paymentMethod" id="pay_cod" value="COD" checked>
                                     <label for="pay_cod" class="payment-label">Cash on Delivery</label>
                                 </div>
-                                <div class="payment-card" onclick="selectPayment(this, 'BANK')">
-                                    <input type="radio" name="paymentMethod" id="pay_bank" value="BANK">
-                                    <label for="pay_bank" class="payment-label">Bank Transfer</label>
+                                <div class="payment-card" onclick="selectPayment(this, 'Online')">
+                                    <input type="radio" name="paymentMethod" id="pay_online" value="Online">
+                                    <label for="pay_online" class="payment-label">Online Payment</label>
                                 </div>
-                                <div class="payment-card" onclick="selectPayment(this, 'WALLET')">
-                                    <input type="radio" name="paymentMethod" id="pay_wallet" value="WALLET">
-                                    <label for="pay_wallet" class="payment-label">Digital Wallet</label>
+                                <div class="payment-card" onclick="selectPayment(this, 'Wallet')">
+                                    <input type="radio" name="paymentMethod" id="pay_wallet" value="Wallet">
+                                    <label for="pay_wallet" class="payment-label">Wallet</label>
                                 </div>
                             </div>
                         </div>
@@ -988,34 +999,19 @@
 
                             <!-- Available Coupons Dropdown Options -->
                             <div class="coupons-dropdown-container" id="couponsDropdown" style="margin-top: 15px;">
-                                <div class="coupon-option-card" onclick="applyCouponCode('VELOURA10')">
-                                    <div class="coupon-option-details">
-                                        <span class="coupon-code-badge">VELOURA10</span>
-                                        <span class="coupon-code-desc">Save 10% off your bag subtotal.</span>
-                                    </div>
-                                    <button type="button" class="coupon-apply-action-btn">Apply</button>
-                                </div>
-                                <div class="coupon-option-card" onclick="applyCouponCode('WELCOME50')">
-                                    <div class="coupon-option-details">
-                                        <span class="coupon-code-badge">WELCOME50</span>
-                                        <span class="coupon-code-desc">Get flat ₹50 discount on your order.</span>
-                                    </div>
-                                    <button type="button" class="coupon-apply-action-btn">Apply</button>
-                                </div>
-                                <div class="coupon-option-card" onclick="applyCouponCode('LUXURY200')">
-                                    <div class="coupon-option-details">
-                                        <span class="coupon-code-badge">LUXURY200</span>
-                                        <span class="coupon-code-desc">Get ₹200 discount for orders above ₹2000.</span>
-                                    </div>
-                                    <button type="button" class="coupon-apply-action-btn">Apply</button>
-                                </div>
-                                <div class="coupon-option-card" onclick="applyCouponCode('FREESHIP')">
-                                    <div class="coupon-option-details">
-                                        <span class="coupon-code-badge">FREESHIP</span>
-                                        <span class="coupon-code-desc">Enjoy free delivery on your parcel.</span>
-                                    </div>
-                                    <button type="button" class="coupon-apply-action-btn">Apply</button>
-                                </div>
+                                <% if (locals.activeCoupons && activeCoupons.length > 0) { %>
+                                    <% activeCoupons.forEach(coupon => { %>
+                                        <div class="coupon-option-card" onclick="applyCouponCode('<%= coupon.code %>')">
+                                            <div class="coupon-option-details">
+                                                <span class="coupon-code-badge"><%= coupon.code %></span>
+                                                <span class="coupon-code-desc"><%= coupon.description %></span>
+                                            </div>
+                                            <button type="button" class="coupon-apply-action-btn">Apply</button>
+                                        </div>
+                                    <% }) %>
+                                <% } else { %>
+                                    <p style="color: #666666; font-size: 13px; margin: 0; padding: 10px;">No available coupons at the moment.</p>
+                                <% } %>
                             </div>
                         </div>
 
@@ -1069,6 +1065,9 @@
             let currentDiscount = <%= discount %>;
             let currentShipping = baseShippingFee;
             let activeCoupon = '';
+
+            // Available coupons from database
+            const availableCoupons = <%- JSON.stringify(locals.activeCoupons || []) %>;
 
             // Track the selected delivery address ID
             let selectedAddressId = '<%= addresses.find(a => a.isDefault)?._id || (addresses[0]?._id || "") %>';
@@ -1188,30 +1187,36 @@
                 let newDiscount = 0;
                 let newShipping = baseShippingFee;
 
-                if (activeCoupon === 'VELOURA10') {
-                    newDiscount = Math.round(baseSubtotal * 0.10);
-                } else if (activeCoupon === 'WELCOME50') {
-                    newDiscount = 50;
-                } else if (activeCoupon === 'LUXURY200') {
-                    if (baseSubtotal >= 2000) {
-                        newDiscount = 200;
+                if (activeCoupon) {
+                    const coupon = availableCoupons.find(c => c.code === activeCoupon);
+                    if (coupon) {
+                        if (baseSubtotal >= coupon.minOrderAmount) {
+                            if (coupon.discountType === 'PERCENTAGE') {
+                                newDiscount = Math.round((baseSubtotal * coupon.discountValue) / 100);
+                                if (coupon.maxDiscountAmount !== null && newDiscount > coupon.maxDiscountAmount) {
+                                    newDiscount = coupon.maxDiscountAmount;
+                                }
+                            } else if (coupon.discountType === 'FIXED') {
+                                newDiscount = coupon.discountValue;
+                            }
+                        } else {
+                            // Coupon condition no longer satisfied, reset it
+                            newDiscount = 0;
+                            activeCoupon = '';
+                            document.getElementById('couponCode').value = '';
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'warning',
+                                title: `Coupon "${coupon.code}" removed (Subtotal fell below ₹${coupon.minOrderAmount})`,
+                                showConfirmButton: false,
+                                timer: 3000
+                            });
+                        }
                     } else {
-                        // Coupon condition no longer satisfied, reset it
-                        newDiscount = 0;
-                        activeCoupon = '';
-                        document.getElementById('couponCode').value = '';
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'warning',
-                            title: 'LUXURY200 coupon removed (Subtotal fell below ₹2000)',
-                            showConfirmButton: false,
-                            timer: 3000
-                        });
+                        // Fallback if applied from backend but not in list
+                        newDiscount = currentDiscount;
                     }
-                } else if (activeCoupon === 'FREESHIP') {
-                    newShipping = 0;
-                    newDiscount = 0;
                 } else {
                     newDiscount = 0;
                 }
@@ -1251,41 +1256,66 @@
                     return;
                 }
 
-                if (code !== 'VELOURA10' && code !== 'WELCOME50' && code !== 'LUXURY200' && code !== 'FREESHIP') {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'error',
-                        title: 'Invalid or expired coupon code',
-                        showConfirmButton: false,
-                        timer: 2000
-                    });
-                    return;
-                }
-
-                if (code === 'LUXURY200' && baseSubtotal < 2000) {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'error',
-                        title: 'Minimum purchase of ₹2000 required for LUXURY200',
-                        showConfirmButton: false,
-                        timer: 2500
-                    });
-                    return;
-                }
-
-                activeCoupon = code;
-                recalculateCheckoutTotals();
-
                 Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: 'success',
-                    title: `Coupon "${code}" applied!`,
-                    showConfirmButton: false,
-                    timer: 2000
+                    title: 'Applying coupon...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
                 });
+
+                fetch('/checkout/apply-coupon', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ couponCode: code })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        Swal.close();
+                        if (data.success) {
+                            activeCoupon = code;
+                            currentDiscount = data.discountAmount;
+
+                            // Add to client-side list if not present
+                            if (data.coupon && !availableCoupons.find(c => c.code === code)) {
+                                availableCoupons.push(data.coupon);
+                            }
+
+                            recalculateCheckoutTotals();
+
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: `Coupon "${code}" applied!`,
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                        } else {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: data.message || 'Invalid or expired coupon code',
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.close();
+                        console.error('Error applying coupon:', error);
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: 'Failed to apply coupon',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                    });
             }
 
             // Change quantity of cart items from checkout page
@@ -1420,8 +1450,9 @@
                 });
             }
 
-            // Place order submit function
-            function placeOrder() {
+            // Place order submit function with Razorpay integration
+            async function placeOrder() {
+                // Validate address selection
                 if (!selectedAddressId) {
                     Swal.fire({
                         icon: 'warning',
@@ -1433,39 +1464,53 @@
                 }
 
                 const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+                const finalAmount = parseFloat(document.getElementById('finalTotalVal').textContent.replace('₹', ''));
 
-                if (paymentMethod !== 'COD') {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Payment Method Info',
-                        text: 'Only Cash on Delivery (COD) is available at the moment. Please select Cash on Delivery to place your order.',
-                        confirmButtonColor: '#5c1e28'
-                    });
-                    return;
+                // Validate wallet balance if Wallet payment is selected
+                if (paymentMethod === 'Wallet') {
+                    const walletBalance = <%= user && user.walletBalance ? user.walletBalance : 0 %>;
+                    if (walletBalance < finalAmount) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Insufficient Wallet Balance',
+                            text: `Your wallet balance is ₹${walletBalance.toFixed(2)}. Required amount is ₹${finalAmount.toFixed(2)}`,
+                            confirmButtonColor: '#5c1e28'
+                        });
+                        return;
+                    }
                 }
 
-                Swal.fire({
+                // Show confirmation dialog
+                const paymentText = paymentMethod === 'COD' ? 'Cash on Delivery' : 
+                                   paymentMethod === 'Wallet' ? 'Wallet Payment' : 'Online Payment';
+                
+                const result = await Swal.fire({
                     title: 'Confirm Your Order',
-                    text: "Are you sure you want to place this order using Cash on Delivery?",
+                    text: `Are you sure you want to place this order using ${paymentText}?`,
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#5c1e28',
                     cancelButtonColor: '#aaa',
                     confirmButtonText: 'Yes, Confirm Order',
                     cancelButtonText: 'Cancel'
-                }).then((result) => {
-                    if (result.isConfirmed) {
+                });
+
+                if (!result.isConfirmed) return;
+
+                // Handle Online Payment with Razorpay
+                if (paymentMethod === 'Online') {
+                    try {
                         Swal.fire({
                             title: 'Processing...',
-                            text: 'Please wait while we secure your booking.',
+                            text: 'Initializing payment gateway',
                             allowOutsideClick: false,
                             didOpen: () => {
                                 Swal.showLoading();
                             }
                         });
 
-                        // Submit order to the backend
-                        fetch('/order/place', {
+                        // Create Razorpay order
+                        const orderResponse = await fetch('/checkout/create-order', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -1476,33 +1521,154 @@
                                 couponCode: activeCoupon,
                                 discount: currentDiscount
                             })
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                Swal.close();
-                                if (data.success) {
-                                    window.location.href = `/order/success?orderId=${data.orderId}`;
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Failed to Place Order',
-                                        text: data.message || 'Something went wrong.',
-                                        confirmButtonColor: '#5c1e28'
-                                    });
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error placing order:', error);
-                                Swal.close();
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'A network error occurred. Please try again.',
-                                    confirmButtonColor: '#5c1e28'
-                                });
+                        });
+
+                        const orderData = await orderResponse.json();
+
+                        if (!orderData.success) {
+                            Swal.close();
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Order Creation Failed',
+                                text: orderData.message || 'Could not create order',
+                                confirmButtonColor: '#5c1e28'
                             });
+                            return;
+                        }
+
+                        Swal.close();
+
+                        // Initialize Razorpay payment
+                        const options = {
+                            key: orderData.razorpayKeyId,
+                            amount: orderData.amount,
+                            currency: 'INR',
+                            name: 'Veloura',
+                            description: 'Luxury Beauty Products',
+                            order_id: orderData.razorpayOrderId,
+                            prefill: {
+                                name: '<%= user.name %>',
+                                email: '<%= user.email %>',
+                                contact: '<%= user.mobile || "" %>'
+                            },
+                            theme: {
+                                color: '#5c1e28'
+                            },
+                            handler: async function (response) {
+                                // Payment successful - verify payment
+                                Swal.fire({
+                                    title: 'Verifying Payment...',
+                                    text: 'Please wait',
+                                    allowOutsideClick: false,
+                                    didOpen: () => {
+                                        Swal.showLoading();
+                                    }
+                                });
+
+                                try {
+                                    const verifyResponse = await fetch('/checkout/verify-payment', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            razorpay_order_id: response.razorpay_order_id,
+                                            razorpay_payment_id: response.razorpay_payment_id,
+                                            razorpay_signature: response.razorpay_signature,
+                                            orderId: orderData.orderId
+                                        })
+                                    });
+
+                                    const verifyData = await verifyResponse.json();
+                                    Swal.close();
+
+                                    if (verifyData.success) {
+                                        window.location.href = `/order/payment-success?orderId=${orderData.orderId}`;
+                                    } else {
+                                        window.location.href = `/order/payment-failed?orderId=${orderData.orderId}`;
+                                    }
+                                } catch (error) {
+                                    console.error('Payment verification error:', error);
+                                    Swal.close();
+                                    window.location.href = `/order/payment-failed?orderId=${orderData.orderId}`;
+                                }
+                            },
+                            modal: {
+                                ondismiss: function() {
+                                    // User closed the payment modal
+                                    window.location.href = `/order/payment-failed?orderId=${orderData.orderId}`;
+                                }
+                            }
+                        };
+
+                        const rzp = new Razorpay(options);
+                        
+                        rzp.on('payment.failed', function (response) {
+                            window.location.href = `/order/payment-failed?orderId=${orderData.orderId}`;
+                        });
+
+                        rzp.open();
+
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.close();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Something went wrong. Please try again.',
+                            confirmButtonColor: '#5c1e28'
+                        });
                     }
-                });
+                } 
+                // Handle COD and Wallet payment
+                else {
+                    Swal.fire({
+                        title: 'Processing...',
+                        text: 'Please wait while we process your order.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    try {
+                        const response = await fetch('/checkout/place-order', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                addressId: selectedAddressId,
+                                paymentMethod: paymentMethod,
+                                couponCode: activeCoupon,
+                                discount: currentDiscount
+                            })
+                        });
+
+                        const data = await response.json();
+                        Swal.close();
+
+                        if (data.success) {
+                            window.location.href = `/order/payment-success?orderId=${data.orderId}`;
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Order Failed',
+                                text: data.message || 'Something went wrong.',
+                                confirmButtonColor: '#5c1e28'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error placing order:', error);
+                        Swal.close();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'A network error occurred. Please try again.',
+                            confirmButtonColor: '#5c1e28'
+                        });
+                    }
+                }
             }
 
             // Modal action functions

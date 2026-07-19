@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Report - Veloura Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF CDN for premium PDF download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f6f5f3;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px;
+            margin-left: 260px; /* Accounts for fixed sidebar */
+        }
+
+        /* Top Header */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .breadcrumb {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .breadcrumb span {
+            color: #5c1e28;
+            font-weight: 600;
+        }
+
+        /* Title Area */
+        .title-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #ebe7e5;
+            padding-bottom: 15px;
+        }
+
+        .title-left h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 44px;
+            color: #5c1e28;
+            font-weight: 400;
+            margin-bottom: 8px;
+        }
+
+        .title-left p {
+            font-size: 13px;
+            color: #7d706a;
+            letter-spacing: 0.5px;
+        }
+
+        .title-right {
+            font-size: 11px;
+            color: #888;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        /* Filter Controls */
+        .filter-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            margin-bottom: 30px;
+            border: 1px solid rgba(230, 225, 220, 0.5);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #7d706a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .filter-select, .date-input {
+            padding: 10px 16px;
+            border: 1px solid #e0dbd9;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            color: #2d2a29;
+            background-color: #fdfdfd;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-select:focus, .date-input:focus {
+            border-color: #5c1e28;
+            box-shadow: 0 0 0 3px rgba(92, 30, 40, 0.05);
+        }
+
+        .custom-dates {
+            display: none;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .custom-dates.active {
+            display: flex;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.2fr;
+            gap: 25px;
+            margin-top: 35px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #faf9f7;
+            border-radius: 8px;
+            padding: 25px 30px;
+            border: 1px solid #ebe7e5;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 120px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.01);
+        }
+
+        .stat-card.best-seller {
+            background-color: #5c1e28;
+            color: white;
+            border-color: #5c1e28;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #7d706a;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+        }
+
+        .best-seller .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .stat-value-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 34px;
+            color: #2d2a29;
+            font-weight: 500;
+        }
+
+        .best-seller .stat-value {
+            color: white;
+            font-size: 26px;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+
+        .best-seller .stat-subtext {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-growth {
+            font-size: 12px;
+            font-weight: 700;
+            color: #2e7d32; /* Green for growth */
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-unit {
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* Sales Table Container */
+        .table-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            border: 1px solid rgba(230, 225, 220, 0.5);
+            margin-bottom: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #faf9f7;
+            border-bottom: 1px solid #ebe7e5;
+        }
+
+        th {
+            padding: 18px 24px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            color: #7d706a;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        td {
+            padding: 18px 24px;
+            border-bottom: 1px solid #f6f4f2;
+            font-size: 13.5px;
+            color: #2d2a29;
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background-color: #fdfdfd;
+        }
+
+        /* Table styles from mock image */
+        .product-name-txt {
+            font-family: 'Playfair Display', serif;
+            font-size: 14.5px;
+            font-weight: 500;
+            color: #5c1e28;
+        }
+
+        .product-id-txt {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .price-txt, .total-txt {
+            font-weight: 500;
+        }
+
+        .total-txt {
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #999;
+            font-style: italic;
+        }
+
+        /* Download Actions */
+        .action-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .btn-download {
+            border-radius: 4px;
+            padding: 12px 24px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-pdf {
+            background-color: #4a131b;
+            color: white;
+            border: none;
+        }
+
+        .btn-pdf:hover {
+            background-color: #2d0b10;
+            transform: translateY(-1px);
+        }
+
+        .btn-excel {
+            background-color: white;
+            color: #4a131b;
+            border: 1px solid #4a131b;
+        }
+
+        .btn-excel:hover {
+            background-color: #faf7f7;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/admin/sidebar', { selectedTab: 'sales' }) %>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <div class="top-header">
+            <div class="breadcrumb">
+                ADMIN › <span>SALES REPORT</span>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-section">
+            <div class="filter-group">
+                <span class="filter-label">Report Period</span>
+                <select id="filterPeriod" class="filter-select" onchange="handlePeriodChange()">
+                    <option value="daily">Daily Report</option>
+                    <option value="weekly">Weekly Report</option>
+                    <option value="yearly">Yearly Report</option>
+                    <option value="custom">Custom Date Range</option>
+                </select>
+            </div>
+
+            <!-- Custom date range wrapper -->
+            <div id="customDatesWrapper" class="custom-dates">
+                <div class="filter-group">
+                    <span class="filter-label">Start Date</span>
+                    <input type="date" id="startDate" class="date-input" onchange="filterData()">
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">End Date</span>
+                    <input type="date" id="endDate" class="date-input" onchange="filterData()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Title Section -->
+        <div class="title-section">
+            <div class="title-left">
+                <h1>Sales Report</h1>
+                <p>Daily overview of luxury lipstick transactions and performance.</p>
+            </div>
+            <div class="title-right" id="report-date-txt">
+                DATE: 14 OCTOBER 2024
+            </div>
+        </div>
+
+        <!-- Sales Report Table -->
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Buyer</th>
+                        <th>Product Name</th>
+                        <th>Product ID</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>GST</th>
+                        <th>Category</th>
+                        <th>Unit/Type</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="report-table-body">
+                    <!-- Loaded dynamically via client JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Download Buttons -->
+        <div class="action-container">
+            <button class="btn-download btn-pdf" onclick="downloadPDF()">
+                Download PDF <i class="fas fa-download"></i>
+            </button>
+            <button class="btn-download btn-excel" onclick="downloadExcel()">
+                Get Excel sheet <i class="fas fa-download"></i>
+            </button>
+        </div>
+
+        <!-- Bottom Stats Cards -->
+        <div class="stats-grid">
+            <!-- Total Revenue -->
+            <div class="stat-card">
+                <span class="stat-label">Total Revenue</span>
+                <div class="stat-value-row">
+                    <span class="stat-value" id="revenue-val">₹0.00</span>
+                    <span class="stat-growth"><i class="fas fa-arrow-trend-up"></i> +12%</span>
+                </div>
+            </div>
+
+            <!-- Items Sold -->
+            <div class="stat-card">
+                <span class="stat-label">Items Sold</span>
+                <div class="stat-value-row">
+                    <span class="stat-value" id="sold-val">0</span>
+                    <span class="stat-unit">Units</span>
+                </div>
+            </div>
+
+            <!-- Best Seller -->
+            <div class="stat-card best-seller">
+                <span class="stat-label">Best Seller</span>
+                <div>
+                    <span class="stat-value" id="best-seller-name">Velvet Matte Lipstick</span>
+                    <p class="stat-subtext" id="best-seller-shade">SHADE: BORDEAUX LUXE</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Load MongoDB orders rendered via EJS (if any exist)
+        const dbOrders = <%- JSON.stringify(orders || []) %>;
+
+        // Fallback Premium Mock Orders (matching the screenshot exactly)
+        const mockOrders = [
+            {
+                buyer: "David Chen",
+                productName: "Velvet Matte Lipstick",
+                productId: "#VL-8821",
+                qty: 1,
+                price: 45.00,
+                gst: "18%",
+                category: "Lips",
+                unit: "NOS",
+                total: 53.10,
+                date: new Date("2024-10-14T10:00:00Z")
+            },
+            {
+                buyer: "Sophia Lauren",
+                productName: "Liquid Silk Lip Stain",
+                productId: "#VL-3312",
+                qty: 2,
+                price: 38.00,
+                gst: "18%",
+                category: "Lips",
+                unit: "NOS",
+                total: 89.68,
+                date: new Date("2024-10-14T11:30:00Z")
+            },
+            {
+                buyer: "Marcus Thorne",
+                productName: "Glossy Rouge",
+                productId: "#VL-0941",
+                qty: 1,
+                price: 42.00,
+                gst: "18%",
+                category: "Lips",
+                unit: "NOS",
+                total: 49.56,
+                date: new Date("2024-10-14T14:15:00Z")
+            },
+            {
+                buyer: "Elena Rossi",
+                productName: "Satin Finish Balm",
+                productId: "#VL-7723",
+                qty: 1,
+                price: 35.00,
+                gst: "18%",
+                category: "Lips",
+                unit: "NOS",
+                total: 41.30,
+                date: new Date("2024-10-14T16:45:00Z")
+            }
+        ];
+
+        // Process Database Orders into report structure or use mock data
+        let ordersList = [];
+
+        if (dbOrders && dbOrders.length > 0) {
+            dbOrders.forEach(o => {
+                const buyerName = o.deliveryAddress ? o.deliveryAddress.fullName : (o.user ? (o.user.name || o.user.email) : "Guest");
+                const orderDate = new Date(o.createdAt);
+                
+                o.items.forEach(item => {
+                    const prodName = item.product ? item.product.productName : "Luxury Cosmetic";
+                    const priceVal = item.price || 0;
+                    const qtyVal = item.quantity || 1;
+                    
+                    // Simple total calculation including 18% GST by default
+                    const sub = priceVal * qtyVal;
+                    const gstAmount = sub * 0.18;
+                    const totalVal = sub + gstAmount - (o.discount / o.items.length || 0);
+
+                    ordersList.push({
+                        buyer: buyerName,
+                        productName: prodName,
+                        productId: `#VL-${String(item.product ? item.product._id : '').slice(-4).toUpperCase()}`,
+                        qty: qtyVal,
+                        price: priceVal,
+                        gst: "18%",
+                        category: item.product && item.product.categoryId ? (item.product.categoryId.name || "Cosmetic") : "Lips",
+                        unit: "NOS",
+                        total: parseFloat(totalVal.toFixed(2)),
+                        date: orderDate
+                    });
+                });
+            });
+        } else {
+            ordersList = mockOrders;
+        }
+
+        // Initialize display date in header
+        function setHeaderDate() {
+            const today = new Date();
+            const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+            document.getElementById('report-date-txt').innerText = `DATE: ${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()}`;
+        }
+
+        // Period filter change handler
+        function handlePeriodChange() {
+            const period = document.getElementById("filterPeriod").value;
+            const datesWrapper = document.getElementById("customDatesWrapper");
+            
+            if (period === 'custom') {
+                datesWrapper.classList.add('active');
+            } else {
+                datesWrapper.classList.remove('active');
+                filterData();
+            }
+        }
+
+        // Main filter function
+        function filterData() {
+            const period = document.getElementById("filterPeriod").value;
+            const now = new Date();
+            let filtered = [];
+
+            if (period === 'daily') {
+                // Today's entries
+                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                filtered = ordersList.filter(item => new Date(item.date) >= todayStart);
+            } else if (period === 'weekly') {
+                // Last 7 days
+                const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                filtered = ordersList.filter(item => new Date(item.date) >= oneWeekAgo);
+            } else if (period === 'yearly') {
+                // Last 365 days
+                const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+                filtered = ordersList.filter(item => new Date(item.date) >= oneYearAgo);
+            } else if (period === 'custom') {
+                // Date range picker
+                const startVal = document.getElementById("startDate").value;
+                const endVal = document.getElementById("endDate").value;
+                if (!startVal || !endVal) return; // Wait until both are filled
+                
+                const start = new Date(startVal);
+                const end = new Date(endVal);
+                end.setHours(23, 59, 59, 999); // Include full end date
+
+                filtered = ordersList.filter(item => {
+                    const d = new Date(item.date);
+                    return d >= start && d <= end;
+                });
+            }
+
+            renderReportTable(filtered);
+            recalculateCards(filtered);
+        }
+
+        // Render rows in HTML Table
+        function renderReportTable(data) {
+            const tbody = document.getElementById("report-table-body");
+            tbody.innerHTML = "";
+
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <p>No sales records found for this period.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            data.forEach(row => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${row.buyer}</td>
+                    <td><span class="product-name-txt">${row.productName}</span></td>
+                    <td><span class="product-id-txt">${row.productId}</span></td>
+                    <td>${String(row.qty).padStart(2, '0')}</td>
+                    <td class="price-txt">₹${row.price.toFixed(2)}</td>
+                    <td>${row.gst}</td>
+                    <td>${row.category}</td>
+                    <td>${row.unit}</td>
+                    <td class="total-txt">₹${row.total.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Recalculate summary stats cards
+        function recalculateCards(data) {
+            let totalRevenue = 0;
+            let totalQty = 0;
+            let productSales = {};
+
+            data.forEach(row => {
+                totalRevenue += row.total;
+                totalQty += row.qty;
+                
+                productSales[row.productName] = (productSales[row.productName] || 0) + row.qty;
+            });
+
+            // Update DOM Values
+            document.getElementById("revenue-val").innerText = `₹${totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById("sold-val").innerText = String(totalQty).padStart(2, '0');
+
+            // Find Best Seller
+            let bestProduct = "N/A";
+            let maxSales = 0;
+
+            for (const prod in productSales) {
+                if (productSales[prod] > maxSales) {
+                    maxSales = productSales[prod];
+                    bestProduct = prod;
+                }
+            }
+
+            document.getElementById("best-seller-name").innerText = bestProduct;
+            
+            // Customize best seller subtitle shade
+            if (bestProduct === "Velvet Matte Lipstick") {
+                document.getElementById("best-seller-shade").innerText = "SHADE: BORDEAUX LUXE";
+            } else if (bestProduct !== "N/A") {
+                document.getElementById("best-seller-shade").innerText = "MOST POPULAR SHADE";
+            } else {
+                document.getElementById("best-seller-shade").innerText = "NO DATA";
+            }
+        }
+
+        // Download Excel (CSV export)
+        function downloadExcel() {
+            let csv = [];
+            let rows = document.querySelectorAll("table tr");
+            
+            for (let i = 0; i < rows.length; i++) {
+                let row = [];
+                let cols = rows[i].querySelectorAll("td, th");
+                
+                for (let j = 0; j < cols.length; j++) {
+                    // Clean text and avoid double quotes issues
+                    let txt = cols[j].innerText.trim().replace(/"/g, '""');
+                    row.push('"' + txt + '"');
+                }
+                csv.push(row.join(","));
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF" + csv.join("\n");
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Veloura_Sales_Report.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Download PDF via jsPDF & AutoTable
+        async function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape layout is cleaner for wide reports
+
+            // Logo & Header
+            doc.setFont("Playfair Display", "bold");
+            doc.setFontSize(26);
+            doc.setTextColor(92, 30, 40); // Maroon #5c1e28
+            doc.text("VELOURA", 14, 20);
+
+            // Subtitle
+            doc.setFont("Inter", "normal");
+            doc.setFontSize(12);
+            doc.setTextColor(100);
+            doc.text("Sales Report Overview & Transactions", 14, 27);
+
+            // Report Meta Info
+            doc.setFontSize(9);
+            const period = document.getElementById("filterPeriod").value.toUpperCase();
+            doc.text(`REPORT TYPE: ${period}`, 14, 34);
+            doc.text(`DATE GENERATED: ${new Date().toLocaleDateString('en-GB')}`, 14, 39);
+
+            // Stats summaries
+            const totalRev = document.getElementById("revenue-val").innerText;
+            const itemsSold = document.getElementById("sold-val").innerText;
+            const bestSeller = document.getElementById("best-seller-name").innerText;
+            
+            doc.setFont("Inter", "bold");
+            doc.text(`Total Revenue: ${totalRev}   |   Units Sold: ${itemsSold}   |   Best Seller: ${bestSeller}`, 14, 46);
+
+            // AutoTable generation
+            doc.autoTable({
+                html: 'table',
+                startY: 52,
+                theme: 'striped',
+                headStyles: { 
+                    fillColor: [92, 30, 40],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold' 
+                },
+                styles: { 
+                    fontSize: 9,
+                    font: 'Inter'
+                },
+                columnStyles: {
+                    1: { fontStyle: 'bold' }, // bold product names
+                    8: { fontStyle: 'bold' } // bold totals
+                }
+            });
+
+            doc.save("Veloura_Sales_Report.pdf");
+        }
+
+        // Bootstrapping
+        document.addEventListener("DOMContentLoaded", () => {
+            setHeaderDate();
+            // Default to Daily report loading
+            filterData();
+        });
+    </script>
+</body>
+</html>

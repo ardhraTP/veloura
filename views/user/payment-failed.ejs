@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failed - Veloura</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .failed-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 50px;
+            text-align: center;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .failed-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            animation: scaleIn 0.5s ease 0.2s both;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .failed-icon svg {
+            width: 50px;
+            height: 50px;
+            stroke: white;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .error-box {
+            background: #fff5f5;
+            border: 1px solid #feb2b2;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 30px 0;
+            color: #c53030;
+        }
+
+        .order-id {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #5c1e28;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4a1820;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(92, 30, 40, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #5c1e28;
+            border: 2px solid #5c1e28;
+        }
+
+        .btn-secondary:hover {
+            background: #5c1e28;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .help-text {
+            color: #718096;
+            font-size: 14px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 600px) {
+            .failed-container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="failed-container">
+        <div class="failed-icon">
+            <svg viewBox="0 0 52 52">
+                <line x1="16" y1="16" x2="36" y2="36"/>
+                <line x1="36" y1="16" x2="16" y2="36"/>
+            </svg>
+        </div>
+
+        <h1>Payment Failed</h1>
+        <p class="subtitle">We couldn't process your payment. Please try again.</p>
+
+        <div class="error-box">
+            <p><strong>Payment was unsuccessful</strong></p>
+            <p style="font-size: 14px; margin-top: 8px;">
+                Your order has been created but the payment could not be completed.
+            </p>
+        </div>
+
+        <% if (orderId) { %>
+        <div class="order-id">
+            Order ID: <%= orderId %>
+        </div>
+
+        <div class="buttons">
+            <button class="btn btn-primary" onclick="retryPayment()">Retry Payment</button>
+            <a href="/products" class="btn btn-secondary">Continue Shopping</a>
+        </div>
+        <% } else { %>
+        <div class="buttons">
+            <a href="/checkout" class="btn btn-primary">Back to Checkout</a>
+            <a href="/products" class="btn btn-secondary">Continue Shopping</a>
+        </div>
+        <% } %>
+
+        <p class="help-text">
+            Need help? Contact our support team at support@veloura.com
+        </p>
+    </div>
+
+    <% if (orderId) { %>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        async function retryPayment() {
+            try {
+                const response = await fetch('/order/retry-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ orderId: '<%= orderId %>' })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const options = {
+                        key: data.keyId,
+                        amount: data.amount * 100,
+                        currency: 'INR',
+                        name: 'Veloura',
+                        description: 'Order Payment',
+                        order_id: data.razorpayOrderId,
+                        handler: async function(response) {
+                            const verifyResponse = await fetch('/checkout/verify-payment', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    orderId: data.orderId
+                                })
+                            });
+
+                            const verifyData = await verifyResponse.json();
+                            if (verifyData.success) {
+                                window.location.href = `/payment-success?orderId=${data.orderId}`;
+                            } else {
+                                alert('Payment verification failed');
+                            }
+                        },
+                        modal: {
+                            ondismiss: function() {
+                                console.log('Payment cancelled');
+                            }
+                        }
+                    };
+
+                    const razorpay = new Razorpay(options);
+                    razorpay.open();
+                } else {
+                    alert(data.message || 'Failed to retry payment');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+    </script>
+    <% } %>
+</body>
+</html>

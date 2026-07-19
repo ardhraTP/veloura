@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failed | Veloura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <script src="/js/prevent-back.js"></script>
+    <style>
+        body {
+            background-color: #FAF6F0;
+            color: #2C2C2C;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .failure-main {
+            flex: 1;
+            padding-top: 140px;
+            padding-bottom: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .failure-container {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 20px;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Failure Badge */
+        .failure-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #D9383A; /* Premium red background */
+            border: none;
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(217, 56, 58, 0.15);
+            margin-bottom: 25px;
+        }
+
+        .failure-badge i {
+            color: #FFFFFF;
+            font-size: 28px;
+        }
+
+        /* Typography */
+        .failure-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 52px;
+            font-weight: 500;
+            color: #5C1E28;
+            margin: 0 0 15px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .failure-subtitle {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #666666;
+            max-width: 550px;
+            margin: 0 auto 45px auto;
+        }
+
+        /* Order Info Split Card */
+        .failure-card {
+            background: #FFFFFF;
+            border: 1px solid #E6DED4;
+            border-radius: 12px;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.02);
+        }
+
+        @media (max-width: 768px) {
+            .failure-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card-image-col {
+            position: relative;
+            min-height: 450px;
+            overflow: hidden;
+            background-color: #FAF8F5;
+        }
+
+        .failure-product-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .card-image-col {
+                min-height: 250px;
+            }
+        }
+
+        .card-details-col {
+            background-color: #FAF8F5;
+            padding: 45px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: left;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 576px) {
+            .card-details-col {
+                padding: 30px 25px;
+            }
+        }
+
+        .summary-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #999999;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .product-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 500;
+            color: #2C2C2C;
+            margin: 0 0 15px 0;
+            line-height: 1.2;
+        }
+
+        .product-description {
+            font-size: 12px;
+            line-height: 1.7;
+            color: #777777;
+            margin: 0 0 25px 0;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: #E6DED4;
+            margin-bottom: 25px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .total-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #2C2C2C;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .total-price {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 500;
+            color: #5C1E28;
+        }
+
+        /* Action Buttons */
+        .btn-action {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 4px;
+            box-sizing: border-box;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-action.burgundy {
+            background-color: #5C1E28;
+            color: #FFFFFF;
+            border: 1px solid #5C1E28;
+            margin-bottom: 12px;
+        }
+
+        .btn-action.burgundy:hover {
+            background-color: #3b1118;
+            border-color: #3b1118;
+            box-shadow: 0 4px 12px rgba(92, 30, 40, 0.15);
+        }
+
+        .btn-action.outline {
+            background-color: transparent;
+            color: #5C1E28;
+            border: 1px solid #5C1E28;
+            margin-bottom: 12px;
+        }
+
+        .btn-action.outline:hover {
+            background-color: #5C1E28;
+            color: #FFFFFF;
+        }
+
+        .link-home {
+            display: block;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #777777;
+            text-decoration: underline;
+            letter-spacing: 0.5px;
+            transition: color 0.2s;
+            margin-top: 8px;
+        }
+
+        .link-home:hover {
+            color: #5C1E28;
+        }
+
+        /* Features/Trust Badges */
+        .features-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            margin: 60px auto 0 auto;
+            border-top: 1px solid #FAF6F0;
+            padding-top: 30px;
+        }
+
+        @media (max-width: 576px) {
+            .features-row {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+        }
+
+        .feature-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+        }
+
+        .feature-icon {
+            font-size: 20px;
+            color: #5C1E28;
+            margin-bottom: 4px;
+        }
+
+        .feature-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #2C2C2C;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .feature-desc {
+            font-size: 11px;
+            color: #888888;
+            line-height: 1.4;
+        }
+
+        footer {
+            margin-top: auto;
+            border-top: 1px solid #E6DED4;
+            background-color: #FAF8F5;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <% 
+        // Resolve dynamic image, name, and description from the order details if available
+        let productImg = '/images/luxury_perfume.png';
+        let productTitle = 'Veloura Signature Collection';
+        let productDesc = 'A premium formulation of botanical extracts designed to hydrate and elevate your natural beauty.';
+        let totalVal = 0.00;
+
+        if (order && order.items && order.items.length > 0) {
+            const firstItem = order.items[0];
+            if (firstItem.variant && firstItem.variant.images && firstItem.variant.images.length > 0) {
+                productImg = firstItem.variant.images[0];
+            } else if (firstItem.product && firstItem.product.images && firstItem.product.images.length > 0) {
+                productImg = firstItem.product.images[0];
+            }
+            
+            if (firstItem.product && firstItem.product.productName) {
+                productTitle = firstItem.product.productName;
+                if (order.items.length > 1) {
+                    productTitle += ` & ${order.items.length - 1} other item${order.items.length > 2 ? 's' : ''}`;
+                }
+            }
+            
+            if (firstItem.product && firstItem.product.description) {
+                productDesc = firstItem.product.description;
+            }
+            
+            totalVal = order.totalAmount;
+        }
+    %>
+
+    <main class="failure-main">
+        <div class="failure-container">
+            <!-- Centered badge icon -->
+            <div class="failure-badge">
+                <i class="fas fa-xmark"></i>
+            </div>
+
+            <!-- Header -->
+            <h1 class="failure-title">Payment Failed</h1>
+            <p class="failure-subtitle">
+                Your transaction could not be completed at this time. If any funds were deducted, they will be automatically refunded to your account within 3–5 working days.
+            </p>
+
+            <!-- Failure Card -->
+            <div class="failure-card">
+                <!-- Left Side: Product Image -->
+                <div class="card-image-col">
+                    <img src="<%= productImg %>" alt="<%= productTitle %>" class="failure-product-img">
+                </div>
+
+                <!-- Right Side: Order Summary Details -->
+                <div class="card-details-col">
+                    <span class="summary-label">Order Summary</span>
+                    <h2 class="product-title"><%= productTitle %></h2>
+                    <p class="product-description"><%= productDesc %></p>
+
+                    <div class="divider"></div>
+
+                    <!-- Price Row -->
+                    <div class="price-row">
+                        <span class="total-label">Total Amount</span>
+                        <span class="total-price">₹<%= totalVal.toFixed(2) %></span>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <a href="/checkout" class="btn-action burgundy">Retry Payment</a>
+                    <a href="/cart" class="btn-action outline">View Shopping Cart</a>
+                    <a href="/profile/orders" class="btn-action outline">Go to My Orders</a>
+                    <a href="/" class="link-home">Return to Home</a>
+                </div>
+            </div>
+
+            <!-- Features Trustrow -->
+            <div class="features-row">
+                <div class="feature-item">
+                    <i class="fas fa-headphones feature-icon"></i>
+                    <span class="feature-title">Client Services</span>
+                    <span class="feature-desc">Available 24/7 for support and inquiries</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-shield-alt feature-icon"></i>
+                    <span class="feature-title">Secure Checkouts</span>
+                    <span class="feature-desc">Every checkout is fully encrypted</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-rotate-left feature-icon"></i>
+                    <span class="feature-title">Auto Refund</span>
+                    <span class="feature-desc">Guaranteed instant release of failed holds</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

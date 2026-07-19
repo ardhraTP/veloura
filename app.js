@@ -1,15 +1,18 @@
+import 'dotenv/config';  
+
+
 import express from 'express';
 import session from 'express-session';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 import passport from 'passport';
 import connectDB from './config/database.js';
 import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
 
-dotenv.config();
+// dotenv.config();
 
 
 import './config/passport.js';

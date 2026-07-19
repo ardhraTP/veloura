@@ -24,9 +24,19 @@ const categorySchema = new mongoose.Schema({
     isDeleted: {
         type: Boolean,
         default: false
+    },
+    categoryDiscount: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100
+    },
+    categoryOfferExpiry: {
+        type: Date,
+        default: null
     }
 }, {
-    timestamps: true
+    timestamps: true 
 });
 
 const category = mongoose.model('Category',categorySchema);

@@ -22,17 +22,17 @@ const cleanupUploadedFiles = (files) => {
 // Show admin products list page with variants
 export const getAdminProductsPage = async (req, res) => {
     try {
-       
+
         res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         res.set('Pragma', 'no-cache');
         res.set('Expires', '0');
 
         const search = req.query.search || '';
-       const page = parseInt(req.query.page) || 1;
-        const limit = 5; 
+        const page = parseInt(req.query.page) || 1;
+        const limit = 5;
         const skip = (page - 1) * limit;
 
-       
+
         const searchFilter = {
             isDeleted: false
         };
@@ -43,7 +43,7 @@ export const getAdminProductsPage = async (req, res) => {
             ];
         }
 
-   
+
         const totalProducts = await Product.countDocuments(searchFilter);
         const totalPages = Math.ceil(totalProducts / limit);
 
@@ -55,9 +55,9 @@ export const getAdminProductsPage = async (req, res) => {
 
         const productsWithVariants = await Promise.all(
             products.map(async (product) => {
-                const variants = await Variant.find({ 
-                    productId: product._id, 
-                    isDeleted: false 
+                const variants = await Variant.find({
+                    productId: product._id,
+                    isDeleted: false
                 });
                 return {
                     ...product.toObject(),
@@ -81,9 +81,9 @@ export const getAdminProductsPage = async (req, res) => {
 
 export const getAddProductPage = async (req, res) => {
     try {
-     
+
         const categories = await Category.find({ isDeleted: false, isListed: true }).sort({ name: 1 });
-        
+
         res.render('admin/add-product', {
             categories: categories,
             errorMessage: req.query.error || null
@@ -98,7 +98,7 @@ export const addProduct = async (req, res) => {
     try {
         const { productName, brand, description, categoryId, status } = req.body;
 
-       
+
         if (!productName || !brand || !description || !categoryId) {
             cleanupUploadedFiles(req.files);
             return res.redirect('/admin/products/add?error=All required fields must be filled');
@@ -139,7 +139,7 @@ export const addProduct = async (req, res) => {
         await newProduct.save();
 
         const files = req.files || [];
-        
+
         // Group files by variant index
         const filesByVariant = {};
         files.forEach(file => {
@@ -156,7 +156,7 @@ export const addProduct = async (req, res) => {
         for (let i = 0; i < variantsData.length; i++) {
             const originalIndex = variantsData[i].index;
             const variantFiles = filesByVariant[originalIndex] || [];
-            
+
             if (variantFiles.length < 3) {
                 cleanupUploadedFiles(req.files);
                 await Product.findByIdAndDelete(newProduct._id);
@@ -281,10 +281,10 @@ export const updateProduct = async (req, res) => {
             const v = variantsRaw[key];
             if (v && v._id) {
                 const updateFields = {};
-                if (v.color !== undefined)        updateFields.color        = v.color.trim();
-                if (v.quantity !== undefined)     updateFields.quantity     = parseInt(v.quantity) || 0;
+                if (v.color !== undefined) updateFields.color = v.color.trim();
+                if (v.quantity !== undefined) updateFields.quantity = parseInt(v.quantity) || 0;
                 if (v.regularPrice !== undefined) updateFields.regularPrice = parseFloat(v.regularPrice) || 0;
-                if (v.salePrice !== undefined)    updateFields.salePrice    = parseFloat(v.salePrice) || 0;
+                if (v.salePrice !== undefined) updateFields.salePrice = parseFloat(v.salePrice) || 0;
                 if (v.hexCode !== undefined) {
                     let normalizedHex = v.hexCode.trim().toUpperCase();
                     if (normalizedHex && !normalizedHex.startsWith('#')) normalizedHex = '#' + normalizedHex;
@@ -478,7 +478,7 @@ export const addVariant = async (req, res) => {
 export const addImageToVariant = async (req, res) => {
     try {
         const variantId = req.params.id;
-        
+
         const variant = await Variant.findOne({ _id: variantId, isDeleted: false });
         if (!variant) {
             cleanupUploadedFiles(req.files);
@@ -577,7 +577,7 @@ export const updateVariantDetails = async (req, res) => {
         if (quantity !== undefined) variant.quantity = parseInt(quantity) || 0;
         if (regularPrice !== undefined) variant.regularPrice = parseFloat(regularPrice) || 0;
         if (salePrice !== undefined) variant.salePrice = parseFloat(salePrice) || 0;
-        
+
         if (hexCode !== undefined) {
             let normalizedHex = hexCode.trim().toUpperCase();
             if (normalizedHex && !normalizedHex.startsWith('#')) normalizedHex = '#' + normalizedHex;

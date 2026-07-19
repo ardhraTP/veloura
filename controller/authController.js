@@ -15,13 +15,16 @@ import {
 export const getSignup = (req, res) => {
     const error = req.session.signupError || null;
     delete req.session.signupError;
-    res.render('user/register', { error });
+
+
+    const referralCode = req.query.ref || '';
+    res.render('user/register', { error,referralCode });
 };
 
 
 export const signup = async (req, res) => {
     try {
-        const { name, email, phone, password, confirmPassword } = req.body;
+        const { name, email, phone, password, confirmPassword, referralCode } = req.body;
 
 
         if (password !== confirmPassword) {
@@ -40,6 +43,21 @@ export const signup = async (req, res) => {
         if (emailExists) {
             req.session.signupError = 'Email already registered';
             return res.redirect('/register');
+        }
+
+        if(referralCode && referralCode.trim() !== ''){
+            const referrer = await User.findOne({
+                referralCode: referralCode.trim()
+            });
+
+            if(!referrer){
+                req.session.signupError = 'Invalid referral code';
+                return res.redirect('/register'); 
+            }
+
+            req.session.referredById = referrer._id;
+        }else{
+            req.session.referredById = null;
         }
 
         const hashedPassword = await hashPassword(password);
@@ -207,6 +225,39 @@ export const verifyOTP = async (req, res) => {
 
         user.isVerified = true;
         clear(user);
+
+
+        const referredId = req.session.referredById;
+        if(referredId){
+            const referrer = await User.findById(referredId);
+            if(referrer){
+                referrer.walletBalance = (referrer.walletBalance || 0) + 100;
+
+                referrer.referralEarnings = (referrer.referralEarnings || 0) + 100;
+
+                referrer.referredCount = (referrer.referredCount || 0) + 1;
+
+                referrer.walletHistory.push({
+                    amount: 100,
+                    type: 'Credited',
+                    description: `Referral bonus for inviting ${user.name}`,
+                    date: new Date()
+                });
+
+                await referrer.save();
+
+                user.walletBalance = (user.walletBalance || 0) + 50;
+
+                user.walletHistory.push({
+                    amount: 50,
+                    type: 'Credited',
+                    description: `Welcome bonus for signing up using referral code from ${referrer.name}`,
+                    date: new Date()
+                });
+            }
+        }
+
+        
         await user.save();
 
         delete req.session.tempUserId;

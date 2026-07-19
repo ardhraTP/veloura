@@ -1,5 +1,6 @@
 import * as productService from '../../services/productService.js';
 import { getUserWishlist } from '../../services/wishlistService.js';
+import { calculateOfferPrice } from '../../utils/priceHelper.js';
 
 
 
@@ -67,6 +68,16 @@ export const getProductDetail = async (req,res)=>{
 
         if (!product) {
             return res.redirect('/products');
+        }
+
+        // Apply offer calculation on each variant
+        if (product.variants && product.variants.length > 0) {
+            product.variants = product.variants.map(variant => {
+                const { finalPrice, discountPercentage } = calculateOfferPrice(product, variant.regularPrice);
+                variant.salePrice = finalPrice;
+                variant.activeOfferDiscount = discountPercentage;
+                return variant;
+            });
         }
 
         //check if the soecific product is in the user's wishlist

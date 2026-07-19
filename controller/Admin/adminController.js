@@ -7,6 +7,7 @@ import {
     toggleUserBlockStatus,
     findUserById
 } from '../../services/adminService.js';
+import Order from '../../model/Order.js';
 
 
 export const getLogin = (req, res) => {
@@ -14,7 +15,7 @@ export const getLogin = (req, res) => {
         error: req.session.adminLoginError || null
     });
 
-    req.session.adminLoginError = null;     
+    req.session.adminLoginError = null;
 };
 
 
@@ -50,21 +51,158 @@ export const getDashboard = (req, res) => {
 };
 
 
+export const getDashboardData = async (req, res) => {
+    try {
+        const { period } = req.query;
+        const now = new Date();
+        let startDate;
+        let groupFormat;
+
+        if (period === 'weekly') {
+            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            groupFormat = "%Y-%m-%d";
+        } else if (period === 'monthly') {
+            startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            groupFormat = "%Y-%m-%d";
+        } else {
+            startDate = new Date(now.getFullYear(), 0, 1);
+            groupFormat = "%Y-%m";
+        }
+
+        // 1. Chart Sales Data
+        const chartData = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startDate },
+                    orderStatus: { $nin: ['Cancelled', 'Returned'] }
+                }
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: groupFormat, date: "$createdAt" } },
+                    totalSales: { $sum: "$totalAmount" }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        // 2. Top 10 Best Selling Products
+        const topProducts = await Order.aggregate([
+            { $match: { orderStatus: { $nin: ['Cancelled', 'Returned'] } } },
+            { $unwind: "$items" },
+            {
+                $group: {
+                    _id: "$items.product",
+                    totalQty: { $sum: "$items.quantity" },
+                    revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+                }
+            },
+            { $sort: { totalQty: -1 } },
+            { $limit: 10 },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "productDetails"
+                }
+            },
+            { $unwind: "$productDetails" }
+        ]);
+
+        // 3. Top 10 Best Selling Categories
+        const topCategories = await Order.aggregate([
+            { $match: { orderStatus: { $nin: ['Cancelled', 'Returned'] } } },
+            { $unwind: "$items" },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "items.product",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            { $unwind: "$product" },
+            {
+                $group: {
+                    _id: "$product.categoryId",
+                    totalQty: { $sum: "$items.quantity" }
+                }
+            },
+            { $sort: { totalQty: -1 } },
+            { $limit: 10 },
+            {
+                $lookup: {
+                    from: "categories",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "categoryDetails"
+                }
+            },
+            { $unwind: "$categoryDetails" }
+        ]);
+
+        // 4. Top 10 Best Selling Brands
+        const topBrands = await Order.aggregate([
+            { $match: { orderStatus: { $nin: ['Cancelled', 'Returned'] } } },
+            { $unwind: "$items" },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "items.product",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            { $unwind: "$product" },
+            {
+                $group: {
+                    _id: "$product.brand",
+                    totalQty: { $sum: "$items.quantity" }
+                }
+            },
+            { $sort: { totalQty: -1 } },
+            { $limit: 10 }
+        ]);
+
+        return res.json({
+            success: true,
+            chartLabels: chartData.map(item => item._id),
+            chartValues: chartData.map(item => item.totalSales),
+            topProducts: topProducts.map(item => ({
+                name: item.productDetails.productName,
+                qty: item.totalQty,
+                revenue: item.revenue
+            })),
+            topCategories: topCategories.map(item => ({
+                name: item.categoryDetails.name,
+                qty: item.totalQty
+            })),
+            topBrands: topBrands.map(item => ({
+                name: item._id,
+                qty: item.totalQty
+            }))
+        });
+    } catch (error) {
+        console.error('Error fetching dashboard statistics:', error);
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
 
 
 export const getUsers = async (req, res) => {
     try {
         let page = parseInt(req.query.page) || 1;
         let limit = 5;
-        
-     
+
+
         const query = buildUserQuery(req.query.search, req.query.status);
 
-       
-        const { users, totalPages } = await getUsersWithPagination(query, page, limit); 
+
+        const { users, totalPages } = await getUsersWithPagination(query, page, limit);
 
         res.render('admin/users', {
-            users,  
+            users,
             currentPage: page,
             totalPages,
             searchQuery: req.query.search || '',
@@ -98,8 +236,6 @@ export const toggleBlockUser = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
-
-
 
 
 export const logout = (req, res) => {

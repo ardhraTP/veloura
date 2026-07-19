@@ -2,8 +2,8 @@ import express from 'express';
 import { isAuthenticated, isGuest } from '../middleware/userAuth.js';
 import { upload } from '../middleware/upload.js';
 import passport from 'passport';
-import { getCheckoutPage, placeOrder } from '../controller/user/checkoutController.js';
-import { getUserOrders, getOrderDetails, cancelOrderProduct, returnOrderProduct, downloadInvoice } from '../controller/user/orderContoller.js';
+import { getCheckoutPage,applyCoupon,removeCoupon,createOrder,placeOrder,verifyPayment,paymentFailed } from '../controller/user/checkoutController.js';
+import { getUserOrders, getOrderDetails, cancelOrderProduct, returnOrderProduct, downloadInvoice,getPaymentSuccess,getPaymentFailed,retryPayment } from '../controller/user/orderContoller.js';
 import Order from '../model/Order.js';
 
 
@@ -37,7 +37,9 @@ import {
     getEmailOTPVerify,
     verifyEmailChange,
     resendEmailOTP,
-    getChangePasswordPage
+    getChangePasswordPage,
+    getWalletPage,
+    addMoneyToWallet
 } from '../controller/user/profileController.js';
 
 import {
@@ -117,6 +119,27 @@ router.get('/order/success', isAuthenticated, async (req, res) => {
     }
 });
 
+router.get('/order/failed', isAuthenticated, async (req, res) => {
+    try {
+        const orderId = req.query.orderId;
+        const order = await Order.findOne({ orderId: orderId })
+            .populate('items.product')
+            .populate('items.variant');
+        res.render('user/order-failure', {
+            order: order,
+            orderId: orderId || '_HY252711',
+            isLoggedIn: true
+        });
+    } catch (error) {
+        console.error('Error fetching order for failure page:', error);
+        res.render('user/order-failure', {
+            order: null,
+            orderId: req.query.orderId || '_HY252711',
+            isLoggedIn: true
+        });
+    }
+});
+
 router.get('/profile/orders', isAuthenticated, getUserOrders);
 
 
@@ -127,6 +150,27 @@ router.post('/profile/orders/:id/cancel', isAuthenticated, cancelOrderProduct);
 router.post('/profile/orders/:id/return', isAuthenticated, returnOrderProduct);
 
 router.get('/profile/orders/:id/invoice', isAuthenticated, downloadInvoice);
+
+//checkout routes
+
+router.get('/checkout',isAuthenticated,getCheckoutPage);
+router.post('/checkout/create-order',isAuthenticated,createOrder);
+router.post('/checkout/apply-coupon',isAuthenticated,applyCoupon);
+router.post('/checkout/remove-coupon',isAuthenticated,removeCoupon);
+router.post('/checkout/place-order',isAuthenticated,placeOrder);
+router.post('/checkout/verify-payment',isAuthenticated,verifyPayment);
+router.post('/checkout/payment-failure',isAuthenticated,paymentFailed);
+
+
+//payment status pages
+router.get('/payment-success',isAuthenticated,getPaymentSuccess);
+router.get('/payment-failure',isAuthenticated,getPaymentFailed);
+router.get('/payment-failed',isAuthenticated,getPaymentFailed);
+router.get('/order/payment-success',isAuthenticated,getPaymentSuccess);
+router.get('/order/payment-failed',isAuthenticated,getPaymentFailed);
+router.post('/order/retry-payment',isAuthenticated,retryPayment);
+
+
 
 //wishlist routes
 router.get('/wishlist', isAuthenticated, getWishlistPage);
@@ -172,6 +216,10 @@ router.post('/profile/upload-image', isAuthenticated, uploadProfileImage);
 
 router.get('/profile/password', isAuthenticated, getChangePasswordPage);
 router.post('/profile/change-password', isAuthenticated, changePassword);
+
+// Wallet routes
+router.get('/profile/wallet', isAuthenticated, getWalletPage);
+router.post('/profile/wallet/add-money', isAuthenticated, addMoneyToWallet);
 
 router.post('/profile/request-email-change', isAuthenticated, requestEmailChange);
 router.get('/profile/verify-email-otp', isAuthenticated, getEmailOTPVerify);

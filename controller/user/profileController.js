@@ -480,5 +480,68 @@ export const getChangePasswordPage = async (req, res) => {
     }
 };
 
+export const getWalletPage = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const user = await getUserById(userId);
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        // Generate a referral code on the fly if not exists
+        if (!user.referralCode) {
+            const cleanName = user.name.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const randomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+            user.referralCode = `VELVET-${cleanName || 'USER'}-${randomCode}`;
+            await user.save();
+        }
+
+        res.render('user/wallet', {
+            user,
+            activeTab: 'wallet',
+            isLoggedIn: true
+        });
+    } catch (error) {
+        console.error('Get wallet page error:', error);
+        res.redirect('/profile');
+    }
+};
+
+export const addMoneyToWallet = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const { amount, paymentMethod } = req.body;
+
+        const numericAmount = parseFloat(amount);
+        if (isNaN(numericAmount) || numericAmount <= 0) {
+            return res.json({ success: false, message: 'Please enter a valid amount to top up.' });
+        }
+
+        const user = await getUserById(userId);
+        if (!user) {
+            return res.json({ success: false, message: 'User not found.' });
+        }
+
+        // Add transaction and update balance
+        user.walletBalance = (user.walletBalance || 0) + numericAmount;
+        user.walletHistory.push({
+            amount: numericAmount,
+            type: 'Credited',
+            description: `Top-up via ${paymentMethod || 'Online Payment'}`
+        });
+
+        await user.save();
+
+        res.json({
+            success: true,
+            message: `₹${numericAmount.toFixed(2)} credited to your wallet successfully!`,
+            newBalance: user.walletBalance
+        });
+    } catch (error) {
+        console.error('Add money to wallet error:', error);
+        res.json({ success: false, message: 'Failed to process top-up. Please try again.' });
+    }
+};
+
 
  

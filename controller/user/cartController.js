@@ -90,7 +90,7 @@ export const removeItem = async (req, res) => {
         console.log('Error in removeItem:', error);
         res.json({ success: false, message: error.message });
     }
-};
+}; 
 
 // Get cart count for navbar
 export const getCartCount = async (req, res) => {
@@ -105,4 +105,4 @@ export const getCartCount = async (req, res) => {
         console.log('Error in getCartCount:', error);
         res.json({ count: 0 });
     }
-};
+}; 
