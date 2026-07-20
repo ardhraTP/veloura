@@ -788,6 +788,18 @@
         document.getElementById('confirmPassword').addEventListener('input', function(e) {
             clearAllErrors(); 
         });
+
+        // Pre-fill referral code from URL parameter
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            if (refCode) {
+                const refInput = document.getElementById('referralCode');
+                if (refInput) {
+                    refInput.value = refCode.trim();
+                }
+            }
+        });
     </script>
 </body>
 </html>

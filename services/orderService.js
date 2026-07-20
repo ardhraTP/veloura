@@ -273,7 +273,22 @@ export const approveReturn = async (orderId,itemId)=>{
             throw new Error('Item is not marked as returned');
         }
 
-        const refundAmount = item.price * item.quantity;
+        const itemSubtotal = item.price * item.quantity;
+        const totalDiscount = order.discount || 0;
+        const totalTax = order.tax || 0;
+        const totalShipping = order.shippingFee || 0;
+
+        let itemDiscountShare = 0;
+        let itemTaxShare = 0;
+        let itemShippingShare = 0;
+
+        if (order.subtotal > 0) {
+            itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
+            itemTaxShare = (itemSubtotal / order.subtotal) * totalTax;
+            itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
+        }
+
+        const refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
 
         const user = await User.findById(order.user);
         user.walletBalance += refundAmount;

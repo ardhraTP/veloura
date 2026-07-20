@@ -10,6 +10,7 @@
 /* Sidebar */
 .sidebar {
     width: 250px;
+    flex-shrink: 0;
     height: fit-content;
     background: var(--white);
     border-radius: 20px;
@@ -66,6 +67,7 @@
     font-size: 11px;
     font-weight: 500;
     transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
 .sidebar-menu a i {

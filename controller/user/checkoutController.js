@@ -255,16 +255,6 @@ export const createOrder = async (req,res)=>{
         newOrder.razorpayOrderId = razorpayOrder.id;
         await newOrder.save();
 
-        for(const item of cart.items){
-            await Variant.findByIdAndUpdate(item.variant._id,{
-                $inc:{quantity: -item.quantity}
-            });
-        }
-
-        if(couponCode){
-            await couponService.applyCoupon(couponCode);
-        }
-
         res.json({
             success:true,
             orderId: newOrder.orderId,
@@ -680,6 +670,18 @@ export const verifyPayment = async (req, res) => {
         order.paymentStatus = 'Completed';
         order.orderStatus = 'Processing';
         await order.save();
+
+        // Decrease stock on successful payment
+        for (const item of order.items) {
+            await Variant.findByIdAndUpdate(item.variant, {
+                $inc: { quantity: -item.quantity }
+            });
+        }
+
+        // Apply coupon on successful payment
+        if (order.coupon && order.coupon.code) {
+            await couponService.applyCoupon(order.coupon.code);
+        }
 
         // Clear cart
         await orderService.clearUserCart(req.session.userId);

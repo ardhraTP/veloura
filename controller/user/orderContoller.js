@@ -2,6 +2,7 @@ import Product from '../../model/Product.js';
 import Order from '../../model/Order.js';
 import User from '../../model/User.js';
 import Variant from '../../model/Variant.js';
+import Review from '../../model/Review.js';
 import PDFDocument from 'pdfkit';
 
 
@@ -135,20 +136,60 @@ export const cancelOrderProduct = async (req, res) => {
         item.itemStatus = 'Cancelled';
         item.cancellationReason = comment ? `${reason} - ${comment}` : reason;
 
+        let refundAmount = 0;
+        if (order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded') {
+            const itemSubtotal = item.price * item.quantity;
+            const totalDiscount = order.discount || 0;
+            const totalTax = order.tax || 0;
+            const totalShipping = order.shippingFee || 0;
+
+            let itemDiscountShare = 0;
+            let itemTaxShare = 0;
+            let itemShippingShare = 0;
+
+            if (order.subtotal > 0) {
+                itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
+                itemTaxShare = (itemSubtotal / order.subtotal) * totalTax;
+                itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
+            }
+
+            refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
+
+            const user = await User.findById(order.user);
+            if (user) {
+                user.walletBalance = (user.walletBalance || 0) + refundAmount;
+                user.walletHistory.push({
+                    amount: refundAmount,
+                    type: 'Credited',
+                    description: `Refund for cancelled item in Order ${order.orderId}`,
+                    date: new Date()
+                });
+                await user.save();
+            }
+
+            const allItemsReturnedOrCancelled = order.items.every(
+                i => i.itemStatus === 'Returned' || i.itemStatus === 'Cancelled'
+            );
+            if (allItemsReturnedOrCancelled) {
+                order.paymentStatus = 'Refunded';
+            } else {
+                order.paymentStatus = 'Partially Refunded';
+            }
+        }
+
+        const allCancelled = order.items.every(i => i.itemStatus === 'Cancelled');
+        if (allCancelled) {
+            order.orderStatus = 'Cancelled';
+            order.cancellationReason = 'All items cancelled';
+        }
+
         await order.save();
 
         await Variant.findByIdAndUpdate(item.variant, {
             $inc: { quantity: item.quantity }
         });
 
-        const allCancelled = order.items.every(i => i.itemStatus === 'Cancelled');
-        if (allCancelled) {
-            order.orderStatus = 'Cancelled';
-            order.cancellationReason = 'All items cancelled';
-            await order.save();
-        }
-
-        res.json({ success: true, message: 'Item cancelled successfully and stock updated!' });
+        res.json({ success: true, message: 'Item cancelled successfully and stock/wallet updated!' });
     } catch (error) {
         console.error('Error in cancelOrderProduct controller:', error);
         res.json({ success: false, message: 'Server error while cancelling order item' });
@@ -174,20 +215,15 @@ export const returnOrderProduct = async (req, res) => {
             return res.json({ success: false, message: 'Only delivered items can be returned' });
         }
 
-        item.itemStatus = 'Returned';
+        item.itemStatus = 'Return Requested';
         item.returnReason = reason;
 
         await order.save();
 
-        // Increment the variant stock quantity when returned
-        await Variant.findByIdAndUpdate(item.variant, {
-            $inc: { quantity: item.quantity }
-        });
-
-        const allReturnedOrCancelled = order.items.every(i => i.itemStatus === 'Returned' || i.itemStatus === 'Cancelled');
+        const allReturnedOrCancelled = order.items.every(i => i.itemStatus === 'Return Requested' || i.itemStatus === 'Returned' || i.itemStatus === 'Cancelled');
         if (allReturnedOrCancelled) {
-            order.orderStatus = 'Returned';
-            order.returnReason = 'All items returned';
+            order.orderStatus = 'Return Requested';
+            order.returnReason = 'Return requested for items';
             await order.save();
         }
 
@@ -387,6 +423,16 @@ export const getPaymentSuccess = async (req,res)=>{
 export const getPaymentFailed = async (req,res)=>{
     try{
         const orderId = req.query.orderId;
+        const userId = req.session.userId;
+
+        if (orderId) {
+            const order = await Order.findOne({ orderId: orderId, user: userId });
+            if (order && order.paymentStatus === 'Pending') {
+                order.paymentStatus = 'Failed';
+                order.orderStatus = 'Cancelled';
+                await order.save();
+            }
+        }
 
         res.render('user/payment-failed',{
             orderId:orderId || null,
@@ -449,5 +495,40 @@ export const retryPayment = async (req,res)=>{
             success:false,
             message:'Failed to retry payment'
         });
+    }
+};
+
+export const submitProductReview = async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        const userId = req.session.userId;
+        const { rating, title, comment } = req.body;
+
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        if (order.items.length === 0) {
+            return res.status(400).json({ success: false, message: 'No items in order' });
+        }
+
+        const product = order.items[0].product;
+
+        const newReview = new Review({
+            user: userId,
+            product: product,
+            rating: parseInt(rating) || 5,
+            title: title || '',
+            comment: comment,
+            status: 'Pending'
+        });
+
+        await newReview.save();
+
+        res.redirect(`/profile/orders/${orderId}?success=review`);
+    } catch (error) {
+        console.error('Error submitting product review:', error);
+        res.status(500).render('error/500');
     }
 };

@@ -1,6 +1,7 @@
 import * as productService from '../../services/productService.js';
 import { getUserWishlist } from '../../services/wishlistService.js';
 import { calculateOfferPrice } from '../../utils/priceHelper.js';
+import Review from '../../model/Review.js';
 
 
 
@@ -94,10 +95,16 @@ export const getProductDetail = async (req,res)=>{
             }
         }
 
+        // Fetch approved reviews for this product
+        const reviews = await Review.find({ product: productId, status: 'Approved' })
+            .populate('user')
+            .sort({ createdAt: -1 });
+
         res.render('user/product-detail',{
             product:product,
             isLoggedIn: !!(req.session && req.session.userId),
-            isInWishlist : isInWishlist
+            isInWishlist : isInWishlist,
+            reviews: reviews
         });
     }catch(error){
         console.log('Error in getProductDetail:',error);

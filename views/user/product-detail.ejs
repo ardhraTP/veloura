@@ -165,21 +165,24 @@
         </div>
 
         <div class="testimony-grid">
-            <div class="testimony-card">
-                <div class="t-stars">★★★★★</div>
-                <p class="t-quote">"The weight of the titanium is perfectly balanced. It feels less like a watch and more like a second skin engineered for precision."</p>
-                <p class="t-author">Julian V. &nbsp;— Architect</p>
-            </div>
-            <div class="testimony-card">
-                <div class="t-stars">★★★★★</div>
-                <p class="t-quote">"An absolute triumph of industrial design. The DLC coating has a matte finish that captures light unlike any other timepiece in my collection."</p>
-                <p class="t-author">Dean &nbsp;— Lifestyle Editor</p>
-            </div>
-            <div class="testimony-card">
-                <div class="t-stars">★★★★★</div>
-                <p class="t-quote">"The H-Calibre movement is mesmerizing through the caseback. It's a quiet mechanical heart that demands respect."</p>
-                <p class="t-author">Marcus T. &nbsp;— Horologist</p>
-            </div>
+            <% if (typeof reviews !== 'undefined' && reviews && reviews.length > 0) { %>
+                <% reviews.forEach(function(review) { %>
+                    <div class="testimony-card">
+                        <div class="t-stars" style="color: #5C1E28; font-size: 14px; letter-spacing: 2px;"><%= '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating) %></div>
+                        <p class="t-quote">
+                            <% if (review.title) { %>
+                                <strong style="font-family: 'Playfair Display', serif; font-size: 16px;"><%= review.title %></strong><br>
+                            <% } %>
+                            "<%= review.comment %>"
+                        </p>
+                        <p class="t-author"><%= review.user ? review.user.name : 'Verified Buyer' %></p>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="testimony-card" style="grid-column: 1 / -1; text-align: center; padding: 40px; border: 1px dashed #EAE5DF; background: white;">
+                    <p class="t-quote" style="font-style: italic; color: #777;">No reviews yet for this product. Be the first to share your experience!</p>
+                </div>
+            <% } %>
         </div>
     </section>
 

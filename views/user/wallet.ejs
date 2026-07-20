@@ -196,6 +196,58 @@
             box-shadow: 0 4px 12px rgba(25, 178, 75, 0.2);
         }
 
+        .top-up-card {
+            width: 400px;
+            max-width: 100%;
+            height: 320px;
+            align-self: start;
+            box-sizing: border-box;
+        }
+
+        /* Pagination Styles */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #E6DED4;
+        }
+
+        .pagination-btn {
+            background-color: var(--white);
+            border: 1px solid #E6DED4;
+            color: var(--text-dark);
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            outline: none;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background-color: var(--primary-red);
+            color: var(--white);
+            border-color: var(--primary-red);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
         /* Transaction History Styles */
         .history-controls {
             display: flex;
@@ -477,6 +529,25 @@
                 gap: 30px;
             }
         }
+
+        /* Referral Card Full-Width Centering Container */
+        .referral-card-container {
+            max-width: 1300px;
+            margin: 0 auto 80px;
+            padding: 0 80px;
+            box-sizing: border-box;
+        }
+
+        .referral-card-container .referral-card {
+            width: 100%;
+        }
+
+        @media (max-width: 992px) {
+            .referral-card-container {
+                padding: 0 40px;
+                margin-bottom: 40px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -499,17 +570,18 @@
             <!-- Middle Cards: Top Up & History -->
             <div class="middle-grid">
                 <!-- Top Up Card -->
-                <div class="premium-card">
+                <div class="premium-card top-up-card">
                     <h3 class="card-header-title">Add Cash to Wallet</h3>
                     <p class="card-subtitle">Enter the amount you wish to add to your wallet balance</p>
 
-                    <form id="addMoneyForm" onsubmit="handleAddMoney(event)">
+                    <form id="addMoneyForm" onsubmit="handleAddMoney(event)" novalidate>
                         <div class="amount-input-group">
                             <label for="amount">Enter amount:</label>
                             <div class="input-wrapper">
                                 <span class="currency-symbol">₹</span>
-                                <input type="number" id="amount" name="amount" class="amount-input" placeholder="e.g. 500" min="1" step="any" required>
+                                <input type="number" id="amount" name="amount" class="amount-input" placeholder="e.g. 500" min="1" step="any">
                             </div>
+                            <span id="amount-error" style="color: #d93025; font-size: 12px; margin-top: 5px; display: none; font-weight: 500;"></span>
                         </div>
 
                         <button type="submit" class="pay-btn">Add Cash</button>
@@ -538,6 +610,7 @@
                             <thead>
                                 <tr>
                                     <th>Date</th>
+                                    <th>Details / Method</th>
                                     <th>Amount</th>
                                     <th>Transaction</th>
                                 </tr>
@@ -551,6 +624,22 @@
                                     <% sortedHistory.forEach(tx => { %>
                                         <tr data-type="<%= tx.type %>" data-date="<%= new Date(tx.date).getTime() %>">
                                             <td><%= new Date(tx.date).toLocaleDateString('en-IN') %></td>
+                                            <%
+                                                let displayDescription = tx.description || 'Wallet Transaction';
+                                                const descLower = displayDescription.toLowerCase();
+                                                if (descLower.includes('referral') || descLower.includes('welcome bonus')) {
+                                                    displayDescription = 'Referral';
+                                                } else if (descLower.includes('cancelled') || descLower.includes('cancel')) {
+                                                    displayDescription = 'Cancel Amount';
+                                                } else if (descLower.includes('returned') || descLower.includes('return')) {
+                                                    displayDescription = 'Return Amount';
+                                                } else if (descLower.includes('added') || descLower.includes('top up') || descLower.includes('topup')) {
+                                                    displayDescription = 'Added Cash';
+                                                } else if (descLower.includes('payment') || descLower.includes('debit') || descLower.includes('order')) {
+                                                    displayDescription = 'Order Payment';
+                                                }
+                                            %>
+                                            <td style="font-weight: 600; font-size: 13px; color: var(--text-dark);"><%= displayDescription %></td>
                                             <td class="<%= tx.type === 'Credited' ? 'amount-cred' : 'amount-deb' %>">
                                                 <%= tx.type === 'Credited' ? '+' : '-' %>₹<%= tx.amount.toFixed(2) %>
                                             </td>
@@ -563,7 +652,7 @@
                                     <% }) %>
                                 <% } else { %>
                                     <tr id="noTxnRow">
-                                        <td colspan="3" style="text-align: center; color: var(--text-light); padding: 30px;">
+                                        <td colspan="4" style="text-align: center; color: var(--text-light); padding: 30px;">
                                             No transactions recorded yet.
                                         </td>
                                     </tr>
@@ -571,64 +660,77 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-
-            <!-- Referral Program Card -->
-            <div class="referral-card">
-                <div class="referral-header">
-                    <i class="fas fa-user-plus"></i>
-                    <h2>Referral Program</h2>
-                </div>
-
-                <!-- Referral stats -->
-                <div class="referral-stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-number">₹<%= (user.referralEarnings || 0).toFixed(2) %></div>
-                        <div class="stat-label">Total Earned</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-number"><%= user.referredCount || 0 %></div>
-                        <div class="stat-label">Friends Referred</div>
-                    </div>
-                </div>
-
-                <!-- Code and Link section -->
-                <div class="share-earn-section">
-                    <div class="share-earn-title">Share & Earn</div>
-                    <p class="share-earn-desc">Invite friends and earn ₹200 for each successful referral. Your friend gets ₹100 too!</p>
-
-                    <!-- Copy Promo Code -->
-                    <div class="copy-group">
-                        <div class="copy-input-wrapper">
-                            <input type="text" id="promoCode" value="<%= user.referralCode %>" readonly>
-                        </div>
-                        <button class="copy-btn burgundy" onclick="copyText('promoCode', 'Referral Code copied!')">
-                            <i class="far fa-copy"></i> Copy
+                    <!-- Pagination Controls -->
+                    <div id="paginationControls" class="pagination-container" style="display: none;">
+                        <button class="pagination-btn" id="prevPageBtn" onclick="changePage(-1)">
+                            <i class="fas fa-chevron-left"></i> Prev
                         </button>
-                    </div>
-
-                    <!-- Copy Referral Link -->
-                    <div class="copy-group">
-                        <div class="copy-input-wrapper">
-                            <input type="text" id="referralLink" value="https://veloura.beauty/signup?ref=<%= user.referralCode %>" readonly>
-                        </div>
-                        <button class="copy-btn blue" onclick="copyText('referralLink', 'Referral Link copied!')">
-                            <i class="fas fa-link"></i> Copy Link
+                        <span class="pagination-info" id="pageInfo">Page 1 of 1</span>
+                        <button class="pagination-btn" id="nextPageBtn" onclick="changePage(1)">
+                            Next <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
                 </div>
-
-                <!-- Empty State / Graphic -->
-                <div class="no-referrals-state">
-                    <div class="no-referrals-icon">
-                        <i class="fas fa-user-friends"></i>
-                    </div>
-                    <h3 class="no-referrals-title">No Referrals Yet</h3>
-                    <p class="no-referrals-desc">Share your referral code or link to start earning rewards!</p>
-                </div>
             </div>
+
         </main>
+    </div>
+
+    <!-- Referral Program Card -->
+    <div class="referral-card-container">
+        <div class="referral-card">
+            <div class="referral-header">
+                <i class="fas fa-user-plus"></i>
+                <h2>Referral Program</h2>
+            </div>
+
+            <!-- Referral stats -->
+            <div class="referral-stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number">₹<%= (user.referralEarnings || 0).toFixed(2) %></div>
+                    <div class="stat-label">Total Earned</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number"><%= user.referredCount || 0 %></div>
+                    <div class="stat-label">Friends Referred</div>
+                </div>
+            </div>
+
+            <!-- Code and Link section -->
+            <div class="share-earn-section">
+                <div class="share-earn-title">Share & Earn</div>
+                <p class="share-earn-desc">Invite friends and earn ₹200 for each successful referral. Your friend gets ₹100 too!</p>
+
+                <!-- Copy Promo Code -->
+                <div class="copy-group">
+                    <div class="copy-input-wrapper">
+                        <input type="text" id="promoCode" value="<%= user.referralCode %>" readonly>
+                    </div>
+                    <button class="copy-btn burgundy" onclick="copyText('promoCode', 'Referral Code copied!')">
+                        <i class="far fa-copy"></i> Copy
+                    </button>
+                </div>
+
+                <!-- Copy Referral Link -->
+                <div class="copy-group">
+                    <div class="copy-input-wrapper">
+                        <input type="text" id="referralLink" value="" readonly>
+                    </div>
+                    <button class="copy-btn blue" onclick="copyText('referralLink', 'Referral Link copied!')">
+                        <i class="fas fa-link"></i> Copy Link
+                    </button>
+                </div>
+            </div>
+
+            <!-- Empty State / Graphic -->
+            <div class="no-referrals-state">
+                <div class="no-referrals-icon">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+                <h3 class="no-referrals-title">No Referrals Yet</h3>
+                <p class="no-referrals-desc">Share your referral code or link to start earning rewards!</p>
+            </div>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -636,23 +738,48 @@
 
     <!-- Client-side Scripts -->
     <script>
+        // Clear error styling/message when typing starts
+        document.addEventListener('DOMContentLoaded', function() {
+            const amountInput = document.getElementById('amount');
+            if (amountInput) {
+                amountInput.addEventListener('input', function() {
+                    const errorSpan = document.getElementById('amount-error');
+                    if (errorSpan) errorSpan.style.display = 'none';
+                    amountInput.style.borderColor = '';
+                });
+            }
+        });
+
         // Handle Top Up Form Submission via Fetch
         function handleAddMoney(event) {
             event.preventDefault();
             const form = event.target;
             const amountInput = document.getElementById('amount');
-            const amount = parseFloat(amountInput.value);
+            const errorSpan = document.getElementById('amount-error');
+            const amountVal = amountInput.value.trim();
             const paymentMethod = 'Online Payment';
 
-            if (isNaN(amount) || amount <= 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Invalid Amount',
-                    text: 'Please enter a valid positive number to add funds.',
-                    confirmButtonColor: '#5c1e28'
-                });
+            if (!amountVal) {
+                if (errorSpan) {
+                    errorSpan.textContent = 'Please enter an amount.';
+                    errorSpan.style.display = 'block';
+                }
+                amountInput.style.borderColor = '#d93025';
                 return;
             }
+
+            const amount = parseFloat(amountVal);
+            if (isNaN(amount) || amount <= 0) {
+                if (errorSpan) {
+                    errorSpan.textContent = 'Please enter a valid positive number to add funds.';
+                    errorSpan.style.display = 'block';
+                }
+                amountInput.style.borderColor = '#d93025';
+                return;
+            }
+
+            if (errorSpan) errorSpan.style.display = 'none';
+            amountInput.style.borderColor = '';
 
             Swal.fire({
                 title: 'Confirm Top Up',
@@ -742,8 +869,22 @@
                 });
         }
 
-        // Filtering and Sorting Transactions Table Client-side
+        // Pagination State Variables
+        let currentPage = 1;
+        const rowsPerPage = 6;
+
         function filterTransactions() {
+            currentPage = 1;
+            renderTransactionsTable();
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            renderTransactionsTable();
+        }
+
+        // Filtering, Sorting, and Paginated Rendering of Transactions Table Client-side
+        function renderTransactionsTable() {
             const typeFilter = document.getElementById('typeFilter').value;
             const sortOrder = document.getElementById('sortOrder').value;
             const tableBody = document.getElementById('txnTableBody');
@@ -753,46 +894,86 @@
             const rows = Array.from(tableBody.querySelectorAll('tr:not(#noTxnRow)'));
             if (rows.length === 0) return;
 
-            // 1. Filter rows
-            let visibleRowsCount = 0;
+            // 1. Filter rows and collect matching ones
+            const filteredRows = [];
             rows.forEach(row => {
                 const rowType = row.getAttribute('data-type');
                 if (typeFilter === 'all' || rowType === typeFilter) {
-                    row.style.display = '';
-                    visibleRowsCount++;
-                } else {
-                    row.style.display = 'none';
+                    filteredRows.push(row);
                 }
+                // Hide all initially
+                row.style.display = 'none';
             });
 
-            // Handle empty state row
+            const visibleRowsCount = filteredRows.length;
+
+            // Handle empty state row and pagination container
             let noTxnRow = document.getElementById('noTxnRow');
+            const paginationControls = document.getElementById('paginationControls');
+
             if (visibleRowsCount === 0) {
                 if (!noTxnRow) {
                     noTxnRow = document.createElement('tr');
                     noTxnRow.id = 'noTxnRow';
-                    noTxnRow.innerHTML = `<td colspan="3" style="text-align: center; color: var(--text-light); padding: 30px;">No transactions match the selected filter.</td>`;
+                    noTxnRow.innerHTML = `<td colspan="4" style="text-align: center; color: var(--text-light); padding: 30px;">No transactions match the selected filter.</td>`;
                     tableBody.appendChild(noTxnRow);
                 } else {
                     noTxnRow.style.display = '';
                     noTxnRow.querySelector('td').textContent = 'No transactions match the selected filter.';
                 }
+                if (paginationControls) paginationControls.style.display = 'none';
+                return;
             } else if (noTxnRow) {
                 noTxnRow.style.display = 'none';
             }
 
-            // 2. Sort rows
-            const sortedRows = rows.sort((a, b) => {
+            // 2. Sort the filtered rows
+            filteredRows.sort((a, b) => {
                 const dateA = parseInt(a.getAttribute('data-date'));
                 const dateB = parseInt(b.getAttribute('data-date'));
                 return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
             });
 
-            // Append sorted rows to table body
-            sortedRows.forEach(row => {
+            // 3. Re-append sorted rows to table body
+            filteredRows.forEach(row => {
                 tableBody.appendChild(row);
             });
+
+            // 4. Paginate
+            const totalPages = Math.ceil(visibleRowsCount / rowsPerPage);
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = startIndex + rowsPerPage;
+
+            const pageRows = filteredRows.slice(startIndex, endIndex);
+            pageRows.forEach(row => {
+                row.style.display = '';
+            });
+
+            // Update pagination controls display
+            if (paginationControls) {
+                if (totalPages > 1) {
+                    paginationControls.style.display = 'flex';
+                    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+                    document.getElementById('prevPageBtn').disabled = (currentPage === 1);
+                    document.getElementById('nextPageBtn').disabled = (currentPage === totalPages);
+                } else {
+                    paginationControls.style.display = 'none';
+                }
+            }
         }
+
+        // Initialize referral link and table pagination on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const refLinkInput = document.getElementById('referralLink');
+            if (refLinkInput) {
+                refLinkInput.value = window.location.origin + '/register?ref=' + '<%= user.referralCode %>';
+            }
+            // Load and paginate the table
+            filterTransactions();
+        });
     </script>
 </body>
 </html>

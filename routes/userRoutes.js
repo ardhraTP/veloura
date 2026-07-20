@@ -3,7 +3,7 @@ import { isAuthenticated, isGuest } from '../middleware/userAuth.js';
 import { upload } from '../middleware/upload.js';
 import passport from 'passport';
 import { getCheckoutPage,applyCoupon,removeCoupon,createOrder,placeOrder,verifyPayment,paymentFailed } from '../controller/user/checkoutController.js';
-import { getUserOrders, getOrderDetails, cancelOrderProduct, returnOrderProduct, downloadInvoice,getPaymentSuccess,getPaymentFailed,retryPayment } from '../controller/user/orderContoller.js';
+import { getUserOrders, getOrderDetails, cancelOrderProduct, returnOrderProduct, downloadInvoice,getPaymentSuccess,getPaymentFailed,retryPayment,submitProductReview } from '../controller/user/orderContoller.js';
 import Order from '../model/Order.js';
 
 
@@ -148,6 +148,7 @@ router.get('/profile/orders', isAuthenticated, getUserOrders);
 router.get('/profile/orders/:id', isAuthenticated, getOrderDetails);
 router.post('/profile/orders/:id/cancel', isAuthenticated, cancelOrderProduct);
 router.post('/profile/orders/:id/return', isAuthenticated, returnOrderProduct);
+router.post('/profile/orders/:id/review', isAuthenticated, submitProductReview);
 
 router.get('/profile/orders/:id/invoice', isAuthenticated, downloadInvoice);
 
@@ -180,6 +181,11 @@ router.delete('/wishlist/remove/:productId', isAuthenticated, removeFromWishlist
 // navbar counts
 router.get('/api/cart-count', getCartCount);
 router.get('/api/wishlist-count', getWishlistCount);
+
+router.get('/signup', (req, res) => {
+    const ref = req.query.ref;
+    res.redirect('/register' + (ref ? `?ref=${encodeURIComponent(ref)}` : ''));
+});
 
 router.get('/register', isGuest, getSignup);
 router.post('/register', isGuest, signup);

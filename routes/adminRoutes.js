@@ -2,7 +2,8 @@ import express from 'express';
 import { isAdminAuthenticated, isAdminGuest } from '../middleware/adminAuth.js';
 import { getLogin, login, getDashboard,getDashboardData, getUsers, toggleBlockUser, logout } from '../controller/Admin/adminController.js';
 import Order from '../model/Order.js';
-import { getAdminOrdersPage, getAdminOrderDetail, updateAdminOrderStatus,updateItemStatus,approveReturn,getOrderStats } from '../controller/Admin/orderController.js';
+import { getAdminOrdersPage, getAdminOrderDetail, updateAdminOrderStatus,updateItemStatus,approveReturn,rejectReturn,getOrderStats } from '../controller/Admin/orderController.js';
+import { getReviewsPage, approveReview, rejectReview } from '../controller/Admin/reviewController.js';
 
 import {
     getAdminProductsPage,
@@ -102,7 +103,13 @@ router.get('/orders/:id', isAdminAuthenticated, getAdminOrderDetail);
 router.post('/orders/:id/status', isAdminAuthenticated, updateAdminOrderStatus);
 router.post('/orders/update-item-status',isAdminAuthenticated,updateItemStatus);
 router.post('/orders/approve-return',isAdminAuthenticated,approveReturn);
+router.post('/orders/reject-return',isAdminAuthenticated,rejectReturn);
 router.get('/api/order-stats',isAdminAuthenticated,getOrderStats);
+
+// Review Management Routes
+router.get('/reviews', isAdminAuthenticated, getReviewsPage);
+router.post('/reviews/approve', isAdminAuthenticated, approveReview);
+router.post('/reviews/reject', isAdminAuthenticated, rejectReview);
 
 export default router;
 

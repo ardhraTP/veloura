@@ -766,6 +766,17 @@
                                 <div class="status-badge returned">
                                     <i class="fas fa-undo-alt"></i> Returned
                                 </div>
+                            <% } else if (item.itemStatus === 'Return Requested') { %>
+                                <div class="status-badge pending">
+                                    <i class="fas fa-history"></i> Return Requested
+                                </div>
+                            <% } else if (item.itemStatus === 'Return Rejected') { %>
+                                <div class="status-badge cancelled">
+                                    <i class="fas fa-times-circle"></i> Return Rejected
+                                </div>
+                                <% if (item.returnRejectionReason) { %>
+                                    <div style="font-size: 11px; color: #E02424; margin-top: 5px; font-weight: 500; text-align: right; max-width: 180px;">Reason: <%= item.returnRejectionReason %></div>
+                                <% } %>
                             <% } else if (item.itemStatus === 'Out for Delivery') { %>
                                 <div class="status-badge out-for-delivery">
                                     <i class="fas fa-truck"></i> Out for Delivery
@@ -1074,6 +1085,25 @@
 
     <!-- Inline JavaScript Helpers for Ratings and Dynamic Popups -->
     <script>
+        // Check URL search params for success messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'review') {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Thank You!',
+                        text: 'Your review has been submitted for moderation.',
+                        icon: 'success',
+                        confirmButtonColor: '#5C1E28'
+                    });
+                } else {
+                    alert('Your review has been submitted for moderation.');
+                }
+                // Clean up the query param
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+
         // Interactive Star Rating Selectors
         document.addEventListener('DOMContentLoaded', function() {
             const stars = document.querySelectorAll('.rating-star-btn');

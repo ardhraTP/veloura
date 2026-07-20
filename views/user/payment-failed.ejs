@@ -190,85 +190,12 @@
         <div class="order-id">
             Order ID: <%= orderId %>
         </div>
-
-        <div class="buttons">
-            <button class="btn btn-primary" onclick="retryPayment()">Retry Payment</button>
-            <a href="/products" class="btn btn-secondary">Continue Shopping</a>
-        </div>
-        <% } else { %>
-        <div class="buttons">
-            <a href="/checkout" class="btn btn-primary">Back to Checkout</a>
-            <a href="/products" class="btn btn-secondary">Continue Shopping</a>
-        </div>
         <% } %>
 
-        <p class="help-text">
-            Need help? Contact our support team at support@veloura.com
-        </p>
+        <div class="buttons">
+            <a href="/checkout" class="btn btn-primary">Retry Payment</a>
+            <a href="/products" class="btn btn-secondary">Continue Shopping</a>
+        </div>
     </div>
-
-    <% if (orderId) { %>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script>
-        async function retryPayment() {
-            try {
-                const response = await fetch('/order/retry-payment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ orderId: '<%= orderId %>' })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    const options = {
-                        key: data.keyId,
-                        amount: data.amount * 100,
-                        currency: 'INR',
-                        name: 'Veloura',
-                        description: 'Order Payment',
-                        order_id: data.razorpayOrderId,
-                        handler: async function(response) {
-                            const verifyResponse = await fetch('/checkout/verify-payment', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    razorpay_order_id: response.razorpay_order_id,
-                                    razorpay_payment_id: response.razorpay_payment_id,
-                                    razorpay_signature: response.razorpay_signature,
-                                    orderId: data.orderId
-                                })
-                            });
-
-                            const verifyData = await verifyResponse.json();
-                            if (verifyData.success) {
-                                window.location.href = `/payment-success?orderId=${data.orderId}`;
-                            } else {
-                                alert('Payment verification failed');
-                            }
-                        },
-                        modal: {
-                            ondismiss: function() {
-                                console.log('Payment cancelled');
-                            }
-                        }
-                    };
-
-                    const razorpay = new Razorpay(options);
-                    razorpay.open();
-                } else {
-                    alert(data.message || 'Failed to retry payment');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            }
-        }
-    </script>
-    <% } %>
 </body>
 </html>

@@ -8,6 +8,7 @@ import {
     findUserById
 } from '../../services/adminService.js';
 import Order from '../../model/Order.js';
+import User from '../../model/User.js';
 
 
 export const getLogin = (req, res) => {
@@ -46,8 +47,35 @@ export const login = async (req, res) => {
 
 
 // Admin dashboard
-export const getDashboard = (req, res) => {
-    res.render('admin/dashboard');
+export const getDashboard = async (req, res) => {
+    try {
+        const totalUsers = await User.countDocuments({ isAdmin: false });
+        const totalOrders = await Order.countDocuments();
+        
+        const totalSalesResult = await Order.aggregate([
+            { $match: { orderStatus: { $nin: ['Cancelled', 'Returned'] } } },
+            { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+        ]);
+        const totalSales = totalSalesResult[0]?.total || 0;
+
+        const recentOrders = await Order.find()
+            .populate('user')
+            .sort({ createdAt: -1 })
+            .limit(5);
+
+        res.render('admin/dashboard', {
+            stats: {
+                totalUsers,
+                totalOrders,
+                totalSales
+            },
+            recentOrders,
+            selectedTab: 'dashboard'
+        });
+    } catch (error) {
+        console.error('Error rendering admin dashboard:', error);
+        res.status(500).send('Internal Server Error');
+    }
 };
 
 
@@ -88,7 +116,12 @@ export const getDashboardData = async (req, res) => {
 
         // 2. Top 10 Best Selling Products
         const topProducts = await Order.aggregate([
-            { $match: { orderStatus: { $nin: ['Cancelled', 'Returned'] } } },
+            { 
+                $match: { 
+                    createdAt: { $gte: startDate },
+                    orderStatus: { $nin: ['Cancelled', 'Returned'] } 
+                } 
+            },
             { $unwind: "$items" },
             {
                 $group: {
@@ -112,7 +145,12 @@ export const getDashboardData = async (req, res) => {
 
         // 3. Top 10 Best Selling Categories
         const topCategories = await Order.aggregate([
-            { $match: { orderStatus: { $nin: ['Cancelled', 'Returned'] } } },
+            { 
+                $match: { 
+                    createdAt: { $gte: startDate },
+                    orderStatus: { $nin: ['Cancelled', 'Returned'] } 
+                } 
+            },
             { $unwind: "$items" },
             {
                 $lookup: {
@@ -144,7 +182,12 @@ export const getDashboardData = async (req, res) => {
 
         // 4. Top 10 Best Selling Brands
         const topBrands = await Order.aggregate([
-            { $match: { orderStatus: { $nin: ['Cancelled', 'Returned'] } } },
+            { 
+                $match: { 
+                    createdAt: { $gte: startDate },
+                    orderStatus: { $nin: ['Cancelled', 'Returned'] } 
+                } 
+            },
             { $unwind: "$items" },
             {
                 $lookup: {

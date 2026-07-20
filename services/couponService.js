@@ -45,7 +45,9 @@ export const validateCoupon = async (couponCode,userId,cartTotal,cartItems)=>{
 
         const userUsageCount = await Order.countDocuments({
             user:userId,
-            'coupon.code' : couponCode.toUpperCase()
+            'coupon.code' : couponCode.toUpperCase(),
+            orderStatus: { $ne: 'Cancelled' },
+            paymentStatus: { $ne: 'Failed' }
         });
 
         if(userUsageCount >= coupon.userUsageLimit){

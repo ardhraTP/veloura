@@ -304,16 +304,29 @@ export const approveReturn = async (req,res)=>{
             });
         }
 
-        const itemSubtotal = item.price * item.quantity;
-        const totalDiscount = order.discount || 0;
-
-        let itemDiscountShare = 0;
-        if(totalDiscount > 0 && order.subtotal > 0){
-            itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
+        if(item.itemStatus !== 'Return Requested'){
+            return res.json({
+                success:false,
+                message:'This item return request cannot be approved because it is not in "Return Requested" status.'
+            });
         }
 
-        const taxShare = itemSubtotal * 0.18;
-        const refundAmount = Math.round(itemSubtotal + taxShare - itemDiscountShare);
+        const itemSubtotal = item.price * item.quantity;
+        const totalDiscount = order.discount || 0;
+        const totalTax = order.tax || 0;
+        const totalShipping = order.shippingFee || 0;
+
+        let itemDiscountShare = 0;
+        let itemTaxShare = 0;
+        let itemShippingShare = 0;
+
+        if (order.subtotal > 0) {
+            itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
+            itemTaxShare = (itemSubtotal / order.subtotal) * totalTax;
+            itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
+        }
+
+        const refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
 
         const variant = await Variant.findById(item.variant);
         if(variant){
@@ -366,6 +379,68 @@ export const approveReturn = async (req,res)=>{
         return res.json({
             success:false,
             message: error.message || 'Something went wrong while approving the return.'
+        });
+    }
+};
+
+
+export const rejectReturn = async (req, res) => {
+    try {
+        const { orderId, itemId, reason } = req.body;
+
+        if (!orderId || !itemId || !reason) {
+            return res.json({
+                success: false,
+                message: 'Order ID, Item ID, and rejection reason are required.'
+            });
+        }
+
+        const order = await Order.findOne({ orderId: orderId });
+        if (!order) {
+            return res.json({
+                success: false,
+                message: 'Order not found.'
+            });
+        }
+
+        const item = order.items.find(i => i._id.toString() === itemId);
+        if (!item) {
+            return res.json({
+                success: false,
+                message: 'Item not found in this order.'
+            });
+        }
+
+        if (item.itemStatus !== 'Return Requested') {
+            return res.json({
+                success: false,
+                message: 'This item return request cannot be rejected as it is not in Return Requested status.'
+            });
+        }
+
+        item.itemStatus = 'Return Rejected';
+        item.returnRejectionReason = reason;
+
+        const allRejectedOrCancelled = order.items.every(
+            i => i.itemStatus === 'Return Rejected' || i.itemStatus === 'Cancelled'
+        );
+
+        if (allRejectedOrCancelled) {
+            order.orderStatus = 'Return Rejected';
+        }
+
+        await order.save();
+
+        return res.json({
+            success: true,
+            message: 'Return request rejected successfully.'
+        });
+
+    } catch (error) {
+        console.error('Error rejecting return request:', error);
+        return res.json({
+            success: false,
+            message: error.message || 'Something went wrong while rejecting the return.'
         });
     }
 };
