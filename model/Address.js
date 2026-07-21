@@ -1,3 +1,4 @@
+import e from 'connect-flash';
 import mongoose, { mongo } from 'mongoose';
 
 const addressSchema = new mongoose.Schema({

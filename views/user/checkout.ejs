@@ -1039,7 +1039,7 @@
                             <div class="breakdown-item" id="discountRow"
                                 style="display: <%= discount > 0 ? 'flex' : 'none' %>; color: #5c1e28;">
                                 <span>Discount:</span>
-                                <span id="discountVal">-₹<%= discount.toFixed(2) %></span>
+                                <span id="discountVal">₹<%= discount.toFixed(2) %></span>
                             </div>
 
                             <div class="breakdown-divider"></div>
@@ -1236,7 +1236,7 @@
                 }
 
                 document.getElementById('discountRow').style.display = currentDiscount > 0 ? 'flex' : 'none';
-                document.getElementById('discountVal').textContent = `-₹${currentDiscount.toFixed(2)}`;
+                document.getElementById('discountVal').textContent = `₹${currentDiscount.toFixed(2)}`;
                 document.getElementById('shippingVal').textContent = currentShipping === 0 ? 'FREE' : `₹${currentShipping.toFixed(2)}`;
                 document.getElementById('finalTotalVal').textContent = `₹${Math.max(0, finalTotal).toFixed(2)}`;
             }

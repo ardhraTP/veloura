@@ -71,7 +71,7 @@ export const getProductDetail = async (req,res)=>{
             return res.redirect('/products');
         }
 
-        // Apply offer calculation on each variant
+        
         if (product.variants && product.variants.length > 0) {
             product.variants = product.variants.map(variant => {
                 const { finalPrice, discountPercentage } = calculateOfferPrice(product, variant.regularPrice);

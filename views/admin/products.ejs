@@ -36,7 +36,7 @@
             padding: 40px;
         }
 
-        /* Top Header */
+        /*ff Top Header */
         .top-header {
             display: flex;
             justify-content: space-between;
@@ -260,6 +260,7 @@
             color: #2e7d32;
             border: 2px solid #2e7d32;
         }
+
         .btn-list.action-btn:hover {
             background-color: #2e7d32;
             color: #ffffff;
@@ -270,6 +271,7 @@
             color: #c62828;
             border: 2px solid #c62828;
         }
+
         .btn-unlist.action-btn:hover {
             background-color: #c62828;
             color: #ffffff;
@@ -516,9 +518,11 @@
                                                                 <%= product.variants ? product.variants.length : 0 %>
                                                                     Variants
                                                             </p>
-                                                            <% if (product.variants && product.variants.length> 0) { %>                                                                <div class="shade-swatches">
+                                                            <% if (product.variants && product.variants.length> 0) { %>
+                                                                <div class="shade-swatches">
                                                                     <% product.variants.forEach(v=> { %>
-                                                                        <span class="shade-dot <%= v.status === 'INACTIVE' ? 'unlisted' : '' %>"
+                                                                        <span
+                                                                            class="shade-dot <%= v.status === 'INACTIVE' ? 'unlisted' : '' %>"
                                                                             style="background-color: <%= v.hexCode && v.hexCode.trim() ? v.hexCode.trim() : '#cccccc' %>;"
                                                                             title="<%= v.color %><%= v.status === 'INACTIVE' ? ' (Unlisted)' : '' %>"></span>
                                                                         <% }) %>
@@ -552,16 +556,19 @@
                                     </td>
                                     <td>
                                         <div class="action-btns">
-                                            <a href="/admin/products/edit/<%= product._id %>" class="btn-edit-icon" title="Edit Product">
+                                            <a href="/admin/products/edit/<%= product._id %>" class="btn-edit-icon"
+                                                title="Edit Product">
                                                 <i class="far fa-edit"></i>
                                             </a>
-                                            <% if (product.status === 'ACTIVE') { %>
+                                            <% if (product.status==='ACTIVE' ) { %>
                                                 <button class="btn-list status-badge">LISTED</button>
-                                                <button class="btn-unlist action-btn" onclick="toggleStatus('<%= product._id %>', 'ACTIVE')">UNLIST</button>
-                                            <% } else { %>
-                                                <button class="btn-list action-btn" onclick="toggleStatus('<%= product._id %>', 'INACTIVE')">LIST</button>
-                                                <button class="btn-unlist status-badge">UNLISTED</button>
-                                            <% } %>
+                                                <button class="btn-unlist action-btn"
+                                                    onclick="toggleStatus('<%= product._id %>', 'ACTIVE')">UNLIST</button>
+                                                <% } else { %>
+                                                    <button class="btn-list action-btn"
+                                                        onclick="toggleStatus('<%= product._id %>', 'INACTIVE')">LIST</button>
+                                                    <button class="btn-unlist status-badge">UNLISTED</button>
+                                                    <% } %>
                                         </div>
                                     </td>
                                 </tr>
@@ -580,32 +587,36 @@
             </div>
 
             <!-- Pagination -->
-            <% if (totalPages > 1) { %>
-            <div class="pagination-area">
-                <div class="pagination-controls">
-                    
-                    <% if (currentPage > 1) { %>
-                        <a href="?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="page-btn">
-                            <span class="page-text"><i class="fas fa-chevron-left" style="font-size: 10px; margin-right: 5px;"></i> Back</span>
-                        </a>
-                    <% } %>
+            <% if (totalPages> 1) { %>
+                <div class="pagination-area">
+                    <div class="pagination-controls">
 
-                    <% for(let i = 1; i <= totalPages; i++) { %>
-                        <a href="?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" 
-                           class="page-btn <%= currentPage === i ? 'active' : '' %>">
-                           <%= i %>
-                        </a>
-                    <% } %>
+                        <% if (currentPage> 1) { %>
+                            <a href="?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
+                                class="page-btn">
+                                <span class="page-text"><i class="fas fa-chevron-left"
+                                        style="font-size: 10px; margin-right: 5px;"></i> Back</span>
+                            </a>
+                            <% } %>
 
-                    <% if (currentPage < totalPages) { %>
-                        <a href="?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="page-btn">
-                            <span class="page-text">Next <i class="fas fa-chevron-right" style="font-size: 10px; margin-left: 5px;"></i></span>
-                        </a>
-                    <% } %>
-                    
+                                <% for(let i=1; i <=totalPages; i++) { %>
+                                    <a href="?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
+                                        class="page-btn <%= currentPage === i ? 'active' : '' %>">
+                                        <%= i %>
+                                    </a>
+                                    <% } %>
+
+                                        <% if (currentPage < totalPages) { %>
+                                            <a href="?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"
+                                                class="page-btn">
+                                                <span class="page-text">Next <i class="fas fa-chevron-right"
+                                                        style="font-size: 10px; margin-left: 5px;"></i></span>
+                                            </a>
+                                            <% } %>
+
+                    </div>
                 </div>
-            </div>
-            <% } %>
+                <% } %>
 
                     <!-- Product Cards -->
                     <div class="product-cards">
@@ -751,7 +762,7 @@
             }
 
             // Show success/error notifications from URL parameters and clear them
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 const urlParams = new URLSearchParams(window.location.search);
                 const successMsg = urlParams.get('success');
                 const errorMsg = urlParams.get('error');

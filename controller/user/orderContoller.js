@@ -14,8 +14,6 @@ export const getUserOrders = async (req, res) => {
         const searchQuery = req.query.search ? req.query.search.trim() : '';
 
         const user = await User.findById(userId);
-        
- 
 
         let query = { user: userId };
 
@@ -62,7 +60,7 @@ export const getUserOrders = async (req, res) => {
             currentPage: page,
             totalPages: totalPages,
             activeTab: 'orders',
-            isLoggedIn: true
+            isLoggedIn: true,
         });
     } catch (error) {
         console.error('Error fetching user orders:', error);
@@ -111,8 +109,10 @@ export const getOrderDetails = async (req, res) => {
 //cancel specific variant in an order
 export const cancelOrderProduct = async (req, res) => {
     try {
+
         const orderId = req.params.id;
         const { itemId, reason, comment } = req.body;
+
 
         const order = await Order.findById(orderId);
         if (!order) {
@@ -135,6 +135,7 @@ export const cancelOrderProduct = async (req, res) => {
 
         item.itemStatus = 'Cancelled';
         item.cancellationReason = comment ? `${reason} - ${comment}` : reason;
+
 
         let refundAmount = 0;
         if (order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded') {
@@ -339,9 +340,9 @@ export const downloadInvoice = async (req, res) => {
             const itemTotal = priceVal * quantity;
             doc.text(prodName, 50, y, { width: 160 });
             doc.text(colorName, 220, y, { width: 90 });
-            doc.text(`$${priceVal.toFixed(2)}`, 320, y, { width: 60, align: 'right' });
+            doc.text(`Rs.${priceVal.toFixed(2)}`, 320, y, { width: 60, align: 'right' });
             doc.text(quantity.toString(), 400, y, { width: 40, align: 'center' });
-            doc.text(`$${itemTotal.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+            doc.text(`Rs.${itemTotal.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
             y += 20;
         });
         // Totals divider
@@ -351,24 +352,24 @@ export const downloadInvoice = async (req, res) => {
         doc.font('Helvetica')
             .text('Subtotal:', 350, y, { width: 110, align: 'right' });
         doc.font('Helvetica-Bold')
-            .text(`$${invoiceSubtotal.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+            .text(`Rs.${invoiceSubtotal.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
         y += 15;
         doc.font('Helvetica')
             .text('Taxes (5%):', 350, y, { width: 110, align: 'right' });
         doc.font('Helvetica-Bold')
-            .text(`$${invoiceTax.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+            .text(`Rs.${invoiceTax.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
         y += 15;
         doc.font('Helvetica')
             .text('Shipping:', 350, y, { width: 110, align: 'right' });
         doc.font('Helvetica-Bold')
-            .text(order.shippingFee === 0 ? 'FREE' : `$${order.shippingFee.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+            .text(order.shippingFee === 0 ? 'FREE' : `Rs.${order.shippingFee.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
         if (order.discount > 0) {
             y += 15;
             doc.font('Helvetica')
                 .text('Discount:', 350, y, { width: 110, align: 'right' });
             doc.font('Helvetica-Bold')
                 .fillColor('#D92525')
-                .text(`-$${order.discount.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+                .text(`Rs.${order.discount.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
         }
         // Final Grand Total
         y += 20;
@@ -377,7 +378,7 @@ export const downloadInvoice = async (req, res) => {
             .font('Helvetica-Bold')
             .fontSize(11)
             .text('Grand Total:', 350, y, { width: 110, align: 'right' });
-        doc.text(`$${invoiceTotalAmount.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+        doc.text(`Rs.${invoiceTotalAmount.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
         // Footer Note
         doc.fillColor('#999999')
             .font('Helvetica-Oblique')

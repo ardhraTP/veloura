@@ -263,6 +263,7 @@ export const getUsers = async (req, res) => {
 export const toggleBlockUser = async (req, res) => {
     try {
         const userId = req.params.id;
+
         const user = await toggleUserBlockStatus(userId);
 
         if (!user) {

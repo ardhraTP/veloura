@@ -17,8 +17,8 @@ export const getAddresses = async (req, res) => {
         const userId = req.session.userId;
 
         const addresses = await getUserAddresses(userId);
-
-        res.render('user/manage-addresses', { addresses, activeTab: 'addresses' });
+    
+        res.render('user/manage-addresses', { addresses,activeTab: 'addresses' });
     } catch (error) {
         console.error('get addresses error:', error);
         res.redirect('/profile');
