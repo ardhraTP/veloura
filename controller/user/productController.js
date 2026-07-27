@@ -74,8 +74,9 @@ export const getProductDetail = async (req,res)=>{
         
         if (product.variants && product.variants.length > 0) {
             product.variants = product.variants.map(variant => {
-                const { finalPrice, discountPercentage } = calculateOfferPrice(product, variant.regularPrice);
+                const { finalPrice, discountPercentage } = calculateOfferPrice(product, variant.regularPrice, variant.salePrice);
                 variant.salePrice = finalPrice;
+                variant.discountPercentage = discountPercentage;
                 variant.activeOfferDiscount = discountPercentage;
                 return variant;
             });

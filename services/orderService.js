@@ -291,15 +291,17 @@ export const approveReturn = async (orderId,itemId)=>{
         const refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
 
         const user = await User.findById(order.user);
-        user.walletBalance += refundAmount;
-        user.walletHistory.push({
-            amount: refundAmount,
-            type: 'Credited',
-            description: `Refund for returned item in order ${orderId}`,
-            date: new Date()
-        });
+        if (user && order.paymentMethod === 'Wallet') {
+            user.walletBalance += refundAmount;
+            user.walletHistory.push({
+                amount: refundAmount,
+                type: 'Credited',
+                description: `Refund for returned item in order ${orderId}`,
+                date: new Date()
+            });
 
-        await user.save();
+            await user.save();
+        }
 
         order.paymentStatus = 'Refunded';
         await order.save();

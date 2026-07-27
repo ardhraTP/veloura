@@ -55,10 +55,14 @@ export const addCategory = async (req, res) => {
             return res.redirect('/admin/categories?error=Category already exists');
         }
 
+        const offerStr = offer ? offer.trim() : '';
+        const parsedDiscount = parseFloat(offerStr.replace(/[^0-9.]/g, '')) || 0;
+
         //create new category
         const newCategory = new Category({
             name: name.trim(),
-            offer: offer ? offer.trim() : '',
+            offer: offerStr,
+            categoryDiscount: Math.min(100, Math.max(0, parsedDiscount)),
             description: description ? description.trim() : '',
             isListed: true
         });
@@ -94,12 +98,23 @@ export const editCategory = async (req, res) => {
             return res.redirect('/admin/categories?error=Category name already exists');
         }
 
-        //update category
-        await Category.findByIdAndUpdate(categoryId, {
+        const offerStr = offer ? offer.trim() : '';
+        const parsedDiscount = parseFloat(offerStr.replace(/[^0-9.]/g, '')) || 0;
+        const categoryDiscountVal = Math.min(100, Math.max(0, parsedDiscount));
+
+        const updateData = {
             name: name.trim(),
-            offer: offer ? offer.trim() : '',
+            offer: offerStr,
+            categoryDiscount: categoryDiscountVal,
             description: description ? description.trim() : ''
-        });
+        };
+
+        if (categoryDiscountVal === 0 || !offerStr) {
+            updateData.categoryOfferExpiry = null;
+        }
+
+        //update category
+        await Category.findByIdAndUpdate(categoryId, updateData);
 
         res.redirect('/admin/categories?success=Category updated successfully');
     } catch (error) {

@@ -1,6 +1,7 @@
 import Wishlist from '../model/Wishlist.js';
 import {checkProductAvailability} from './productService.js';
 import Variant from '../model/Variant.js';
+import { calculateOfferPrice } from '../utils/priceHelper.js';
 
 const populateWishlistVariants = async (wishlist) => {
     if (!wishlist) return null;
@@ -13,15 +14,22 @@ const populateWishlistVariants = async (wishlist) => {
                 isDeleted: false,
                 status: { $ne: 'INACTIVE' }
             });
+            const updatedVariants = variants.map(v => {
+                const vObj = v.toObject ? v.toObject() : v;
+                const { finalPrice, discountPercentage } = calculateOfferPrice(product, vObj.regularPrice, vObj.salePrice);
+                vObj.salePrice = finalPrice;
+                vObj.discountPercentage = discountPercentage;
+                return vObj;
+            });
             return {
-                ...product.toObject(),
-                variants: variants
+                ...(product.toObject ? product.toObject() : product),
+                variants: updatedVariants
             };
         })
     );
 
     return {
-        ...wishlist.toObject(),
+        ...(wishlist.toObject ? wishlist.toObject() : wishlist),
         products: productsWithVariants.filter(Boolean)
     };
 };
@@ -29,7 +37,7 @@ const populateWishlistVariants = async (wishlist) => {
 export const getUserWishlist = async (userId)=>{
     try{
         let wishlist = await Wishlist.findOne({user:userId})
-        .populate('products');
+        .populate({ path: 'products', populate: { path: 'categoryId' } });
 
         if(!wishlist){
             wishlist = new Wishlist({

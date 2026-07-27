@@ -1,6 +1,6 @@
 import User from '../model/User.js';
 import { hashPassword, comparePassword, sendResponse, addMinutes, generateToken } from '../utils/helpers.js';
-import { sendOTP, sendResetPassword } from '../services/emailService.js';
+import { sendOTP, sendResetPassword, sendContactMessage } from '../services/emailService.js';
 import { generate, isValid, clear } from '../services/otpService.js';
 import {
     validateSignupData,
@@ -540,5 +540,47 @@ export const googleAuthCallback = (req, res) => {
     };
     res.redirect('/home');
 };
+
+export const getAboutPage = (req, res) => {
+    res.render('user/about', {
+        isLoggedIn: !!(req.session && req.session.userId)
+    });
+};
+
+
+export const getContactPage = (req, res) => {
+    res.render('user/contact', {
+        isLoggedIn: !!(req.session && req.session.userId),
+        user: req.session ? req.session.user : null
+    });
+};
+
+export const submitContactForm = async (req, res) => {
+    try {
+        const { name, email, phone, message } = req.body;
+
+        if (!name || !email || !message) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please fill in all required fields (Name, Email, and Message).'
+            });
+        }
+
+      
+        await sendContactMessage({ name, email, phone, message });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Thank you for reaching out to Veloura! Your message has been sent successfully.'
+        });
+    } catch (error) {
+        console.error('Error in submitContactForm:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to send message. Please try again later.'
+        });
+    }
+};
+
 
 

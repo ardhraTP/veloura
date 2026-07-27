@@ -50,19 +50,21 @@ header {
 
 /* ── Wishlist Item ── */
 .wishlist-item {
-    background: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
-    border: 1px solid rgba(92, 30, 40, 0.05);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(92, 30, 40, 0.03);
+    box-shadow: var(--shadow-sm);
     position: relative;
-    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    transition: var(--transition-smooth);
 }
 
 .wishlist-item:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 16px 40px rgba(92, 30, 40, 0.08);
-    border-color: rgba(92, 30, 40, 0.12);
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(197, 160, 89, 0.4);
 }
 
 /* Remove Button */
@@ -70,33 +72,34 @@ header {
     position: absolute;
     top: 15px;
     right: 15px;
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     background: rgba(255, 255, 255, 0.95);
-    border: none;
+    border: 1px solid var(--border-color);
     border-radius: 50%;
     cursor: pointer;
     z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: var(--transition-smooth);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .remove-wishlist-btn i {
     font-size: 14px;
-    color: #666;
-    transition: all 0.3s ease;
+    color: var(--text-light);
+    transition: var(--transition-fast);
 }
 
 .remove-wishlist-btn:hover {
-    background: #ffffff;
-    transform: scale(1.1);
+    background: #dc2626;
+    border-color: #dc2626;
+    transform: scale(1.15) rotate(90deg);
 }
 
 .remove-wishlist-btn:hover i {
-    color: #d32f2f;
+    color: #ffffff;
 }
 
 /* Wishlist Image */
@@ -109,18 +112,18 @@ header {
     justify-content: center;
     padding: 30px;
     overflow: hidden;
-    border-bottom: 1px solid rgba(92, 30, 40, 0.03);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .wishlist-image img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    transition: transform 0.3s ease;
+    transition: transform 0.5s ease;
 }
 
 .wishlist-item:hover .wishlist-image img {
-    transform: scale(1.05);
+    transform: scale(1.08);
 }
 
 /* Wishlist Details */
@@ -131,9 +134,9 @@ header {
 
 .wishlist-product-name {
     font-family: 'Playfair Display', serif;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 500;
-    color: #2d2a29;
+    color: var(--primary-red);
     margin: 0 0 10px 0;
     line-height: 1.4;
     min-height: 50px;
@@ -145,49 +148,33 @@ header {
 .wishlist-product-price {
     font-family: 'Inter', sans-serif;
     font-size: 20px;
-    font-weight: 600;
-    color: #5c1e28;
+    font-weight: 700;
+    color: var(--text-dark);
     margin: 0 0 18px 0;
 }
 
 /* Add to Cart Button */
 .wishlist-add-cart-btn {
     width: 100%;
-    padding: 12px 24px;
-    background: #5c1e28;
+    padding: 14px 24px;
+    background: var(--primary-red);
     color: #ffffff;
     border: none;
     border-radius: 8px;
     font-family: 'Inter', sans-serif;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: 1.8px;
     text-transform: uppercase;
     cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.product-unavailable-label {
-    display: block;
-    width: 100%;
-    padding: 12px 24px;
-    background: #f5ecec;
-    color: #c62828;
-    border: 1px solid #e57373;
-    border-radius: 8px;
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    text-align: center;
-    box-sizing: border-box;
+    transition: var(--transition-smooth);
+    box-shadow: 0 6px 18px rgba(92, 30, 40, 0.2);
 }
 
 .wishlist-add-cart-btn:hover {
     background: #3b1118;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(92, 30, 40, 0.3);
+    box-shadow: 0 10px 25px rgba(92, 30, 40, 0.3);
 }
 
 .wishlist-add-cart-btn:disabled {

@@ -1,0 +1,543 @@
+/* ══════════════════════════════════════════════════════════════════
+   VELOURA LUXURY ADMIN DESIGN SYSTEM
+   Theme: Royal Burgundy (#5c1e28), Champagne Gold (#c5a059), Warm Cream (#FAF6F0)
+   ══════════════════════════════════════════════════════════════════ */
+
+:root {
+    --primary-red: #5c1e28;
+    --primary-hover: #3b1118;
+    --accent-gold: #c5a059;
+    --accent-gold-light: #f4eae1;
+    --main-bg: #FAF6F0;
+    --sidebar-bg: #FCFBF9;
+    --card-bg: #FFFFFF;
+    --text-dark: #2D2A29;
+    --text-gray: #77726D;
+    --text-light: #A5A09A;
+    --border-color: #E6DED4;
+    --border-light: #F0EAE1;
+    --shadow-soft: 0 8px 30px rgba(92, 30, 40, 0.04);
+    --shadow-hover: 0 14px 38px rgba(92, 30, 40, 0.09);
+    
+    /* Badges & Status */
+    --success-bg: #eaf7f0;
+    --success-text: #1b7a4b;
+    --warning-bg: #fff8eb;
+    --warning-text: #b87b14;
+    --danger-bg: #fcebeb;
+    --danger-text: #b82525;
+    --info-bg: #eff4fe;
+    --info-text: #2b5ac7;
+}
+
+/* ── Reset & Baseline ── */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--main-bg);
+    color: var(--text-dark);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ── Admin Sidebar Layout ── */
+.sidebar {
+    width: 260px;
+    min-width: 260px;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 4px 0 25px rgba(92, 30, 40, 0.02);
+}
+
+.sidebar-header {
+    padding: 35px 35px 25px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--primary-red);
+    text-decoration: none;
+    letter-spacing: -0.5px;
+    display: block;
+}
+
+.sidebar-menu {
+    flex: 1;
+    overflow-y: auto;
+    list-style: none;
+    padding: 20px 0;
+    margin: 0;
+}
+
+.sidebar-menu li {
+    margin-bottom: 4px;
+}
+
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    padding: 14px 35px;
+    color: #44403e;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+}
+
+.sidebar-menu a i {
+    width: 24px;
+    font-size: 15px;
+    color: var(--text-gray);
+    margin-right: 14px;
+    text-align: center;
+    transition: color 0.25s ease;
+}
+
+.sidebar-menu a:hover {
+    background-color: rgba(92, 30, 40, 0.04);
+    color: var(--primary-red);
+    padding-left: 38px;
+}
+
+.sidebar-menu a:hover i {
+    color: var(--primary-red);
+}
+
+.sidebar-menu a.active {
+    background-color: rgba(92, 30, 40, 0.08);
+    color: var(--primary-red);
+    font-weight: 600;
+}
+
+.sidebar-menu a.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background-color: var(--primary-red);
+    border-radius: 0 4px 4px 0;
+}
+
+.sidebar-menu a.active i {
+    color: var(--primary-red);
+}
+
+.logout-li {
+    padding: 20px 30px 30px;
+    margin-top: auto;
+}
+
+.sidebar-menu .logout-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 13px !important;
+    background-color: var(--primary-red);
+    color: #FFFFFF !important;
+    text-align: center;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(92, 30, 40, 0.15);
+}
+
+.sidebar-menu .logout-btn:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(92, 30, 40, 0.25);
+    padding-left: 13px !important;
+}
+
+/* ── Main Layout Container ── */
+.main-content {
+    margin-left: 260px;
+    flex: 1;
+    min-width: 0;
+    padding: 40px 50px 60px;
+    box-sizing: border-box;
+    background-color: var(--main-bg);
+}
+
+/* Page Header & Breadcrumb */
+.top-header, .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.breadcrumb {
+    font-size: 11px;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.breadcrumb span {
+    color: var(--primary-red);
+    font-weight: 600;
+}
+
+.user-info, .user-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    background: #FFFFFF;
+    padding: 8px 16px;
+    border-radius: 30px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 10px rgba(92, 30, 40, 0.02);
+}
+
+.user-info i, .user-indicator i {
+    color: var(--primary-red);
+    font-size: 14px;
+}
+
+.page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+    font-weight: 500;
+    color: var(--primary-red);
+    margin-bottom: 30px;
+    letter-spacing: -0.5px;
+}
+
+/* ── Luxury Cards & Panels ── */
+.card, .metrics-card, .table-card, .chart-card, .form-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 28px 32px;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.card:hover, .metrics-card:hover, .table-card:hover {
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(197, 160, 89, 0.35);
+}
+
+/* ── Standard Admin Tables ── */
+.table-container, .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    background: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    box-shadow: var(--shadow-soft);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    background: #FFFFFF;
+}
+
+table th {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    color: var(--primary-red);
+    background-color: #FAF8F5;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+table td {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--text-dark);
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+}
+
+table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+table tbody tr:hover {
+    background-color: rgba(250, 246, 240, 0.6);
+}
+
+table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ── Form Inputs & Controls ── */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="password"],
+input[type="date"],
+select,
+textarea,
+.search-input,
+.form-control {
+    width: 100%;
+    padding: 13px 18px;
+    background-color: #FAF8F5;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--text-dark);
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.search-input:focus,
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-red);
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(92, 30, 40, 0.08);
+}
+
+/* ── Buttons & CTAs ── */
+.btn, .btn-primary, .btn-add, .add-btn, .btn-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: var(--primary-red);
+    color: #FFFFFF !important;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 13px 26px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 15px rgba(92, 30, 40, 0.15);
+}
+
+.btn:hover, .btn-primary:hover, .btn-add:hover, .add-btn:hover, .btn-submit:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(92, 30, 40, 0.25);
+}
+
+.btn-secondary, .btn-cancel, .btn-outline {
+    background-color: transparent;
+    color: var(--text-dark) !important;
+    border: 1px solid var(--border-color);
+    padding: 12px 24px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+.btn-secondary:hover, .btn-cancel:hover, .btn-outline:hover {
+    background-color: #FAF8F5;
+    border-color: var(--primary-red);
+    color: var(--primary-red) !important;
+}
+
+/* Square Action Icon Buttons */
+.btn-icon-action, a.btn-action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: #FFFFFF;
+    color: var(--text-gray);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-icon-action:hover, a.btn-action-icon:hover {
+    border-color: var(--primary-red);
+    color: var(--primary-red);
+    background-color: rgba(92, 30, 40, 0.05);
+}
+
+/* List / Unlist Product Toggle & Status Buttons */
+.btn-list,
+.btn-unlist {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 16px;
+    height: auto;
+    width: auto;
+    min-width: 75px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+/* Clickable Action Button (Active Toggle) */
+.btn-list.action-btn {
+    background-color: transparent !important;
+    color: #1b7a4b !important;
+    border: 1.5px solid #1b7a4b !important;
+    cursor: pointer !important;
+}
+
+.btn-list.action-btn:hover {
+    background-color: #1b7a4b !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(27, 122, 75, 0.2);
+}
+
+.btn-unlist.action-btn {
+    background-color: transparent !important;
+    color: #b82525 !important;
+    border: 1.5px solid #b82525 !important;
+    cursor: pointer !important;
+}
+
+.btn-unlist.action-btn:hover {
+    background-color: #b82525 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(184, 37, 37, 0.2);
+}
+
+/* Current Status Badge (Non-clickable state) */
+.btn-list.status-badge {
+    background-color: #1b7a4b !important;
+    color: #ffffff !important;
+    border: 1.5px solid #1b7a4b !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    box-shadow: 0 2px 6px rgba(27, 122, 75, 0.15);
+}
+
+.btn-unlist.status-badge {
+    background-color: #b82525 !important;
+    color: #ffffff !important;
+    border: 1.5px solid #b82525 !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    box-shadow: 0 2px 6px rgba(184, 37, 37, 0.15);
+}
+
+/* ── Badges & Status Pills ── */
+.badge, .badge-active, .badge-inactive, .badge-pending, .badge-shipped, .badge-delivered, .badge-cancelled {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.badge-active, .badge-success, .badge-delivered {
+    background-color: var(--success-bg);
+    color: var(--success-text);
+    border: 1px solid rgba(46, 165, 113, 0.2);
+}
+
+.badge-inactive, .badge-danger, .badge-cancelled, .badge-blocked {
+    background-color: var(--danger-bg);
+    color: var(--danger-text);
+    border: 1px solid rgba(217, 48, 37, 0.2);
+}
+
+.badge-pending, .badge-warning, .badge-shipped {
+    background-color: var(--warning-bg);
+    color: var(--warning-text);
+    border: 1px solid rgba(184, 123, 20, 0.2);
+}
+
+/* ── Pagination ── */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 30px;
+}
+
+.pagination a, .pagination span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: #FFFFFF;
+    color: var(--text-dark);
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+.pagination a:hover {
+    border-color: var(--primary-red);
+    color: var(--primary-red);
+    background-color: rgba(92, 30, 40, 0.04);
+}
+
+.pagination .active, .pagination span.current {
+    background-color: var(--primary-red);
+    color: #FFFFFF;
+    border-color: var(--primary-red);
+    font-weight: 600;
+}

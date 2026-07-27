@@ -143,6 +143,7 @@ export const getDashboardData = async (req, res) => {
             { $unwind: "$productDetails" }
         ]);
 
+
         // 3. Top 10 Best Selling Categories
         const topCategories = await Order.aggregate([
             { 
@@ -208,6 +209,7 @@ export const getDashboardData = async (req, res) => {
             { $limit: 10 }
         ]);
 
+
         return res.json({
             success: true,
             chartLabels: chartData.map(item => item._id),
@@ -224,14 +226,13 @@ export const getDashboardData = async (req, res) => {
             topBrands: topBrands.map(item => ({
                 name: item._id,
                 qty: item.totalQty
-            }))
+            })),
         });
     } catch (error) {
         console.error('Error fetching dashboard statistics:', error);
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
-
 
 export const getUsers = async (req, res) => {
     try {

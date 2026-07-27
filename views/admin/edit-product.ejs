@@ -533,6 +533,14 @@
                                 </div>
 
                                 <div class="form-group">
+                                    <label class="form-label">PRODUCT OFFER (%)</label>
+                                    <input type="number" id="editProductOffer" name="productOffer" class="form-input"
+                                        placeholder="e.g. 15" min="0" max="100" step="1"
+                                        value="<%= product.offer ? (product.offer.discount || 0) : 0 %>">
+                                    <span class="field-error" id="editProductOfferError"></span>
+                                </div>
+
+                                <div class="form-group">
                                     <label class="form-label">STATUS</label>
                                     <select name="status" class="form-select">
                                         <option value="ACTIVE" <%=product.status==='ACTIVE' ? 'selected' : '' %>>Active
@@ -983,12 +991,16 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> UPDATING...';
 
             try {
+                const productOfferInput = document.getElementById('editProductOffer');
+                const productOffer = productOfferInput ? productOfferInput.value.trim() : '0';
+
                 const formData = new URLSearchParams();
                 formData.append('productName', productName);
                 formData.append('brand', brand);
                 formData.append('description', description);
                 formData.append('categoryId', categoryId);
                 formData.append('status', status);
+                formData.append('productOffer', productOffer);
 
                 const response = await fetch('/admin/products/update-details/<%= product._id %>', {
                     method: 'POST',

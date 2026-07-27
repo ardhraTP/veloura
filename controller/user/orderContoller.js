@@ -113,7 +113,6 @@ export const cancelOrderProduct = async (req, res) => {
         const orderId = req.params.id;
         const { itemId, reason, comment } = req.body;
 
-
         const order = await Order.findById(orderId);
         if (!order) {
             return res.json({ success: false, message: 'Order not found' });
@@ -135,7 +134,7 @@ export const cancelOrderProduct = async (req, res) => {
 
         item.itemStatus = 'Cancelled';
         item.cancellationReason = comment ? `${reason} - ${comment}` : reason;
-
+        item.cancelledAt = new Date();
 
         let refundAmount = 0;
         if (order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded') {
@@ -157,7 +156,7 @@ export const cancelOrderProduct = async (req, res) => {
             refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
 
             const user = await User.findById(order.user);
-            if (user) {
+            if (user && order.paymentMethod === 'Wallet') {
                 user.walletBalance = (user.walletBalance || 0) + refundAmount;
                 user.walletHistory.push({
                     amount: refundAmount,

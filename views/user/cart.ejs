@@ -89,7 +89,16 @@
                                             <% } %>
                                 </div>
                             </div>
-                            <div class="item-price">₹<%= item.price.toFixed(2) %>
+                            <div class="item-price">
+                                ₹<%= item.price.toFixed(2) %>
+                                <%
+                                    const hasDiscount = item.variant && item.variant.regularPrice > item.price;
+                                    const discPct = (typeof item.discountPercentage === 'number') ? item.discountPercentage : (hasDiscount ? Math.round(((item.variant.regularPrice - item.price) / item.variant.regularPrice) * 100) : 0);
+                                %>
+                                <% if (discPct > 0) { %>
+                                    <div style="font-size: 11px; color: #999; text-decoration: line-through; margin-top: 2px;">₹<%= item.variant.regularPrice.toFixed(2) %></div>
+                                    <span style="font-size: 10px; background: #5c1e28; color: #fff; padding: 2px 5px; border-radius: 3px; font-weight: 600; display: inline-block; margin-top: 2px;"><%= discPct %>% OFF</span>
+                                <% } %>
                             </div>
                             <div class="item-quantity">
                                 <button class="qty-btn"

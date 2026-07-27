@@ -626,11 +626,9 @@
                                         <a href="/admin/orders/<%= order._id %>" class="btn-view" title="View Order Details">
                                             View
                                         </a>
-                                        <% if (order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Returned') { %>
-                                            <button type="button" class="action-link-btn" onclick="enableStatusEdit('<%= order._id %>')" title="Edit Order Status" style="margin: 0; cursor: pointer;">
-                                                <i class="far fa-edit"></i>
-                                            </button>
-                                        <% } %>
+                                        <button type="button" class="action-link-btn" onclick="enableStatusEdit('<%= order._id %>')" title="Edit Order Status" style="margin: 0; cursor: pointer;">
+                                            <i class="far fa-edit"></i>
+                                        </button>
                                     </div>
                                     <div id="actions-edit-<%= order._id %>" style="display: none; gap: 10px; justify-content: flex-end; align-items: center; width: 100%;">
                                         <button type="button" class="btn-view" style="color: #137333; border-color: #137333; cursor: pointer;" onclick="saveStatusEdit('<%= order._id %>')" title="Save Status">

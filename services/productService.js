@@ -1,6 +1,7 @@
 import Product from '../model/Product.js';
 import Variant from '../model/Variant.js';
 import mongoose from 'mongoose';
+import { calculateOfferPrice } from '../utils/priceHelper.js';
 
 export const getProducts = async (options) => {
     try {
@@ -93,6 +94,18 @@ export const getProducts = async (options) => {
 
         const products = await Product.aggregate(pipeline).collation({ locale: 'en', strength: 2 });
 
+        // Calculate offer prices for all product variants
+        products.forEach(product => {
+            if (product.variants && product.variants.length > 0) {
+                product.variants.forEach(variant => {
+                    const { finalPrice, discountPercentage } = calculateOfferPrice(product, variant.regularPrice, variant.salePrice);
+                    variant.salePrice = finalPrice;
+                    variant.discountPercentage = discountPercentage;
+                    variant.activeOfferDiscount = discountPercentage;
+                });
+            }
+        });
+
         const totalProducts = await Product.countDocuments(matchFilter);
         const totalPages = Math.ceil(totalProducts / limit);
 
@@ -114,7 +127,7 @@ export const getProductById = async (productId) => {
             _id: productId,
             isDeleted: false,
             status: 'ACTIVE'
-        }).populate('categoryId', 'name');
+        }).populate('categoryId');
 
         if (!product) return null;
 

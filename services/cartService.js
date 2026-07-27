@@ -2,11 +2,12 @@ import Cart from '../model/Cart.js';
 import Product from '../model/Product.js';
 import Variant from '../model/Variant.js';
 import { removeFromWishlist } from './wishlistService.js';
+import { calculateOfferPrice } from '../utils/priceHelper.js';
 
 export const getUserCart = async (userId) => {
     try {
         let cart = await Cart.findOne({ user: userId })
-            .populate('items.product')
+            .populate({ path: 'items.product', populate: { path: 'categoryId' } })
             .populate('items.variant');
 
         if (!cart) {
@@ -20,14 +21,22 @@ export const getUserCart = async (userId) => {
                         item.quantity = Math.max(0, item.variant.quantity);
                         cartUpdated = true;
                     }
+                    if (item.product && item.variant.regularPrice) {
+                        const { finalPrice, discountPercentage } = calculateOfferPrice(item.product, item.variant.regularPrice, item.variant.salePrice);
+                        if (item.price !== finalPrice || item.discountPercentage !== discountPercentage) {
+                            item.price = finalPrice;
+                            item.discountPercentage = discountPercentage;
+                            cartUpdated = true;
+                        }
+                    }
                 }
             }
+            cart.totalAmount = cart.items.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
             if (cartUpdated) {
-                cart.totalAmount = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
                 await cart.save();
                 
                 cart = await Cart.findOne({ user: userId })
-                    .populate('items.product')
+                    .populate({ path: 'items.product', populate: { path: 'categoryId' } })
                     .populate('items.variant');
             }
         }
@@ -44,7 +53,7 @@ export const addProductToCart = async (userId, productId, variantId, quantity) =
             _id: productId,
             isDeleted: false,
             status: 'ACTIVE'
-        });
+        }).populate('categoryId');
         if (!product) throw new Error('Product not found or unavailable');
 
         const variant = await Variant.findOne({
@@ -56,7 +65,8 @@ export const addProductToCart = async (userId, productId, variantId, quantity) =
         if (!variant) throw new Error('Variant not found');
         if (variant.quantity < quantity) throw new Error('Not enough stock available');
 
-        const priceToUse = variant.salePrice;
+        const { finalPrice } = calculateOfferPrice(product, variant.regularPrice, variant.salePrice);
+        const priceToUse = finalPrice;
 
         let cart = await getUserCart(userId);
 
@@ -75,6 +85,7 @@ export const addProductToCart = async (userId, productId, variantId, quantity) =
                 throw new Error('Not enough stock available');
             }
             existingItem.quantity = newQuantity;
+            existingItem.price = priceToUse;
         } else {
             if (quantity > 5) {
                 throw new Error('Cannot add more than 5 quantity of the same product variant');
@@ -96,7 +107,7 @@ export const addProductToCart = async (userId, productId, variantId, quantity) =
             console.error('Error removing from wishlist in addProductToCart:', e);
         }
 
-        cart = await Cart.findById(cart._id).populate('items.product').populate('items.variant');
+        cart = await Cart.findById(cart._id).populate({ path: 'items.product', populate: { path: 'categoryId' } }).populate('items.variant');
         return cart;
     } catch (error) {
         console.log('Error adding to cart:', error);

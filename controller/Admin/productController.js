@@ -19,7 +19,7 @@ const cleanupUploadedFiles = (files) => {
     }
 };
 
-// Show admin products list page with variants
+
 export const getAdminProductsPage = async (req, res) => {
     try {
 
@@ -128,12 +128,18 @@ export const addProduct = async (req, res) => {
             return res.redirect('/admin/products/add?error=Please add at least one variant');
         }
 
+        const offerDiscount = Math.min(100, Math.max(0, parseFloat(req.body.productOffer || req.body.offer) || 0));
+
         const newProduct = new Product({
             productName: productName.trim(),
             brand: brand.trim(),
             description: description.trim(),
             categoryId: categoryId,
-            status: status || 'ACTIVE'
+            status: status || 'ACTIVE',
+            offer: {
+                discount: offerDiscount,
+                isActive: offerDiscount > 0
+            }
         });
 
         await newProduct.save();
@@ -224,6 +230,8 @@ export const updateProductDetails = async (req, res) => {
             return res.json({ success: false, message: 'All required fields must be filled.' });
         }
 
+        const offerDiscount = Math.min(100, Math.max(0, parseFloat(req.body.productOffer || req.body.offer) || 0));
+
         const updatedProduct = await Product.findOneAndUpdate(
             { _id: productId, isDeleted: false },
             {
@@ -232,7 +240,11 @@ export const updateProductDetails = async (req, res) => {
                     brand: brand.trim(),
                     description: description.trim(),
                     categoryId: categoryId,
-                    status: status || 'ACTIVE'
+                    status: status || 'ACTIVE',
+                    offer: {
+                        discount: offerDiscount,
+                        isActive: offerDiscount > 0
+                    }
                 }
             },
             { new: true, runValidators: true }
@@ -258,6 +270,8 @@ export const updateProduct = async (req, res) => {
             return res.redirect(`/admin/products/edit/${productId}?error=All required fields must be filled`);
         }
 
+        const offerDiscount = Math.min(100, Math.max(0, parseFloat(req.body.productOffer || req.body.offer) || 0));
+
         const updatedProduct = await Product.findOneAndUpdate(
             { _id: productId, isDeleted: false },
             {
@@ -266,7 +280,11 @@ export const updateProduct = async (req, res) => {
                     brand: brand.trim(),
                     description: description.trim(),
                     categoryId: categoryId,
-                    status: status || 'ACTIVE'
+                    status: status || 'ACTIVE',
+                    offer: {
+                        discount: offerDiscount,
+                        isActive: offerDiscount > 0
+                    }
                 }
             },
             { new: true, runValidators: true }

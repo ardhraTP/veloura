@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= product.brand %> – <%= product.productName %> | Veloura</title>
-    <meta name="description" content="Shop <%= product.brand %> <%= product.productName %> — iconic finish, unrivaled pigment. Exclusive at Veloura.">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>
+        <%= product.brand %> – <%= product.productName %> | Veloura
+    </title>
+    <meta name="description"
+        content="Shop <%= product.brand %> <%= product.productName %> — iconic finish, unrivaled pigment. Exclusive at Veloura.">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/navbar.css">
@@ -13,568 +19,628 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/prevent-back.js"></script>
 </head>
+
 <body>
 
     <%- include('../partials/navbar') %>
 
-    <!-- Breadcrumb -->
-    <nav class="breadcrumb">
-        <a href="/home">Home</a><span>›</span>
-        <a href="/products">Collections</a><span>›</span>
-        <a href="/products"><%= product.brand %></a><span>›</span>
-        <%= product.productName %>
-    </nav>
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb">
+            <a href="/home">Home</a><span>›</span>
+            <a href="/products">Collections</a><span>›</span>
+            <a href="/products">
+                <%= product.brand %>
+            </a><span>›</span>
+            <%= product.productName %>
+        </nav>
 
-    <!-- ══════════════════════════════
+        <!-- ══════════════════════════════
          PRODUCT HERO
     ══════════════════════════════ -->
-    <section class="product-hero">
+        <section class="product-hero">
 
-        <!-- LEFT: Thumbnail strip + Main image -->
-        <div class="product-gallery">
+            <!-- LEFT: Thumbnail strip + Main image -->
+            <div class="product-gallery">
 
-            <!-- Vertical thumbnails on far left -->
-            <div class="thumb-strip" id="thumbStrip">
-                <% if (product.variants && product.variants.length > 0 && product.variants[0].images && product.variants[0].images.length > 0) { %>
-                    <% product.variants[0].images.forEach((img, idx) => { %>
-                        <div class="thumb-item <%= idx === 0 ? 'active' : '' %>" onclick="switchImg(this, '<%= img %>')">
-                            <img src="<%= img %>" alt="View <%= idx + 1 %>">
+                <!-- Vertical thumbnails on far left -->
+                <div class="thumb-strip" id="thumbStrip">
+                    <% if (product.variants && product.variants.length> 0 && product.variants[0].images &&
+                        product.variants[0].images.length > 0) { %>
+                        <% product.variants[0].images.forEach((img, idx)=> { %>
+                            <div class="thumb-item <%= idx === 0 ? 'active' : '' %>"
+                                onclick="switchImg(this, '<%= img.replace(/'/g, "\\'") %>')">
+                                <img src="<%= img %>" alt="View <%= idx + 1 %>">
+                            </div>
+                            <% }) %>
+                                <% } else { %>
+                                    <div class="thumb-item active" onclick="switchImg(this, '/images/placeholder.png')">
+                                        <img src="/images/placeholder.png" alt="Placeholder">
+                                    </div>
+                                    <% } %>
+                </div>
+
+                <!-- Main large image -->
+                <div class="main-image-wrap"
+                    style="--variant-hex: <%= product.variants && product.variants.length > 0 && product.variants[0].hexCode ? product.variants[0].hexCode : '#f4eae1' %>;">
+                    <img id="mainImg"
+                        src="<%= product.variants && product.variants.length > 0 && product.variants[0].images && product.variants[0].images[0] ? product.variants[0].images[0] : '/images/placeholder.png' %>"
+                        alt="<%= product.productName %>">
+                </div>
+
+            </div>
+
+            <!-- RIGHT: Product Info -->
+            <div class="product-info">
+
+                <p class="pd-brand">
+                    <%= product.brand %>
+                </p>
+                <h1 class="pd-title">
+                    <%= product.productName %>
+                </h1>
+                <p class="pd-tagline" style="font-size: 14px; margin-bottom: 20px; line-height: 1.6; color: #777;">
+                    <%= product.description %>
+                </p>
+
+
+                <!-- Price -->
+                <div class="pd-price-row">
+                    <span class="pd-price-now" id="salePrice">₹<%= product.variants && product.variants.length> 0 ?
+                            product.variants[0].salePrice.toFixed(2) : '0.00' %></span>
+                    <span class="pd-price-was" id="regularPrice"
+                        style="<%= product.variants && product.variants.length > 0 && product.variants[0].regularPrice > product.variants[0].salePrice ? '' : 'display: none;' %>">
+                        ₹<%= product.variants && product.variants.length> 0 ?
+                            product.variants[0].regularPrice.toFixed(2) : '0.00' %>
+                    </span>
+                    <% const firstV=product.variants && product.variants.length> 0 ? product.variants[0] : null;
+                        const discountPct = firstV ? (typeof firstV.activeOfferDiscount === 'number' ? firstV.activeOfferDiscount : (typeof firstV.discountPercentage === 'number' ? firstV.discountPercentage : (firstV.regularPrice > firstV.salePrice ? Math.round(((firstV.regularPrice - firstV.salePrice) / firstV.regularPrice) * 100) : 0))) : 0;
+                        %>
+                        <span class="offer-badge" id="offerBadge"
+                            style="<%= discountPct > 0 ? '' : 'display: none;' %>; background: #5c1e28; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 12px; margin-left: 8px;">
+                            <%= discountPct %>% OFF
+                        </span>
+                </div>
+
+                <!-- Stock -->
+                <div class="pd-stock" id="stockDisplay">Stock: <%= product.variants && product.variants.length> 0 ?
+                        product.variants[0].quantity : 0 %></div>
+
+                <!-- Color swatches -->
+                <div class="pd-color-section">
+                    <% if (product.variants && product.variants.length> 0) { %>
+                        <p class="pd-color-label">Color: <span id="colorName">
+                                <%= product.variants[0].color %>
+                            </span></p>
+                        <div class="pd-swatches">
+                            <% product.variants.forEach((v, index)=> { %>
+                                <div class="pd-swatch <%= index === 0 ? 'active' : '' %>"
+                                    style="background: <%= v.hexCode || '#ffffff' %>;" data-id="<%= v._id %>"
+                                    data-name="<%= v.color %>" onclick="selectVariant(this)"></div>
+                                <% }) %>
                         </div>
-                    <% }) %>
-                <% } else { %>
-                    <div class="thumb-item active" onclick="switchImg(this, '/images/placeholder.png')">
-                        <img src="/images/placeholder.png" alt="Placeholder">
-                    </div>
-                <% } %>
-            </div>
-
-            <!-- Main large image -->
-            <div class="main-image-wrap" style="--variant-hex: <%= product.variants && product.variants.length > 0 && product.variants[0].hexCode ? product.variants[0].hexCode : '#f4eae1' %>;">
-                <img id="mainImg" src="<%= product.variants && product.variants.length > 0 && product.variants[0].images && product.variants[0].images[0] ? product.variants[0].images[0] : '/images/placeholder.png' %>" alt="<%= product.productName %>">
-            </div>
-
-        </div>
-
-        <!-- RIGHT: Product Info -->
-        <div class="product-info">
-
-            <p class="pd-brand"><%= product.brand %></p>
-            <h1 class="pd-title"><%= product.productName %></h1>
-            <p class="pd-tagline" style="font-size: 14px; margin-bottom: 20px; line-height: 1.6; color: #777;"><%= product.description %></p>
-    
-
-            <!-- Price -->
-            <div class="pd-price-row">
-                <span class="pd-price-now" id="salePrice">₹<%= product.variants && product.variants.length > 0 ? product.variants[0].salePrice.toFixed(2) : '0.00' %></span>
-                <span class="pd-price-was" id="regularPrice" style="<%= product.variants && product.variants.length > 0 && product.variants[0].regularPrice > product.variants[0].salePrice ? '' : 'display: none;' %>">
-                    ₹<%= product.variants && product.variants.length > 0 ? product.variants[0].regularPrice.toFixed(2) : '0.00' %>
-                </span>
-            </div>
-
-            <!-- Stock -->
-            <div class="pd-stock" id="stockDisplay">Stock: <%= product.variants && product.variants.length > 0 ? product.variants[0].quantity : 0 %></div>
-
-            <!-- Color swatches -->
-            <div class="pd-color-section">
-                <% if (product.variants && product.variants.length > 0) { %>
-                    <p class="pd-color-label">Color: <span id="colorName"><%= product.variants[0].color %></span></p>
-                    <div class="pd-swatches">
-                        <% product.variants.forEach((v, index) => { %>
-                            <div class="pd-swatch <%= index === 0 ? 'active' : '' %>" 
-                                 style="background: <%= v.hexCode || '#ffffff' %>;" 
-                                 data-id="<%= v._id %>"
-                                 data-name="<%= v.color %>" 
-                                 onclick="selectVariant(this)"></div>
-                        <% }) %>
-                    </div>
-                <% } else { %>
-                    <p class="pd-color-label">Color: <span id="colorName">No shades available</span></p>
-                <% } %>
-            </div>
-
-            <!-- CTA Buttons -->
-            <%
-                const firstVariantStock = product.variants && product.variants.length > 0 ? product.variants[0].quantity : 0;
-            %>
-            <button class="pd-btn-add" id="addCartBtn" <%= firstVariantStock === 0 ? 'disabled' : '' %>>
-                <%= firstVariantStock === 0 ? 'OUT OF STOCK' : 'ADD TO CART' %>
-            </button>
-            <button class="pd-btn-buy" id="buyNowBtn" <%= firstVariantStock === 0 ? 'disabled' : '' %>>BUY NOW</button>
-            <button class="pd-btn-wishlist <%= typeof isInWishlist !== 'undefined' && isInWishlist ? 'active' : '' %>" id="wishlistBtn" onclick="toggleWishlist()">
-                <i class="<%= typeof isInWishlist !== 'undefined' && isInWishlist ? 'fas fa-heart' : 'far fa-heart' %>"></i> <%= typeof isInWishlist !== 'undefined' && isInWishlist ? 'ADDED TO WISHLIST' : 'ADD TO WISHLIST' %>
-            </button>
-
-            <!-- Specifications -->
-            <div class="pd-specs">
-                <p class="pd-specs-title">Specifications</p>
-                <table class="pd-specs-table">
-                    <tr>
-                        <td>Brand</td>
-                        <td><%= product.brand %></td>
-                    </tr>
-                    <tr>
-                        <td>Model ID</td>
-                        <td>Velvet Absolute 402</td>
-                    </tr>
-                    <tr>
-                        <td>Finish</td>
-                        <td>Velvet Matte</td>
-                    </tr>
-                    <tr>
-                        <td>Weight</td>
-                        <td>3.5g</td>
-                    </tr>
-                    <tr>
-                        <td>Duration</td>
-                        <td>12 Hour Wear</td>
-                    </tr>
-                    <tr>
-                        <td>Key Ingredient</td>
-                        <td>Vitamin E &amp; Argan Oil</td>
-                    </tr>
-                </table>
-            </div>
-
-            <!-- Shipping -->
-            <div class="pd-shipping">
-                <div class="pd-ship-row">
-                    <i class="fas fa-truck"></i>
-                    <div>
-                        <strong>Free Shipping and Returns</strong>
-                        Free standard shipping on all orders above ₹1000. Free returns within 30 days.
-                    </div>
+                        <% } else { %>
+                            <p class="pd-color-label">Color: <span id="colorName">No shades available</span></p>
+                            <% } %>
                 </div>
-                <div class="pd-ship-row">
-                    <i class="fas fa-store"></i>
-                    <div>
-                        <strong>In-Store Pickup</strong>
-                        Pick up at any Veloura retail location at no extra charge.
+
+                <!-- CTA Buttons -->
+                <% const firstVariantStock=product.variants && product.variants.length> 0 ? product.variants[0].quantity
+                    : 0;
+                    %>
+                    <button class="pd-btn-add" id="addCartBtn" <%=firstVariantStock===0 ? 'disabled' : '' %>>
+                        <%= firstVariantStock===0 ? 'OUT OF STOCK' : 'ADD TO CART' %>
+                    </button>
+                    <button class="pd-btn-buy" id="buyNowBtn" <%=firstVariantStock===0 ? 'disabled' : '' %>>BUY
+                        NOW</button>
+                    <button
+                        class="pd-btn-wishlist <%= typeof isInWishlist !== 'undefined' && isInWishlist ? 'active' : '' %>"
+                        id="wishlistBtn" onclick="toggleWishlist()">
+                        <i
+                            class="<%= typeof isInWishlist !== 'undefined' && isInWishlist ? 'fas fa-heart' : 'far fa-heart' %>"></i>
+                        <%= typeof isInWishlist !=='undefined' && isInWishlist ? 'ADDED TO WISHLIST' : 'ADD TO WISHLIST'
+                            %>
+                    </button>
+
+                    <!-- Specifications -->
+                    <div class="pd-specs">
+                        <p class="pd-specs-title">Specifications</p>
+                        <table class="pd-specs-table">
+                            <tr>
+                                <td>Brand</td>
+                                <td>
+                                    <%= product.brand %>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Model ID</td>
+                                <td>Velvet Absolute 402</td>
+                            </tr>
+                            <tr>
+                                <td>Finish</td>
+                                <td>Velvet Matte</td>
+                            </tr>
+                            <tr>
+                                <td>Weight</td>
+                                <td>3.5g</td>
+                            </tr>
+                            <tr>
+                                <td>Duration</td>
+                                <td>12 Hour Wear</td>
+                            </tr>
+                            <tr>
+                                <td>Key Ingredient</td>
+                                <td>Vitamin E &amp; Argan Oil</td>
+                            </tr>
+                        </table>
                     </div>
-                </div>
+
+                    <!-- Shipping -->
+                    <div class="pd-shipping">
+                        <div class="pd-ship-row">
+                            <i class="fas fa-truck"></i>
+                            <div>
+                                <strong>Free Shipping and Returns</strong>
+                                Free standard shipping on all orders above ₹1000. Free returns within 30 days.
+                            </div>
+                        </div>
+                        <div class="pd-ship-row">
+                            <i class="fas fa-store"></i>
+                            <div>
+                                <strong>In-Store Pickup</strong>
+                                Pick up at any Veloura retail location at no extra charge.
+                            </div>
+                        </div>
+                    </div>
+
             </div>
+        </section>
 
-        </div>
-    </section>
-
-    <!-- ══════════════════════════════
+        <!-- ══════════════════════════════
          PATRON TESTIMONY
     ══════════════════════════════ -->
-    <section class="testimony-section">
-        <div class="testimony-heading">
-            <h2>Patron Testimony</h2>
-        </div>
+        <section class="testimony-section">
+            <div class="testimony-heading">
+                <h2>Patron Testimony</h2>
+            </div>
 
-        <div class="testimony-grid">
-            <% if (typeof reviews !== 'undefined' && reviews && reviews.length > 0) { %>
-                <% reviews.forEach(function(review) { %>
-                    <div class="testimony-card">
-                        <div class="t-stars" style="color: #5C1E28; font-size: 14px; letter-spacing: 2px;"><%= '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating) %></div>
-                        <p class="t-quote">
-                            <% if (review.title) { %>
-                                <strong style="font-family: 'Playfair Display', serif; font-size: 16px;"><%= review.title %></strong><br>
-                            <% } %>
-                            "<%= review.comment %>"
-                        </p>
-                        <p class="t-author"><%= review.user ? review.user.name : 'Verified Buyer' %></p>
-                    </div>
-                <% }) %>
-            <% } else { %>
-                <div class="testimony-card" style="grid-column: 1 / -1; text-align: center; padding: 40px; border: 1px dashed #EAE5DF; background: white;">
-                    <p class="t-quote" style="font-style: italic; color: #777;">No reviews yet for this product. Be the first to share your experience!</p>
-                </div>
-            <% } %>
-        </div>
-    </section>
+            <div class="testimony-grid">
+                <% if (typeof reviews !=='undefined' && reviews && reviews.length> 0) { %>
+                    <% reviews.forEach(function(review) { %>
+                        <div class="testimony-card">
+                            <div class="t-stars" style="color: #5C1E28; font-size: 14px; letter-spacing: 2px;">
+                                <%= '★' .repeat(review.rating) + '☆' .repeat(5 - review.rating) %>
+                            </div>
+                            <p class="t-quote">
+                                <% if (review.title) { %>
+                                    <strong style="font-family: 'Playfair Display', serif; font-size: 16px;">
+                                        <%= review.title %>
+                                    </strong><br>
+                                    <% } %>
+                                        "<%= review.comment %>"
+                            </p>
+                            <p class="t-author">
+                                <%= review.user ? review.user.name : 'Verified Buyer' %>
+                            </p>
+                        </div>
+                        <% }) %>
+                            <% } else { %>
+                                <div class="testimony-card"
+                                    style="grid-column: 1 / -1; text-align: center; padding: 40px; border: 1px dashed #EAE5DF; background: white;">
+                                    <p class="t-quote" style="font-style: italic; color: #777;">No reviews yet for this
+                                        product. Be the first to share your experience!</p>
+                                </div>
+                                <% } %>
+            </div>
+        </section>
 
-    <!-- ══════════════════════════════
+        <!-- ══════════════════════════════
          ART OF THE SWIPE
     ══════════════════════════════ -->
-    <section class="art-section">
-        <div class="art-text">
-            <p class="art-eyebrow">The Craft</p>
-            <h2 class="art-title">The Art of<br>the Swipe</h2>
-            <p class="art-body">
-                Created in our Parisian laboratories, each bullet is precision-cut to ensure a flawless application. Our formula balances high-saturation pigments with moisturising argan oils for a finish that is undeniably matte yet remarkably comfortable.
-            </p>
-            <a href="/products" class="art-btn">VIEW COLLECTIONS</a>
-        </div>
-        <div class="art-media">
-            <img src="/images/products_lakme_1.png" alt="The Art of the Swipe">
-            <div class="art-play-btn">
-                <i class="fas fa-play"></i>
+        <section class="art-section">
+            <div class="art-text">
+                <p class="art-eyebrow">The Craft</p>
+                <h2 class="art-title">The Art of<br>the Swipe</h2>
+                <p class="art-body">
+                    Created in our Parisian laboratories, each bullet is precision-cut to ensure a flawless application.
+                    Our formula balances high-saturation pigments with moisturising argan oils for a finish that is
+                    undeniably matte yet remarkably comfortable.
+                </p>
+                <a href="/products" class="art-btn">VIEW COLLECTIONS</a>
             </div>
-        </div>
-    </section>
+            <div class="art-media">
+                <img src="/images/products_lakme_1.png" alt="The Art of the Swipe">
+                <div class="art-play-btn">
+                    <i class="fas fa-play"></i>
+                </div>
+            </div>
+        </section>
 
-    <!-- ══════════════════════════════
+        <!-- ══════════════════════════════
          RELATED PRODUCTS
     ══════════════════════════════ -->
-    <section class="related-section">
-        <h2 class="related-heading">Related Products</h2>
-        <div class="related-grid">
-            <div class="related-img-wrap" onclick="window.location.href='/products'">
-                <img src="/images/mac_product.png" alt="MAC Cosmetics">
+        <section class="related-section">
+            <h2 class="related-heading">Related Products</h2>
+            <div class="related-grid">
+                <div class="related-img-wrap" onclick="window.location.href='/products'">
+                    <img src="/images/mac_product.png" alt="MAC Cosmetics">
+                </div>
+                <div class="related-img-wrap" onclick="window.location.href='/products'">
+                    <img src="/images/maybelline_product.png" alt="Maybelline">
+                </div>
+                <div class="related-img-wrap" onclick="window.location.href='/products'">
+                    <img src="/images/products_maybelline_1.png" alt="Maybelline">
+                </div>
             </div>
-            <div class="related-img-wrap" onclick="window.location.href='/products'">
-                <img src="/images/maybelline_product.png" alt="Maybelline">
-            </div>
-            <div class="related-img-wrap" onclick="window.location.href='/products'">
-                <img src="/images/products_maybelline_1.png" alt="Maybelline">
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <%- include('../partials/footer') %>
+        <%- include('../partials/footer') %>
 
-    <script>
-        // ── Auth state from server ────────────────────────────────────
-        const IS_LOGGED_IN = <%= isLoggedIn ? 'true' : 'false' %>;
+            <script>
+                // ── Auth state from server ────────────────────────────────────
+                const IS_LOGGED_IN = <%= isLoggedIn ? 'true' : 'false' %>;
 
-        // Guest guard: shows a prompt to login/register and returns true if guest
-        function requireAuth() {
-            if (!IS_LOGGED_IN) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Login Required',
-                    text: 'Please log in or create an account to continue.',
-                    showCancelButton: true,
-                    confirmButtonColor: '#5c1e28',
-                    cancelButtonColor: '#aaa',
-                    confirmButtonText: 'Login',
-                    cancelButtonText: 'Register'
-                }).then(result => {
-                    if (result.isConfirmed) {
-                        window.location.href = '/login';
-                    } else if (result.dismiss === Swal.DismissReason.cancel) {
-                        window.location.href = '/register';
+                // Guest guard: shows a prompt to login/register and returns true if guest
+                function requireAuth() {
+                    if (!IS_LOGGED_IN) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Login Required',
+                            text: 'Please log in or create an account to continue.',
+                            showCancelButton: true,
+                            confirmButtonColor: '#5c1e28',
+                            cancelButtonColor: '#aaa',
+                            confirmButtonText: 'Login',
+                            cancelButtonText: 'Register'
+                        }).then(result => {
+                            if (result.isConfirmed) {
+                                window.location.href = '/login';
+                            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                                window.location.href = '/register';
+                            }
+                        });
+                        return true;
+                    }
+                    return false;
+                }
+
+                // Zoom/magnify feature on product main image hover
+                document.addEventListener('DOMContentLoaded', function () {
+                    const mainImgWrap = document.querySelector('.main-image-wrap');
+                    const mainImg = document.getElementById('mainImg');
+
+                    if (mainImgWrap && mainImg) {
+                        mainImgWrap.addEventListener('mouseenter', function () {
+                            mainImg.style.transition = 'transform 0.1s ease-out, transform-origin 0.05s ease-out';
+                        });
+
+                        mainImgWrap.addEventListener('mousemove', function (e) {
+                            const rect = mainImgWrap.getBoundingClientRect();
+                            const x = e.clientX - rect.left;
+                            const y = e.clientY - rect.top;
+
+                            const xPercent = (x / rect.width) * 100;
+                            const yPercent = (y / rect.height) * 100;
+
+                            mainImg.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+                            mainImg.style.transform = 'scale(2.5)';
+                        });
+
+                        mainImgWrap.addEventListener('mouseleave', function () {
+                            mainImg.style.transition = 'transform 0.5s ease, transform-origin 0.5s ease';
+                            mainImg.style.transform = 'scale(1)';
+                            mainImg.style.transformOrigin = 'center center';
+                        });
                     }
                 });
-                return true;
-            }
-            return false;
-        }
 
-        // Zoom/magnify feature on product main image hover
-        document.addEventListener('DOMContentLoaded', function() {
-            const mainImgWrap = document.querySelector('.main-image-wrap');
-            const mainImg = document.getElementById('mainImg');
-
-            if (mainImgWrap && mainImg) {
-                mainImgWrap.addEventListener('mouseenter', function() {
-                    mainImg.style.transition = 'transform 0.1s ease-out, transform-origin 0.05s ease-out';
-                });
-
-                mainImgWrap.addEventListener('mousemove', function(e) {
-                    const rect = mainImgWrap.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-
-                    const xPercent = (x / rect.width) * 100;
-                    const yPercent = (y / rect.height) * 100;
-
-                    mainImg.style.transformOrigin = `${xPercent}% ${yPercent}%`;
-                    mainImg.style.transform = 'scale(2.5)';
-                });
-
-                mainImgWrap.addEventListener('mouseleave', function() {
-                    mainImg.style.transition = 'transform 0.5s ease, transform-origin 0.5s ease';
-                    mainImg.style.transform = 'scale(1)';
-                    mainImg.style.transformOrigin = 'center center';
-                });
-            }
-        });
-
-        // Image switcher
-        function switchImg(thumb, src) {
-            document.getElementById('mainImg').src = src;
-            document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
-            thumb.classList.add('active');
-        }
-
-        // Track selected variantId (default = first variant)
-        const variants = <%- JSON.stringify(product.variants || []) %>;
-        let selectedVariantId = variants.length > 0 ? variants[0]._id : null;
-
-        function selectVariant(element) {
-            const variantId = element.dataset.id;
-            selectedVariantId = variantId;
-
-            // Highlight active swatch
-            document.querySelectorAll('.pd-swatch').forEach(d => d.classList.remove('active'));
-            element.classList.add('active');
-
-            // Find selected variant object
-            const variant = variants.find(v => v._id === variantId);
-            if (!variant) return;
-
-            // Update dynamic background highlight based on selected variant's hex color
-            const mainImgWrap = document.querySelector('.main-image-wrap');
-            if (mainImgWrap && variant.hexCode) {
-                mainImgWrap.style.setProperty('--variant-hex', variant.hexCode);
-            }
-
-            // Update color name
-            document.getElementById('colorName').textContent = variant.color;
-
-            // Update prices
-            document.getElementById('salePrice').textContent = '₹' + variant.salePrice.toFixed(2);
-            const regPriceEl = document.getElementById('regularPrice');
-            if (variant.regularPrice > variant.salePrice) {
-                regPriceEl.textContent = '₹' + variant.regularPrice.toFixed(2);
-                regPriceEl.style.display = 'inline';
-            } else {
-                regPriceEl.style.display = 'none';
-            }
-
-            // Update stock
-            const stockDisplay = document.getElementById('stockDisplay');
-            stockDisplay.textContent = 'Stock: ' + variant.quantity;
-
-            // Update CTA Add to Cart & Buy Now button status/text
-            const addCartBtn = document.getElementById('addCartBtn');
-            const buyNowBtn = document.getElementById('buyNowBtn');
-            if (variant.quantity === 0) {
-                addCartBtn.textContent = 'OUT OF STOCK';
-                addCartBtn.disabled = true;
-                if (buyNowBtn) buyNowBtn.disabled = true;
-            } else {
-                addCartBtn.textContent = 'ADD TO CART';
-                addCartBtn.disabled = false;
-                if (buyNowBtn) buyNowBtn.disabled = false;
-            }
-
-            // Update gallery (thumbnails and main image)
-            const thumbStrip = document.getElementById('thumbStrip');
-            const mainImg = document.getElementById('mainImg');
-            
-            thumbStrip.innerHTML = '';
-            if (variant.images && variant.images.length > 0) {
-                variant.images.forEach((img, idx) => {
-                    const thumbItem = document.createElement('div');
-                    thumbItem.className = 'thumb-item' + (idx === 0 ? ' active' : '');
-                    thumbItem.onclick = function() { switchImg(this, img); };
-                    
-                    const imgEl = document.createElement('img');
-                    imgEl.src = img;
-                    imgEl.alt = 'View ' + (idx + 1);
-                    
-                    thumbItem.appendChild(imgEl);
-                    thumbStrip.appendChild(thumbItem);
-                });
-                mainImg.src = variant.images[0];
-            } else {
-                const thumbItem = document.createElement('div');
-                thumbItem.className = 'thumb-item active';
-                thumbItem.onclick = function() { switchImg(this, '/images/placeholder.png'); };
-                
-                const imgEl = document.createElement('img');
-                imgEl.src = '/images/placeholder.png';
-                imgEl.alt = 'Placeholder';
-                
-                thumbItem.appendChild(imgEl);
-                thumbStrip.appendChild(thumbItem);
-                mainImg.src = '/images/placeholder.png';
-            }
-        }
-
-        // Add to cart — sends productId + variantId
-        document.getElementById('addCartBtn').addEventListener('click', function () {
-            if (requireAuth()) return;
-
-            const productId = '<%= product._id %>';
-            const quantity = 1;
-
-            if (!selectedVariantId) {
-                Swal.fire({ 
-                    toast: true, 
-                    position: 'top-end', 
-                    icon: 'warning', 
-                    title: 'Please select a shade first', 
-                    showConfirmButton: false, 
-                    timer: 2500,
-                    timerProgressBar: true
-                });
-                return;
-            }
-
-            fetch('/cart/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productId, variantId: selectedVariantId, quantity })
-            })
-            .then(response => {
-                if (response.redirected) {
-                    window.location.href = response.url;
-                    return;
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (!data) return;
-                if (data.success) {
-                    if (window.updateCartCount) window.updateCartCount();
-                    Swal.fire({ 
-                        toast: true, 
-                        position: 'top-end', 
-                        icon: 'success', 
-                        title: 'Product added to cart successfully!', 
-                        showConfirmButton: false, 
-                        timer: 2500,
-                        timerProgressBar: true
-                    });
-                } else {
-                    Swal.fire({ 
-                        toast: true, 
-                        position: 'top-end', 
-                        icon: 'error', 
-                        title: data.message || 'Failed to add to cart', 
-                        showConfirmButton: false, 
-                        timer: 2500,
-                        timerProgressBar: true
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({ 
-                    toast: true, 
-                    position: 'top-end', 
-                    icon: 'error', 
-                    title: 'Failed to add to cart', 
-                    showConfirmButton: false, 
-                    timer: 2500,
-                    timerProgressBar: true
-                });
-            });
-        });
-
-        // Toggle wishlist with AJAX
-        function toggleWishlist() {
-            if (requireAuth()) return;
-
-            const btn = document.getElementById('wishlistBtn');
-            const icon = btn.querySelector('i');
-            const productId = '<%= product._id %>';
-            const isInWishlist = icon.classList.contains('fas');
-            
-            if (isInWishlist) {
-                // Remove from wishlist
-                fetch('/wishlist/remove/' + productId, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
+                // Image switcher
+                function switchImg(thumb, src) {
+                    const mainImg = document.getElementById('mainImg');
+                    if (mainImg && src) {
+                        mainImg.src = src;
                     }
-                })
-                .then(response => {
-                    if (response.redirected) {
-                        window.location.href = response.url;
+                    document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+                    if (thumb) {
+                        thumb.classList.add('active');
+                    }
+                }
+
+                // Track selected variantId (default = first variant)
+                const variants = <%- JSON.stringify(product.variants || []) %>;
+                let selectedVariantId = variants.length > 0 ? variants[0]._id : null;
+
+                function selectVariant(element) {
+                    const variantId = element.dataset.id;
+                    selectedVariantId = variantId;
+
+                    // Highlight active swatch
+                    document.querySelectorAll('.pd-swatch').forEach(d => d.classList.remove('active'));
+                    element.classList.add('active');
+
+                    // Find selected variant object
+                    const variant = variants.find(v => v._id === variantId);
+                    if (!variant) return;
+
+                    // Update dynamic background highlight based on selected variant's hex color
+                    const mainImgWrap = document.querySelector('.main-image-wrap');
+                    if (mainImgWrap && variant.hexCode) {
+                        mainImgWrap.style.setProperty('--variant-hex', variant.hexCode);
+                    }
+
+                    // Update color name
+                    document.getElementById('colorName').textContent = variant.color;
+
+                    // Update prices
+                    document.getElementById('salePrice').textContent = '₹' + variant.salePrice.toFixed(2);
+                    const regPriceEl = document.getElementById('regularPrice');
+                    if (variant.regularPrice > variant.salePrice) {
+                        regPriceEl.textContent = '₹' + variant.regularPrice.toFixed(2);
+                        regPriceEl.style.display = 'inline';
+                    } else {
+                        regPriceEl.style.display = 'none';
+                    }
+
+                    const offerBadgeEl = document.getElementById('offerBadge');
+                    const discountPct = (typeof variant.activeOfferDiscount === 'number') ? variant.activeOfferDiscount : ((typeof variant.discountPercentage === 'number') ? variant.discountPercentage : (variant.regularPrice > variant.salePrice ? Math.round(((variant.regularPrice - variant.salePrice) / variant.regularPrice) * 100) : 0));
+                    if (offerBadgeEl) {
+                        if (discountPct > 0) {
+                            offerBadgeEl.textContent = discountPct + '% OFF';
+                            offerBadgeEl.style.display = 'inline-block';
+                        } else {
+                            offerBadgeEl.style.display = 'none';
+                        }
+                    }
+
+                    // Update stock
+                    const stockDisplay = document.getElementById('stockDisplay');
+                    stockDisplay.textContent = 'Stock: ' + variant.quantity;
+
+                    // Update CTA Add to Cart & Buy Now button status/text
+                    const addCartBtn = document.getElementById('addCartBtn');
+                    const buyNowBtn = document.getElementById('buyNowBtn');
+                    if (variant.quantity === 0) {
+                        addCartBtn.textContent = 'OUT OF STOCK';
+                        addCartBtn.disabled = true;
+                        if (buyNowBtn) buyNowBtn.disabled = true;
+                    } else {
+                        addCartBtn.textContent = 'ADD TO CART';
+                        addCartBtn.disabled = false;
+                        if (buyNowBtn) buyNowBtn.disabled = false;
+                    }
+
+                    // Update gallery (thumbnails and main image)
+                    const thumbStrip = document.getElementById('thumbStrip');
+                    const mainImg = document.getElementById('mainImg');
+
+                    thumbStrip.innerHTML = '';
+                    if (variant.images && variant.images.length > 0) {
+                        variant.images.forEach((img, idx) => {
+                            const thumbItem = document.createElement('div');
+                            thumbItem.className = 'thumb-item' + (idx === 0 ? ' active' : '');
+                            thumbItem.onclick = function () { switchImg(this, img); };
+
+                            const imgEl = document.createElement('img');
+                            imgEl.src = img;
+                            imgEl.alt = 'View ' + (idx + 1);
+
+                            thumbItem.appendChild(imgEl);
+                            thumbStrip.appendChild(thumbItem);
+                        });
+                        mainImg.src = variant.images[0];
+                    } else {
+                        const thumbItem = document.createElement('div');
+                        thumbItem.className = 'thumb-item active';
+                        thumbItem.onclick = function () { switchImg(this, '/images/placeholder.png'); };
+
+                        const imgEl = document.createElement('img');
+                        imgEl.src = '/images/placeholder.png';
+                        imgEl.alt = 'Placeholder';
+
+                        thumbItem.appendChild(imgEl);
+                        thumbStrip.appendChild(thumbItem);
+                        mainImg.src = '/images/placeholder.png';
+                    }
+                }
+
+                // Add to cart — sends productId + variantId
+                document.getElementById('addCartBtn').addEventListener('click', function () {
+                    if (requireAuth()) return;
+
+                    const productId = '<%= product._id %>';
+                    const quantity = 1;
+
+                    if (!selectedVariantId) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'warning',
+                            title: 'Please select a shade first',
+                            showConfirmButton: false,
+                            timer: 2500,
+                            timerProgressBar: true
+                        });
                         return;
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    if (!data) return;
-                    if (data.success) {
-                        icon.classList.remove('fas');
-                        icon.classList.add('far');
-                        btn.classList.remove('active');
-                        btn.innerHTML = '<i class="far fa-heart"></i> ADD TO WISHLIST';
-                        if (window.updateWishlistCount) window.updateWishlistCount();
-                        Swal.fire({ 
-                            toast: true, 
-                            position: 'top-end', 
-                            icon: 'success', 
-                            title: 'Removed from wishlist', 
-                            showConfirmButton: false, 
-                            timer: 2500,
-                            timerProgressBar: true
-                        });
-                    } else {
-                        Swal.fire({ 
-                            toast: true, 
-                            position: 'top-end', 
-                            icon: 'error', 
-                            title: data.message || 'Failed to remove from wishlist', 
-                            showConfirmButton: false, 
-                            timer: 2500,
-                            timerProgressBar: true
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire({ 
-                        toast: true, 
-                        position: 'top-end', 
-                        icon: 'error', 
-                        title: 'Failed to remove from wishlist', 
-                        showConfirmButton: false, 
-                        timer: 2500,
-                        timerProgressBar: true
-                    });
-                });
-            } else {
-                // Add to wishlist
-                fetch('/wishlist/add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        productId: productId
+
+                    fetch('/cart/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ productId, variantId: selectedVariantId, quantity })
                     })
-                })
-                .then(response => {
-                    if (response.redirected) {
-                        window.location.href = response.url;
-                        return;
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (!data) return;
-                    if (data.success) {
-                        icon.classList.remove('far');
-                        icon.classList.add('fas');
-                        btn.classList.add('active');
-                        btn.innerHTML = '<i class="fas fa-heart"></i> ADDED TO WISHLIST';
-                        if (window.updateWishlistCount) window.updateWishlistCount();
-                        Swal.fire({ 
-                            toast: true, 
-                            position: 'top-end', 
-                            icon: 'success', 
-                            title: 'Added to wishlist!', 
-                            showConfirmButton: false, 
-                            timer: 2500,
-                            timerProgressBar: true
+                        .then(response => {
+                            if (response.redirected) {
+                                window.location.href = response.url;
+                                return;
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (!data) return;
+                            if (data.success) {
+                                if (window.updateCartCount) window.updateCartCount();
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'success',
+                                    title: 'Product added to cart successfully!',
+                                    showConfirmButton: false,
+                                    timer: 2500,
+                                    timerProgressBar: true
+                                });
+                            } else {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'error',
+                                    title: data.message || 'Failed to add to cart',
+                                    showConfirmButton: false,
+                                    timer: 2500,
+                                    timerProgressBar: true
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: 'Failed to add to cart',
+                                showConfirmButton: false,
+                                timer: 2500,
+                                timerProgressBar: true
+                            });
                         });
-                    } else {
-                        Swal.fire({ 
-                            toast: true, 
-                            position: 'top-end', 
-                            icon: 'error', 
-                            title: data.message || 'Failed to add to wishlist', 
-                            showConfirmButton: false, 
-                            timer: 2500,
-                            timerProgressBar: true
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire({ 
-                        toast: true, 
-                        position: 'top-end', 
-                        icon: 'error', 
-                        title: 'Failed to add to wishlist', 
-                        showConfirmButton: false, 
-                        timer: 2500,
-                        timerProgressBar: true
-                    });
                 });
-            }
-        }
-    </script>
+
+                // Toggle wishlist with AJAX
+                function toggleWishlist() {
+                    if (requireAuth()) return;
+
+                    const btn = document.getElementById('wishlistBtn');
+                    const icon = btn.querySelector('i');
+                    const productId = '<%= product._id %>';
+                    const isInWishlist = icon.classList.contains('fas');
+
+                    if (isInWishlist) {
+                        // Remove from wishlist
+                        fetch('/wishlist/remove/' + productId, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                            .then(response => {
+                                if (response.redirected) {
+                                    window.location.href = response.url;
+                                    return;
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (!data) return;
+                                if (data.success) {
+                                    icon.classList.remove('fas');
+                                    icon.classList.add('far');
+                                    btn.classList.remove('active');
+                                    btn.innerHTML = '<i class="far fa-heart"></i> ADD TO WISHLIST';
+                                    if (window.updateWishlistCount) window.updateWishlistCount();
+                                    Swal.fire({
+                                        toast: true,
+                                        position: 'top-end',
+                                        icon: 'success',
+                                        title: 'Removed from wishlist',
+                                        showConfirmButton: false,
+                                        timer: 2500,
+                                        timerProgressBar: true
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        toast: true,
+                                        position: 'top-end',
+                                        icon: 'error',
+                                        title: data.message || 'Failed to remove from wishlist',
+                                        showConfirmButton: false,
+                                        timer: 2500,
+                                        timerProgressBar: true
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'error',
+                                    title: 'Failed to remove from wishlist',
+                                    showConfirmButton: false,
+                                    timer: 2500,
+                                    timerProgressBar: true
+                                });
+                            });
+                    } else {
+                        // Add to wishlist
+                        fetch('/wishlist/add', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                productId: productId
+                            })
+                        })
+                            .then(response => {
+                                if (response.redirected) {
+                                    window.location.href = response.url;
+                                    return;
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (!data) return;
+                                if (data.success) {
+                                    icon.classList.remove('far');
+                                    icon.classList.add('fas');
+                                    btn.classList.add('active');
+                                    btn.innerHTML = '<i class="fas fa-heart"></i> ADDED TO WISHLIST';
+                                    if (window.updateWishlistCount) window.updateWishlistCount();
+                                    Swal.fire({
+                                        toast: true,
+                                        position: 'top-end',
+                                        icon: 'success',
+                                        title: 'Added to wishlist!',
+                                        showConfirmButton: false,
+                                        timer: 2500,
+                                        timerProgressBar: true
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        toast: true,
+                                        position: 'top-end',
+                                        icon: 'error',
+                                        title: data.message || 'Failed to add to wishlist',
+                                        showConfirmButton: false,
+                                        timer: 2500,
+                                        timerProgressBar: true
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'error',
+                                    title: 'Failed to add to wishlist',
+                                    showConfirmButton: false,
+                                    timer: 2500,
+                                    timerProgressBar: true
+                                });
+                            });
+                    }
+                }
+            </script>
 
 </body>
+
 </html>

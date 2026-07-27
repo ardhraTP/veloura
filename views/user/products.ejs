@@ -133,10 +133,13 @@
                                         const salePrice = firstVariant ? firstVariant.salePrice : null;
                                         const regularPrice = firstVariant ? firstVariant.regularPrice : null;
                                         const hasDiscount = salePrice && regularPrice && salePrice < regularPrice;
+                                        const discountPercent = (firstVariant && typeof firstVariant.discountPercentage === 'number') ? firstVariant.discountPercentage : (hasDiscount ? Math.round(((regularPrice - salePrice) / regularPrice) * 100) : 0);
                                     %>
                                     <a href="/product/<%= product._id %>" class="product-card">
                                         <div class="product-image-container">
-                                            <% if (hasDiscount) { %>
+                                            <% if (discountPercent > 0) { %>
+                                                <span class="badge"><%= discountPercent %>% OFF</span>
+                                            <% } else if (hasDiscount) { %>
                                                 <span class="badge">SALE</span>
                                             <% } %>
                                             <% 

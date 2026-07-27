@@ -7,7 +7,7 @@ export const getCartPage = async (req, res) => {
         const userId = req.session.userId;
         const cart = await cartService.getUserCart(userId);
         
-        // Check availability and stock for each item in the cart
+        
         if (cart && cart.items) {
             for (const item of cart.items) {
                 item.isAvailable = true;

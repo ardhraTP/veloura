@@ -1,58 +1,67 @@
-/* Products/Collections Page Styles */
+/* Products/Collections Page Styles - High-End Luxury Design */
 body {
     background-color: var(--bg-beige);
 }
 
 .collections-main {
-    padding-top: 100px; /* Space for fixed navbar */
+    padding-top: 40px;
 }
 
 .collections-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 60px 80px 40px;
+    padding: 40px 80px 60px;
 }
 
 .page-title {
-    font-size: 64px;
+    font-size: 68px;
     font-weight: 500;
     color: var(--primary-red);
-    margin-bottom: 60px;
-    letter-spacing: -1px;
+    margin-bottom: 50px;
+    letter-spacing: -1.5px;
+    font-family: 'Playfair Display', serif;
 }
 
 .collections-layout {
     display: flex;
-    gap: 60px;
+    gap: 50px;
 }
 
-/* Sidebar Styling */
+/* Sidebar Styling - Glassmorphic Luxury Card */
 .sidebar {
-    width: 250px;
+    width: 270px;
     flex-shrink: 0;
-    background-color: #f0ece5;
-    padding: 30px;
-    border-radius: 12px;
-    border: 1px solid rgba(92, 30, 40, 0.06);
-    box-shadow: 0 1px 6px rgba(92, 30, 40, 0.05);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 35px 30px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
     align-self: flex-start;
     position: sticky;
     top: 110px;
+    transition: var(--transition-smooth);
+}
+
+.sidebar:hover {
+    box-shadow: var(--shadow-md);
+    border-color: rgba(197, 160, 89, 0.3);
 }
 
 .filter-group {
-    margin-bottom: 40px;
+    margin-bottom: 35px;
 }
 
 .filter-label {
     display: block;
     font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     color: var(--primary-red);
     text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 15px;
+    letter-spacing: 2.5px;
+    margin-bottom: 18px;
 }
 
 .search-wrapper {
@@ -63,11 +72,17 @@ body {
     width: 100%;
     padding: 12px 30px 12px 0;
     border: none;
-    border-bottom: 1px solid #dcdcdc;
+    border-bottom: 1.5px solid #dcdcdc;
     background: transparent;
     font-family: 'Inter', sans-serif;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-dark);
+    transition: var(--transition-fast);
+}
+
+.search-input:focus {
+    outline: none;
+    border-bottom-color: var(--primary-red);
 }
 
 .clear-search {

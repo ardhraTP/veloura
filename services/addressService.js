@@ -3,7 +3,6 @@ import Address from '../model/Address.js';
 
 import { isValidName, isValidPhone, isValidPincode, isValidCity, isValidState, isValidAddress } from '../utils/helpers.js';
 
-
 export const validateAddressData = (data) => {
     const { fullName, phone, pincode, address, city, state, addressType } = data;
 
@@ -40,7 +39,6 @@ export const validateAddressData = (data) => {
 
 
 
-
 export const getUserAddresses = async (userId) => {
     return await Address.find({ userId }).sort({ createdAt: -1 });
 }
@@ -56,6 +54,7 @@ export const createAddress = async (userId, addressData) => {
 
     const existingAddresses = await Address.find({ userId });
     const isFirstAddress = existingAddresses.length === 0; 
+
 
     const newAddress = new Address({
         userId,

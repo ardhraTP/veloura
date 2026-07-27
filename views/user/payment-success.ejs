@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Successful - Veloura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,19 +13,21 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #FAF6F0 0%, #efece5 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            color: #2c2c2c;
         }
 
         .success-container {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e8e4df;
+            box-shadow: 0 15px 40px rgba(92, 30, 40, 0.08);
             max-width: 600px;
             width: 100%;
             padding: 50px;
@@ -46,13 +49,14 @@
         .success-icon {
             width: 100px;
             height: 100px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 30px;
-            animation: scaleIn 0.5s ease 0.2s both;
+            box-shadow: 0 10px 25px rgba(22, 163, 74, 0.3);
+            animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both;
         }
 
         @keyframes scaleIn {
@@ -68,26 +72,29 @@
             width: 50px;
             height: 50px;
             stroke: white;
-            stroke-width: 3;
+            stroke-width: 3.5;
             stroke-linecap: round;
             stroke-linejoin: round;
             fill: none;
         }
 
         h1 {
-            color: #2d3748;
+            font-family: 'Playfair Display', serif;
+            color: #5c1e28;
             font-size: 32px;
             margin-bottom: 10px;
         }
 
         .subtitle {
-            color: #718096;
+            color: #666666;
             font-size: 16px;
             margin-bottom: 30px;
+            line-height: 1.5;
         }
 
         .order-info {
-            background: #f7fafc;
+            background: #FAF8F5;
+            border: 1px solid #E6DED4;
             border-radius: 12px;
             padding: 25px;
             margin: 30px 0;
@@ -98,7 +105,7 @@
             display: flex;
             justify-content: space-between;
             padding: 12px 0;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #E6DED4;
         }
 
         .order-row:last-child {
@@ -106,18 +113,19 @@
         }
 
         .order-label {
-            color: #718096;
+            color: #666666;
             font-weight: 500;
         }
 
         .order-value {
-            color: #2d3748;
+            color: #2c2c2c;
             font-weight: 600;
         }
 
         .total-amount {
             font-size: 24px;
             color: #5c1e28;
+            font-family: 'Playfair Display', serif;
         }
 
         .buttons {
@@ -137,6 +145,7 @@
             text-decoration: none;
             display: inline-block;
             transition: all 0.3s ease;
+            text-align: center;
         }
 
         .btn-primary {

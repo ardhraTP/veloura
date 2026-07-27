@@ -16,9 +16,10 @@ export const getAddresses = async (req, res) => {
     try {
         const userId = req.session.userId;
 
-        const addresses = await getUserAddresses(userId);
-    
-        res.render('user/manage-addresses', { addresses,activeTab: 'addresses' });
+        const user = await User.findById(userId);
+        const addresses = await getUserAddresses(userId); 
+
+        res.render('user/manage-addresses', { addresses,user, activeTab: 'addresses', isLoggedIn: true });
     } catch (error) {
         console.error('get addresses error:', error);
         res.redirect('/profile');
@@ -26,8 +27,15 @@ export const getAddresses = async (req, res) => {
 };
 
 
-export const getAddAddress = (req, res) => {
-    res.render('user/add-address', { error: null, success: null, activeTab: 'addresses' });
+export const getAddAddress = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const user = await User.findById(userId);
+        res.render('user/add-address', { user, error: null, success: null, activeTab: 'addresses', isLoggedIn: true });
+    } catch (error) {
+        console.error('getAddAddress error:', error);
+        res.redirect('/profile/addresses');
+    }
 };
 
 
@@ -65,13 +73,14 @@ export const getEditAddress = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.session.userId;
+        const user = await User.findById(userId);
 
         const address = await getAddressById(id, userId);
         if (!address) {
             return res.redirect('/profile/addresses');
         }
 
-        res.render('user/edit-address', { address, error: null, success: null, activeTab: 'addresses' });
+        res.render('user/edit-address', { user, address, error: null, success: null, activeTab: 'addresses', isLoggedIn: true });
     } catch (error) {
         console.error('Get edit address error:', error);
         res.redirect('/profile/addresses');

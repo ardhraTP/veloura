@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import { isAuthenticated, isGuest } from '../middleware/userAuth.js';
 import { upload } from '../middleware/upload.js';
 import passport from 'passport';
@@ -23,9 +23,11 @@ import {
     logout,
     getLandingPage,
     getHomePage,
+    getAboutPage,
+    getContactPage,
+    submitContactForm,
     googleAuthCallback
 } from '../controller/authController.js';
-
 
 import {
     getProfile,
@@ -72,6 +74,9 @@ import {
     removeFromWishlist,
     getWishlistCount
 } from '../controller/user/wishlistController.js';
+import User from '../model/User.js';
+import Address from '../model/Address.js';
+import Cart from '../model/Cart.js';
 
 
 
@@ -83,6 +88,9 @@ router.get('/', getLandingPage);
 
 router.get('/home', isAuthenticated, getHomePage);
 
+router.get('/about', getAboutPage);
+router.get('/contact', getContactPage);
+router.post('/contact', submitContactForm);
 
 router.get('/products', getProductsPage);
 router.get('/product/:id', getProductDetail);
@@ -241,6 +249,7 @@ router.post('/profile/addresses/edit/:id', isAuthenticated, updateAddress);
 
 router.delete('/profile/addresses/:id', isAuthenticated, deleteAddress);
 router.put('/profile/addresses/:id/default', isAuthenticated, setDefaultAddress);
+
 
 export default router;
 

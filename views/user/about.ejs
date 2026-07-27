@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veloura - About Us</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/about.css">
+    <script src="/js/prevent-back.js"></script>
+</head>
+<body>
+    <%- include('../partials/navbar') %>
+
+    <main class="about-page-container">
+        <div class="about-content-wrapper">
+            <div class="about-image-card">
+                <img src="/images/about_us.png" alt="Veloura Luxury Lipstick">
+            </div>
+
+            <div class="about-text-section">
+                <h1 class="about-title">About Us</h1>
+                <p class="about-description">
+                    At Veloura, we believe that the ritual of beauty should be simple, intentional, and deeply rewarding. We are passionate about bringing you carefully curated collections that bridge the gap between timeless sophistication and modern innovation.
+                </p>
+                <p class="about-description">
+                    We are more than just a boutique; we are a community of fashion enthusiasts, curators, and seekers of the sublime. From the first spark of product discovery to the moment of delivery, we are committed to providing an experience that feels as curated as the items we sell.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <%- include('../partials/footer', { showSocialLinks: true }) %>
+</body>
+</html>

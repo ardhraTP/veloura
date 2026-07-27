@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Veloura</title>
-    
+
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -24,14 +27,14 @@
             --text-gray: #888380;
             --text-light: #b3aea9;
             --border-color: #ebe7e5;
-            
+
             --success-bg: #e6f7ef;
             --success-text: #2ea571;
             --warning-bg: #e8f0fe;
             --warning-text: #3c78d8;
             --danger-bg: #fce8e8;
             --danger-text: #d93025;
-            
+
             --icon-blue-bg: #e8f0fe;
             --icon-blue: #4285f4;
             --icon-yellow-bg: #fef7e0;
@@ -134,10 +137,11 @@
         .trend-up {
             color: var(--success-text);
         }
+
         .trend-down {
             color: var(--danger-text);
         }
-        
+
         .trend-text {
             color: var(--text-light);
             font-weight: 400;
@@ -157,9 +161,20 @@
             font-size: 16px;
         }
 
-        .icon-users { background-color: var(--icon-blue-bg); color: var(--icon-blue); }
-        .icon-orders { background-color: var(--icon-yellow-bg); color: var(--icon-yellow); }
-        .icon-sales { background-color: var(--icon-green-bg); color: var(--icon-green); }
+        .icon-users {
+            background-color: var(--icon-blue-bg);
+            color: var(--icon-blue);
+        }
+
+        .icon-orders {
+            background-color: var(--icon-yellow-bg);
+            color: var(--icon-yellow);
+        }
+
+        .icon-sales {
+            background-color: var(--icon-green-bg);
+            color: var(--icon-green);
+        }
 
         /* Chart Section */
         .chart-section {
@@ -241,7 +256,7 @@
         .data-table tr:last-child td {
             border-bottom: none;
         }
-        
+
         .td-id {
             color: var(--text-gray);
             font-weight: 500;
@@ -256,9 +271,20 @@
             text-transform: uppercase;
         }
 
-        .status-completed { background-color: var(--success-bg); color: var(--success-text); }
-        .status-processing { background-color: var(--warning-bg); color: var(--warning-text); }
-        .status-rejected { background-color: var(--danger-bg); color: var(--danger-text); }
+        .status-completed {
+            background-color: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .status-processing {
+            background-color: var(--warning-bg);
+            color: var(--warning-text);
+        }
+
+        .status-rejected {
+            background-color: var(--danger-bg);
+            color: var(--danger-text);
+        }
 
         /* Best Sellers Section */
         .best-sellers-grid {
@@ -321,260 +347,288 @@
             border-bottom: none;
         }
     </style>
-<script src="/js/prevent-back.js"></script>
+    <script src="/js/prevent-back.js"></script>
 </head>
+
 <body>
 
     <%- include('../partials/admin/sidebar', { selectedTab: 'dashboard' }) %>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Header -->
-        <header class="header">
-        </header>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+            </header>
 
-        <!-- Metrics -->
-        <div class="metrics-row">
-            <!-- Total Users -->
-            <div class="metric-card">
-                <div class="metric-title">TOTAL USER</div>
-                <div class="metric-value"><%= stats.totalUsers %></div>
-                <div class="metric-trend">
-                    <span class="trend-up"><i class="fas fa-users"></i> Active</span>
-                    <span class="trend-text">Customer accounts</span>
+            <!-- Metrics -->
+            <div class="metrics-row">
+                <!-- Total Users -->
+                <div class="metric-card">
+                    <div class="metric-title">TOTAL USER</div>
+                    <div class="metric-value">
+                        <%= stats.totalUsers %>
+                    </div>
+                    <div class="metric-trend">
+                        <span class="trend-up"><i class="fas fa-users"></i> Active</span>
+                        <span class="trend-text">Customer accounts</span>
+                    </div>
+                    <div class="metric-icon icon-users">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
                 </div>
-                <div class="metric-icon icon-users">
-                    <i class="fas fa-user-friends"></i>
-                </div>
-            </div>
 
-            <!-- Total Orders -->
-            <div class="metric-card">
-                <div class="metric-title">TOTAL ORDER</div>
-                <div class="metric-value"><%= stats.totalOrders %></div>
-                <div class="metric-trend">
-                    <span class="trend-up"><i class="fas fa-shopping-bag"></i> Total</span>
-                    <span class="trend-text">Orders processed</span>
+                <!-- Total Orders -->
+                <div class="metric-card">
+                    <div class="metric-title">TOTAL ORDER</div>
+                    <div class="metric-value">
+                        <%= stats.totalOrders %>
+                    </div>
+                    <div class="metric-trend">
+                        <span class="trend-up"><i class="fas fa-shopping-bag"></i> Total</span>
+                        <span class="trend-text">Orders processed</span>
+                    </div>
+                    <div class="metric-icon icon-orders">
+                        <i class="fas fa-box-open"></i>
+                    </div>
                 </div>
-                <div class="metric-icon icon-orders">
-                    <i class="fas fa-box-open"></i>
-                </div>
-            </div>
 
-            <!-- Total Sales -->
-            <div class="metric-card">
-                <div class="metric-title">TOTAL SALES</div>
-                <div class="metric-value">₹<%= stats.totalSales.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></div>
-                <div class="metric-trend">
-                    <span class="trend-up"><i class="fas fa-check-circle"></i> Completed</span>
-                    <span class="trend-text">Revenue excluding cancels/returns</span>
-                </div>
-                <div class="metric-icon icon-sales">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sales Chart -->
-        <div class="chart-section">
-            <div class="section-header">
-                <h2 class="section-title">Sales Details</h2>
-                <div class="chart-filters">
-                    <select class="chart-filter" id="periodSelect" onchange="updateChart()">
-                        <option value="weekly">This Week</option>
-                        <option value="monthly">This Month</option>
-                        <option value="yearly" selected>This Year</option>
-                    </select>
-                </div>
-            </div>
-            <div class="chart-container">
-                <canvas id="salesChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Best Sellers Section -->
-        <div class="best-sellers-grid">
-            <!-- Top 10 Products -->
-            <div class="best-seller-card">
-                <h3 class="best-seller-title"><i class="fas fa-box-open" style="color: var(--primary-red); margin-right: 8px;"></i> Top 10 Products</h3>
-                <div style="overflow-x: auto;">
-                    <table class="best-seller-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Product</th>
-                                <th style="text-align: center;">Qty</th>
-                                <th style="text-align: right;">Revenue</th>
-                            </tr>
-                        </thead>
-                        <tbody id="topProductsBody">
-                            <tr>
-                                <td colspan="4" style="text-align: center; color: var(--text-gray); padding: 20px;">Loading top products...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Total Sales -->
+                <div class="metric-card">
+                    <div class="metric-title">TOTAL SALES</div>
+                    <div class="metric-value">₹<%= stats.totalSales.toLocaleString('en-IN', { minimumFractionDigits: 2,
+                            maximumFractionDigits: 2 }) %>
+                    </div>
+                    <div class="metric-trend">
+                        <span class="trend-up"><i class="fas fa-check-circle"></i> Completed</span>
+                        <span class="trend-text">Revenue excluding cancels/returns</span>
+                    </div>
+                    <div class="metric-icon icon-sales">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
                 </div>
             </div>
 
-            <!-- Top 10 Categories -->
-            <div class="best-seller-card">
-                <h3 class="best-seller-title"><i class="fas fa-th-list" style="color: var(--primary-red); margin-right: 8px;"></i> Top 10 Categories</h3>
-                <div style="overflow-x: auto;">
-                    <table class="best-seller-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Category</th>
-                                <th style="text-align: right;">Sales</th>
-                            </tr>
-                        </thead>
-                        <tbody id="topCategoriesBody">
-                            <tr>
-                                <td colspan="3" style="text-align: center; color: var(--text-gray); padding: 20px;">Loading top categories...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <!-- Sales Chart -->
+            <div class="chart-section">
+                <div class="section-header">
+                    <h2 class="section-title">Sales Details</h2>
+                    <div class="chart-filters">
+                        <select class="chart-filter" id="periodSelect" onchange="updateChart()">
+                            <option value="weekly">This Week</option>
+                            <option value="monthly">This Month</option>
+                            <option value="yearly" selected>This Year</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
                 </div>
             </div>
 
-            <!-- Top 10 Brands -->
-            <div class="best-seller-card">
-                <h3 class="best-seller-title"><i class="fas fa-award" style="color: var(--primary-red); margin-right: 8px;"></i> Top 10 Brands</h3>
-                <div style="overflow-x: auto;">
-                    <table class="best-seller-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Brand</th>
-                                <th style="text-align: right;">Sales</th>
-                            </tr>
-                        </thead>
-                        <tbody id="topBrandsBody">
-                            <tr>
-                                <td colspan="3" style="text-align: center; color: var(--text-gray); padding: 20px;">Loading top brands...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <!-- Best Sellers Section -->
+            <div class="best-sellers-grid">
+                <!-- Top 10 Products -->
+                <div class="best-seller-card">
+                    <h3 class="best-seller-title"><i class="fas fa-box-open"
+                            style="color: var(--primary-red); margin-right: 8px;"></i> Top 10 Products</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="best-seller-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th style="text-align: center;">Qty</th>
+                                    <th style="text-align: right;">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topProductsBody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: var(--text-gray); padding: 20px;">
+                                        Loading top products...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Top 10 Categories -->
+                <div class="best-seller-card">
+                    <h3 class="best-seller-title"><i class="fas fa-th-list"
+                            style="color: var(--primary-red); margin-right: 8px;"></i> Top 10 Categories</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="best-seller-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Category</th>
+                                    <th style="text-align: right;">Sales</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topCategoriesBody">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: var(--text-gray); padding: 20px;">
+                                        Loading top categories...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Top 10 Brands -->
+                <div class="best-seller-card">
+                    <h3 class="best-seller-title"><i class="fas fa-award"
+                            style="color: var(--primary-red); margin-right: 8px;"></i> Top 10 Brands</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="best-seller-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Brand</th>
+                                    <th style="text-align: right;">Sales</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topBrandsBody">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: var(--text-gray); padding: 20px;">
+                                        Loading top brands...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Recent Orders -->
-        <div class="table-section">
-            <div class="section-header" style="margin-bottom: 10px;">
-                <h2 class="section-title">Recent Orders</h2>
+
+
             </div>
-            
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>NAME</th>
-                        <th>ADDRESS</th>
-                        <th>DATE</th>
-                        <th>METHOD</th>
-                        <th>STATUS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (typeof recentOrders !== 'undefined' && recentOrders && recentOrders.length > 0) { %>
-                        <% recentOrders.forEach(order => { %>
-                            <tr>
-                                <td class="td-id"><%= order.orderId %></td>
-                                <td><%= order.user?.name || 'Guest User' %></td>
-                                <td><%= order.deliveryAddress?.city || 'Unknown' %>, <%= order.deliveryAddress?.state || 'Unknown' %></td>
-                                <td><%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
-                                <td><%= order.paymentMethod %></td>
-                                <td>
-                                    <% 
-                                        let badgeClass = 'status-processing';
-                                        if (order.orderStatus === 'Delivered') {
-                                            badgeClass = 'status-completed';
-                                        } else if (order.orderStatus === 'Cancelled' || order.orderStatus === 'Returned') {
-                                            badgeClass = 'status-rejected';
-                                        }
-                                    %>
-                                    <span class="status-badge <%= badgeClass %>"><%= order.orderStatus.toUpperCase() %></span>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    <% } else { %>
+
+            <!-- Recent Orders -->
+            <div class="table-section">
+                <div class="section-header" style="margin-bottom: 10px;">
+                    <h2 class="section-title">Recent Orders</h2>
+                </div>
+
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-gray); padding: 30px;">No recent orders.</td>
+                            <th>ID</th>
+                            <th>NAME</th>
+                            <th>ADDRESS</th>
+                            <th>DATE</th>
+                            <th>METHOD</th>
+                            <th>STATUS</th>
                         </tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-    </main>
+                    </thead>
+                    <tbody>
+                        <% if (typeof recentOrders !=='undefined' && recentOrders && recentOrders.length> 0) { %>
+                            <% recentOrders.forEach(order=> { %>
+                                <tr>
+                                    <td class="td-id">
+                                        <%= order.orderId %>
+                                    </td>
+                                    <td>
+                                        <%= order.user?.name || 'Guest User' %>
+                                    </td>
+                                    <td>
+                                        <%= order.deliveryAddress?.city || 'Unknown' %>, <%=
+                                                order.deliveryAddress?.state || 'Unknown' %>
+                                    </td>
+                                    <td>
+                                        <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit' ,
+                                            month: 'short' , year: 'numeric' }) %>
+                                    </td>
+                                    <td>
+                                        <%= order.paymentMethod %>
+                                    </td>
+                                    <td>
+                                        <% let badgeClass='status-processing' ; if (order.orderStatus==='Delivered' ) {
+                                            badgeClass='status-completed' ; } else if (order.orderStatus==='Cancelled'
+                                            || order.orderStatus==='Returned' ) { badgeClass='status-rejected' ; } %>
+                                            <span class="status-badge <%= badgeClass %>">
+                                                <%= order.orderStatus.toUpperCase() %>
+                                            </span>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="6"
+                                                style="text-align: center; color: var(--text-gray); padding: 30px;">No
+                                                recent orders.</td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </main>
 
-    <script>
-        let salesChart = null;
+        <script>
+            let salesChart = null;
 
-        async function updateChart() {
-            const period = document.getElementById('periodSelect').value;
-            
-            try {
-                const response = await fetch(`/admin/api/dashboard-data?period=${period}`);
-                const data = await response.json();
-                
-                if (!data.success) return;
+            async function updateChart() {
+                const period = document.getElementById('periodSelect').value;
 
-                const ctx = document.getElementById('salesChart').getContext('2d');
-                const gradientFill = ctx.createLinearGradient(0, 0, 0, 300);
-                gradientFill.addColorStop(0, 'rgba(92, 30, 40, 0.2)');  
-                gradientFill.addColorStop(1, 'rgba(92, 30, 40, 0)');    
+                try {
+                    const response = await fetch(`/admin/api/dashboard-data?period=${period}`);
+                    const data = await response.json();
 
-                // If chart already exists, destroy it before rendering a new one
-                if (salesChart) {
-                    salesChart.destroy();
-                }
+                    if (!data.success) return;
 
-                salesChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: data.chartLabels,
-                        datasets: [{
-                            label: 'Sales Revenue',
-                            data: data.chartValues,
-                            borderColor: '#5c1e28',
-                            borderWidth: 2,
-                            backgroundColor: gradientFill,
-                            fill: true,
-                            pointBackgroundColor: '#5c1e28',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4,
-                            tension: 0.4 
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
-                        scales: {
-                            x: { grid: { display: false } },
-                            y: { grid: { color: '#f0f0f0' }, beginAtZero: true }
-                        }
+                    const ctx = document.getElementById('salesChart').getContext('2d');
+                    const gradientFill = ctx.createLinearGradient(0, 0, 0, 300);
+                    gradientFill.addColorStop(0, 'rgba(92, 30, 40, 0.2)');
+                    gradientFill.addColorStop(1, 'rgba(92, 30, 40, 0)');
+
+                    // If chart already exists, destroy it before rendering a new one
+                    if (salesChart) {
+                        salesChart.destroy();
                     }
-                });
 
-                // Update Top Selling Products/Categories/Brands in the DOM
-                renderTopSellers(data.topProducts, data.topCategories, data.topBrands);
+                    salesChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.chartLabels,
+                            datasets: [{
+                                label: 'Sales Revenue',
+                                data: data.chartValues,
+                                borderColor: '#5c1e28',
+                                borderWidth: 2,
+                                backgroundColor: gradientFill,
+                                fill: true,
+                                pointBackgroundColor: '#5c1e28',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2,
+                                pointRadius: 4,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                x: { grid: { display: false } },
+                                y: { grid: { color: '#f0f0f0' }, beginAtZero: true }
+                            }
+                        }
+                    });
 
-            } catch (error) {
-                console.error('Error loading chart data:', error);
+                    // Update Top Selling Products/Categories/Brands in the DOM
+                    renderTopSellers(data.topProducts, data.topCategories, data.topBrands);
+
+                } catch (error) {
+                    console.error('Error loading chart data:', error);
+                }
             }
-        }
 
-        // Function to render Best Selling tables on the dashboard
-        function renderTopSellers(products, categories, brands) {
-            // Update Top Products Table
-            const productsBody = document.getElementById('topProductsBody');
-            if (productsBody) {
-                productsBody.innerHTML = products.map((p, idx) => `
+            // Function to render Best Selling tables on the dashboard
+            function renderTopSellers(products, categories, brands) {
+                // Update Top Products Table
+                const productsBody = document.getElementById('topProductsBody');
+                if (productsBody) {
+                    productsBody.innerHTML = products.map((p, idx) => `
                     <tr>
                         <td style="font-weight: 600; color: var(--text-gray); width: 30px;">#${idx + 1}</td>
                         <td style="font-weight: 500; max-width: 145px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.name}">${p.name}</td>
@@ -582,37 +636,38 @@
                         <td style="text-align: right; font-weight: 600; color: var(--primary-red);">₹${p.revenue.toFixed(2)}</td>
                     </tr>
                 `).join('') || `<tr><td colspan="4" style="text-align: center; color: var(--text-gray); padding: 20px;">No data available</td></tr>`;
-            }
+                }
 
-            // Update Top Categories Table
-            const categoriesBody = document.getElementById('topCategoriesBody');
-            if (categoriesBody) {
-                categoriesBody.innerHTML = categories.map((c, idx) => `
+                // Update Top Categories Table
+                const categoriesBody = document.getElementById('topCategoriesBody');
+                if (categoriesBody) {
+                    categoriesBody.innerHTML = categories.map((c, idx) => `
                     <tr>
                         <td style="font-weight: 600; color: var(--text-gray); width: 30px;">#${idx + 1}</td>
                         <td style="font-weight: 500;">${c.name}</td>
                         <td style="text-align: right; font-weight: 600;">${c.qty} sold</td>
                     </tr>
                 `).join('') || `<tr><td colspan="3" style="text-align: center; color: var(--text-gray); padding: 20px;">No data available</td></tr>`;
-            }
+                }
 
-            // Update Top Brands Table
-            const brandsBody = document.getElementById('topBrandsBody');
-            if (brandsBody) {
-                brandsBody.innerHTML = brands.map((b, idx) => `
+                // Update Top Brands Table
+                const brandsBody = document.getElementById('topBrandsBody');
+                if (brandsBody) {
+                    brandsBody.innerHTML = brands.map((b, idx) => `
                     <tr>
                         <td style="font-weight: 600; color: var(--text-gray); width: 30px;">#${idx + 1}</td>
                         <td style="font-weight: 500;">${b.name || 'Unknown'}</td>
                         <td style="text-align: right; font-weight: 600;">${b.qty} sold</td>
                     </tr>
                 `).join('') || `<tr><td colspan="3" style="text-align: center; color: var(--text-gray); padding: 20px;">No data available</td></tr>`;
+                }
             }
-        }
 
-        // Load chart on DOM Content ready
-        document.addEventListener('DOMContentLoaded', () => {
-            updateChart();
-        });
-    </script>
+            // Load chart on DOM Content ready
+            document.addEventListener('DOMContentLoaded', () => {
+                updateChart();
+            });
+        </script>
 </body>
+
 </html>

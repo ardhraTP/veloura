@@ -84,3 +84,39 @@ export const sendResetPassword = async (email, token, name) => {
         throw new Error('Failed to send password reset email. Please try again.');
     }
 };
+
+// Send user contact message to ardhraardhra407@gmail.com
+export const sendContactMessage = async ({ name, email, phone, message }) => {
+    try {
+        const transporter = createTransporter();
+        const destinationEmail = 'ardhraardhra407@gmail.com';
+        
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: destinationEmail,
+            replyTo: email,
+            subject: `Veloura Customer Inquiry from ${name}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e8e4df; border-radius: 12px; background-color: #faf6f0;">
+                    <h2 style="color: #5c1e28; margin-top: 0;">New Contact Form Message</h2>
+                    <p style="font-size: 14px; color: #2c2c2c;"><strong>Name:</strong> ${name}</p>
+                    <p style="font-size: 14px; color: #2c2c2c;"><strong>Email:</strong> ${email}</p>
+                    <p style="font-size: 14px; color: #2c2c2c;"><strong>Phone:</strong> ${phone || 'N/A'}</p>
+                    <hr style="border: none; border-top: 1px solid #e6ded4; margin: 20px 0;">
+                    <p style="font-size: 14px; color: #2c2c2c;"><strong>Message:</strong></p>
+                    <div style="background-color: #ffffff; padding: 18px; border-radius: 8px; border: 1px solid #e6ded4; color: #333333; line-height: 1.6;">
+                        ${message.replace(/\n/g, '<br>')}
+                    </div>
+                    <p style="font-size: 12px; color: #888888; margin-top: 25px;">Sent from Veloura Website Contact Us Page</p>
+                </div>
+            `
+        };
+        
+        const result = await transporter.sendMail(mailOptions);
+        console.log('Contact message email sent successfully:', result.messageId);
+        return result;
+    } catch (error) {
+        console.error('Failed to send contact message email:', error);
+        throw error;
+    }
+};

@@ -136,45 +136,23 @@
             margin-bottom: 15px;
         }
 
-        .quantity-controller {
+        .product-qty-badge {
             display: inline-flex;
             align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background-color: #FAF6F0;
             border: 1px solid #E6DED4;
             border-radius: 6px;
-            background: #FFFFFF;
+            font-size: 12px;
+            font-weight: 500;
+            color: #5c1e28;
             width: fit-content;
         }
 
-        .quantity-controller button {
-            border: none;
-            background: none;
-            width: 32px;
-            height: 32px;
-            cursor: pointer;
-            font-size: 14px;
-            color: #666666;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
-
-        .quantity-controller button:hover {
-            background-color: #FAF6F0;
-        }
-
-        .quantity-controller span {
-            width: 32px;
-            text-align: center;
+        .product-qty-badge strong {
             font-size: 13px;
-            font-weight: 500;
             color: #2C2C2C;
-            border-left: 1px solid #E6DED4;
-            border-right: 1px solid #E6DED4;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .product-price-col {
@@ -197,6 +175,20 @@
             font-size: 15px;
             font-weight: 600;
             color: #2C2C2C;
+        }
+
+        .original-price {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            color: #999999;
+            text-decoration: line-through;
+        }
+
+        .item-discount-savings {
+            font-size: 11px;
+            color: #2e7d32;
+            font-weight: 600;
+            margin-top: 2px;
         }
 
         .discount-badge {
@@ -238,22 +230,25 @@
 
         .address-card {
             border: 1px solid #E6DED4;
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 22px;
             position: relative;
             cursor: pointer;
             background: #FFFFFF;
-            transition: all 0.2s ease;
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 2px 10px rgba(92, 30, 40, 0.03);
         }
 
         .address-card:hover {
             border-color: #5c1e28;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(92, 30, 40, 0.08);
         }
 
         .address-card.selected {
             border-color: #5c1e28;
-            background-color: rgba(92, 30, 40, 0.02);
-            box-shadow: 0 2px 8px rgba(92, 30, 40, 0.04);
+            background-color: rgba(92, 30, 40, 0.03);
+            box-shadow: 0 6px 20px rgba(92, 30, 40, 0.08);
         }
 
         .address-header {
@@ -833,13 +828,53 @@
                                         : '/images/placeholder.png';
                                         const variantColor = item.variant ? item.variant.color : 'N/A';
                                         const itemPrice = item.price;
-                                        // Simulated discount percentage calculation
-                                        const hasDiscount = item.variant && item.variant.regularPrice >
-                                        item.variant.salePrice;
-                                        const discountPercent = hasDiscount
-                                        ? Math.round(((item.variant.regularPrice - item.variant.salePrice) /
+                                        const hasDiscount = item.variant && item.variant.regularPrice > itemPrice;
+                                        const discountPercent = (typeof item.discountPercentage === 'number') ? item.discountPercentage : (hasDiscount
+                                        ? Math.round(((item.variant.regularPrice - itemPrice) /
                                         item.variant.regularPrice) * 100)
-                                        : 0;
+                                        : 0);
+
+                                        // Find which offer is applied for this product
+                                        const now = new Date();
+                                        let productOfferDiscount = 0;
+                                        let categoryOfferDiscount = 0;
+
+                                        // Check product offer
+                                        if (item.product && item.product.offer && item.product.offer.isActive) {
+                                            const isNotExpired = !item.product.offer.expiryDate || new Date(item.product.offer.expiryDate) > now;
+                                            if (isNotExpired) {
+                                                productOfferDiscount = Number(item.product.offer.discount) || 0;
+                                            }
+                                        }
+
+                                        // Check category offer
+                                        const categoryData = item.product ? item.product.categoryId : null;
+                                        if (categoryData && typeof categoryData === 'object') {
+                                            const isNotExpired = !categoryData.categoryOfferExpiry || new Date(categoryData.categoryOfferExpiry) > now;
+                                            let catDiscount = Number(categoryData.categoryDiscount) || 0;
+                                            if (!catDiscount && categoryData.offer && String(categoryData.offer).trim() !== '') {
+                                                catDiscount = parseFloat(String(categoryData.offer).replace(/[^0-9.]/g, '')) || 0;
+                                            }
+                                            if (isNotExpired && catDiscount > 0) {
+                                                categoryOfferDiscount = catDiscount;
+                                            }
+                                        }
+
+                                        // Determine label to show to the user
+                                        let appliedOfferLabel = '';
+                                        if (productOfferDiscount > 0 && categoryOfferDiscount > 0) {
+                                            if (productOfferDiscount > categoryOfferDiscount) {
+                                                appliedOfferLabel = 'Product Offer Applied';
+                                            } else if (categoryOfferDiscount > productOfferDiscount) {
+                                                appliedOfferLabel = 'Category Offer Applied';
+                                            } else {
+                                                appliedOfferLabel = 'Product & Category Offer Applied';
+                                            }
+                                        } else if (categoryOfferDiscount > 0) {
+                                            appliedOfferLabel = 'Category Offer Applied';
+                                        } else if (productOfferDiscount > 0) {
+                                            appliedOfferLabel = 'Product Offer Applied';
+                                        }
                                         %>
                                         <div class="product-card" id="card_<%= item.variant._id %>" data-price="<%= itemPrice %>">
                                             <img src="<%= variantImg %>" alt="<%= item.product.productName %>"
@@ -862,27 +897,32 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="quantity-controller" id="qty_controller_<%= item.variant._id %>">
-                                                    <button type="button"
-                                                        onclick="event.preventDefault(); changeQuantity('<%= item.variant._id %>', -1)">-</button>
-                                                    <span class="qty-span">
-                                                        <%= item.quantity %>
-                                                    </span>
-                                                    <button type="button"
-                                                        onclick="event.preventDefault(); changeQuantity('<%= item.variant._id %>', 1)">+</button>
+                                                <div class="product-qty-badge">
+                                                    <span>Qty:</span>
+                                                    <strong><%= item.quantity %></strong>
                                                 </div>
                                             </div>
 
                                             <div class="product-price-col">
-                                                <div class="price-row">
+                                                <div class="price-row" style="flex-wrap: wrap; justify-content: flex-end;">
                                                     <span class="price-value">₹<%= (itemPrice *
                                                             item.quantity).toFixed(2) %></span>
-                                                    <% if (hasDiscount) { %>
+                                                    <% if (hasDiscount && item.variant && item.variant.regularPrice > itemPrice) { %>
+                                                        <span class="original-price">
+                                                            ₹<%= (item.variant.regularPrice * item.quantity).toFixed(2) %>
+                                                        </span>
+                                                    <% } %>
+                                                    <% if (discountPercent > 0 || hasDiscount) { %>
                                                         <span class="discount-badge">
                                                             <%= discountPercent %>% OFF
                                                         </span>
-                                                        <% } %>
+                                                    <% } %>
                                                 </div>
+                                                <% if (appliedOfferLabel) { %>
+                                                    <div class="item-discount-savings">
+                                                        <i class="fas fa-tag" style="font-size: 10px; margin-right: 3px;"></i><%= appliedOfferLabel %>
+                                                    </div>
+                                                <% } %>
 
                                                 <button type="button" class="remove-btn"
                                                     onclick="event.preventDefault(); removeItem('<%= item.variant._id %>')">
@@ -1018,6 +1058,16 @@
                     </div>
 
                     <!-- RIGHT COLUMN: Cart Total -->
+                    <%
+                        let totalProductSavings = 0;
+                        if (cart && cart.items) {
+                            cart.items.forEach(item => {
+                                if (item.variant && item.variant.regularPrice > item.price) {
+                                    totalProductSavings += (item.variant.regularPrice - item.price) * item.quantity;
+                                }
+                            });
+                        }
+                    %>
                     <div class="checkout-right">
                         <div class="cart-total-card">
                             <h2 class="cart-total-title">Cart Total</h2>
@@ -1036,10 +1086,16 @@
                                     <%= shippingFee===0 ? 'FREE' : '₹' + shippingFee.toFixed(2) %>
                                 </span>
                             </div>
+                            <% if (totalProductSavings > 0) { %>
+                                <div class="breakdown-item" style="color: #2e7d32; font-weight: 500;">
+                                    <span>Product Savings:</span>
+                                    <span>-₹<%= totalProductSavings.toFixed(2) %></span>
+                                </div>
+                            <% } %>
                             <div class="breakdown-item" id="discountRow"
-                                style="display: <%= discount > 0 ? 'flex' : 'none' %>; color: #5c1e28;">
-                                <span>Discount:</span>
-                                <span id="discountVal">₹<%= discount.toFixed(2) %></span>
+                                style="display: <%= discount > 0 ? 'flex' : 'none' %>; color: #2e7d32; font-weight: 500;">
+                                <span>Coupon Discount:</span>
+                                <span id="discountVal">-₹<%= discount.toFixed(2) %></span>
                             </div>
 
                             <div class="breakdown-divider"></div>
@@ -1236,7 +1292,7 @@
                 }
 
                 document.getElementById('discountRow').style.display = currentDiscount > 0 ? 'flex' : 'none';
-                document.getElementById('discountVal').textContent = `₹${currentDiscount.toFixed(2)}`;
+                document.getElementById('discountVal').textContent = `-₹${currentDiscount.toFixed(2)}`;
                 document.getElementById('shippingVal').textContent = currentShipping === 0 ? 'FREE' : `₹${currentShipping.toFixed(2)}`;
                 document.getElementById('finalTotalVal').textContent = `₹${Math.max(0, finalTotal).toFixed(2)}`;
             }
@@ -1315,84 +1371,6 @@
                             showConfirmButton: false,
                             timer: 2000
                         });
-                    });
-            }
-
-            // Change quantity of cart items from checkout page
-            function changeQuantity(variantId, change) {
-                const controller = document.getElementById(`qty_controller_${variantId}`);
-                if (!controller) return;
-
-                const qtySpan = controller.querySelector('.qty-span');
-                const buttons = controller.querySelectorAll('button');
-                if (!qtySpan) return;
-
-                const currentQty = parseInt(qtySpan.textContent.trim());
-                const newQty = currentQty + change;
-
-                if (newQty < 1) {
-                    removeItem(variantId);
-                    return;
-                }
-                if (newQty > 5) {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'warning',
-                        title: 'Limit reached: Max 5 quantity allowed',
-                        showConfirmButton: false,
-                        timer: 2500
-                    });
-                    return;
-                }
-
-                // Disable buttons to prevent double click while updating
-                buttons.forEach(btn => btn.disabled = true);
-
-                fetch('/cart/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ variantId, quantity: newQty })
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        // Re-enable buttons
-                        buttons.forEach(btn => btn.disabled = false);
-
-                        if (data.success) {
-                            // Update quantity text
-                            qtySpan.textContent = newQty;
-
-                            // Update price for this product card
-                            const productCard = document.getElementById('card_' + variantId);
-                            if (productCard) {
-                                const itemPrice = parseFloat(productCard.getAttribute('data-price') || '0');
-                                const priceValSpan = productCard.querySelector('.price-value');
-                                if (priceValSpan) {
-                                    priceValSpan.textContent = '₹' + (itemPrice * newQty).toFixed(2);
-                                }
-                            }
-
-                            // Update baseSubtotal and recalculate all totals
-                            baseSubtotal = data.cart.totalAmount;
-                            recalculateCheckoutTotals();
-
-                            if (window.updateCartCount) window.updateCartCount();
-                        } else {
-                            Swal.fire({
-                                toast: true,
-                                position: 'top-end',
-                                icon: 'error',
-                                title: data.message || 'Failed to update quantity',
-                                showConfirmButton: false,
-                                timer: 2500
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        // Re-enable buttons
-                        buttons.forEach(btn => btn.disabled = false);
-                        console.error(error);
                     });
             }
 

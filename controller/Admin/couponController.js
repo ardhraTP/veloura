@@ -1,7 +1,7 @@
 import { parse } from 'dotenv';
 import Coupon from '../../model/Coupon.js';
 
-// Get coupons management page
+
 export const getCouponsPage = async (req, res) => {
     try {
         const search = req.query.search || '';
@@ -12,7 +12,6 @@ export const getCouponsPage = async (req, res) => {
 
         const filter = {};
 
-        // Apply search filter (match name, code, or description)
         if (search) {
             filter.$or = [
                 { code: { $regex: search, $options: 'i' } },
@@ -21,7 +20,7 @@ export const getCouponsPage = async (req, res) => {
             ];
         }
 
-        // Apply status filter
+       
         if (status === 'active') {
             filter.isActive = true;
         } else if (status === 'inactive') {
@@ -122,7 +121,7 @@ export const addCoupon = async (req, res) => {
         const newCoupon = new Coupon({
             name: name.trim(),
             code: cleanCode,
-            discountType: 'PERCENTAGE', // default to percentage discount
+            discountType: 'PERCENTAGE',
             discountValue: parseFloat(discountValue),
             minOrderAmount: parseFloat(minOrderAmount) || 0,
             maxDiscountAmount: maxDiscountAmount ? parseFloat(maxDiscountAmount) : null,
@@ -160,7 +159,7 @@ export const editCoupon = async (req, res) => {
 
         const cleanCode = code.trim().toUpperCase();
 
-        // Check if another coupon with same code exists
+     
         const existingCoupon = await Coupon.findOne({
             _id: { $ne: couponId },
             code: cleanCode
@@ -189,7 +188,7 @@ export const editCoupon = async (req, res) => {
     }
 };
 
-// Toggle coupon active/inactive status
+
 export const toggleCouponStatus = async (req, res) => {
     try {
         const couponId = req.params.id;

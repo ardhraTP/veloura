@@ -412,6 +412,19 @@
                     </div>
                     
                     <div class="form-group">
+                        <label class="form-label">PRODUCT OFFER (%)</label>
+                        <input type="number" 
+                               id="productOffer" 
+                               name="productOffer" 
+                               class="form-input" 
+                               placeholder="e.g. 15" 
+                               min="0" 
+                               max="100" 
+                               step="1">
+                        <span class="field-error" id="productOfferError"></span>
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label">STATUS</label>
                         <select name="status" class="form-select">
                             <option value="ACTIVE">Active</option>
