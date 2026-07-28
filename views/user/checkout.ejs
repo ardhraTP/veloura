@@ -1058,16 +1058,6 @@
                     </div>
 
                     <!-- RIGHT COLUMN: Cart Total -->
-                    <%
-                        let totalProductSavings = 0;
-                        if (cart && cart.items) {
-                            cart.items.forEach(item => {
-                                if (item.variant && item.variant.regularPrice > item.price) {
-                                    totalProductSavings += (item.variant.regularPrice - item.price) * item.quantity;
-                                }
-                            });
-                        }
-                    %>
                     <div class="checkout-right">
                         <div class="cart-total-card">
                             <h2 class="cart-total-title">Cart Total</h2>
@@ -1086,12 +1076,6 @@
                                     <%= shippingFee===0 ? 'FREE' : '₹' + shippingFee.toFixed(2) %>
                                 </span>
                             </div>
-                            <% if (totalProductSavings > 0) { %>
-                                <div class="breakdown-item" style="color: #2e7d32; font-weight: 500;">
-                                    <span>Product Savings:</span>
-                                    <span>-₹<%= totalProductSavings.toFixed(2) %></span>
-                                </div>
-                            <% } %>
                             <div class="breakdown-item" id="discountRow"
                                 style="display: <%= discount > 0 ? 'flex' : 'none' %>; color: #2e7d32; font-weight: 500;">
                                 <span>Coupon Discount:</span>
