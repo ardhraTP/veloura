@@ -124,14 +124,16 @@
                 </div>
 
                 <!-- CTA Buttons -->
-                <% const firstVariantStock=product.variants && product.variants.length> 0 ? product.variants[0].quantity
-                    : 0;
-                    %>
-                    <button class="pd-btn-add" id="addCartBtn" <%=firstVariantStock===0 ? 'disabled' : '' %>>
-                        <%= firstVariantStock===0 ? 'OUT OF STOCK' : 'ADD TO CART' %>
+                <% 
+                    const isUnlisted = product.status === 'INACTIVE';
+                    const firstVariantStock = product.variants && product.variants.length > 0 ? product.variants[0].quantity : 0;
+                %>
+                    <button class="pd-btn-add" id="addCartBtn" <%= (isUnlisted || firstVariantStock === 0) ? 'disabled' : '' %>>
+                        <%= isUnlisted ? 'CURRENTLY UNAVAILABLE' : (firstVariantStock === 0 ? 'OUT OF STOCK' : 'ADD TO CART') %>
                     </button>
-                    <button class="pd-btn-buy" id="buyNowBtn" <%=firstVariantStock===0 ? 'disabled' : '' %>>BUY
-                        NOW</button>
+                    <button class="pd-btn-buy" id="buyNowBtn" <%= (isUnlisted || firstVariantStock === 0) ? 'disabled' : '' %>>
+                        <%= isUnlisted ? 'CURRENTLY UNAVAILABLE' : 'BUY NOW' %>
+                    </button>
                     <button
                         class="pd-btn-wishlist <%= typeof isInWishlist !== 'undefined' && isInWishlist ? 'active' : '' %>"
                         id="wishlistBtn" onclick="toggleWishlist()">
@@ -398,7 +400,15 @@
                     // Update CTA Add to Cart & Buy Now button status/text
                     const addCartBtn = document.getElementById('addCartBtn');
                     const buyNowBtn = document.getElementById('buyNowBtn');
-                    if (variant.quantity === 0) {
+                    const isProductUnlisted = '<%= product.status %>' === 'INACTIVE';
+                    if (isProductUnlisted) {
+                        addCartBtn.textContent = 'CURRENTLY UNAVAILABLE';
+                        addCartBtn.disabled = true;
+                        if (buyNowBtn) {
+                            buyNowBtn.textContent = 'CURRENTLY UNAVAILABLE';
+                            buyNowBtn.disabled = true;
+                        }
+                    } else if (variant.quantity === 0) {
                         addCartBtn.textContent = 'OUT OF STOCK';
                         addCartBtn.disabled = true;
                         if (buyNowBtn) buyNowBtn.disabled = true;

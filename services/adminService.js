@@ -1,3 +1,4 @@
+import Order from '../model/Order.js';
 import User from '../model/User.js';
 
 export const findAdminByEmail = async (email) => {

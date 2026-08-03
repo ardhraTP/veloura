@@ -386,17 +386,30 @@
                                     <% 
                                         let dotColor = 'yellow';
                                         let statusText = order.orderStatus || 'Pending';
-                                        if (order.orderStatus === 'Delivered') {
+                                        const isPaymentFailed = order.paymentStatus === 'Failed';
+
+                                        if (isPaymentFailed) {
+                                            dotColor = 'red';
+                                            statusText = 'PAYMENT FAILED';
+                                        } else if (order.orderStatus === 'Delivered') {
                                             dotColor = 'green';
                                         } else if (order.orderStatus === 'Cancelled' || order.orderStatus === 'Returned') {
                                             dotColor = 'red';
                                         }
                                     %>
-                                    <div class="order-status-right">
+                                    <div class="order-status-right" style="display: flex; align-items: center; gap: 12px;">
                                         <div class="status-header">
                                             <span class="status-dot <%= dotColor %>"></span>
-                                            <span><%= statusText.toUpperCase() %></span>
+                                            <span><%= statusText %></span>
                                         </div>
+                                        <% if (isPaymentFailed) { %>
+                                            <button type="button" 
+                                                    class="btn-retry-payment"
+                                                    onclick="event.preventDefault(); event.stopPropagation(); retryPayment('<%= order.orderId %>');"
+                                                    style="background-color: #5C1E28; color: #ffffff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.8px; box-shadow: 0 2px 8px rgba(92, 30, 40, 0.2); transition: all 0.2s;">
+                                                <i class="fas fa-redo"></i> Retry Payment
+                                            </button>
+                                        <% } %>
                                     </div>
                                 </div>
 
@@ -464,5 +477,125 @@
     </div>
 
     <%- include('../partials/footer') %>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        async function retryPayment(orderId) {
+            try {
+                Swal.fire({
+                    title: 'Initializing Payment...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                const response = await fetch('/order/retry-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: orderId })
+                });
+
+                const data = await response.json();
+                Swal.close();
+
+                if (!data.success) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Stock / Payment Error',
+                        text: data.message || 'Unable to retry payment.',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                    return;
+                }
+
+                const options = {
+                    key: data.keyId,
+                    amount: Math.round(data.amount * 100),
+                    currency: 'INR',
+                    name: 'Veloura',
+                    description: 'Retry Payment for Order ' + data.orderId,
+                    order_id: data.razorpayOrderId,
+                    prefill: {
+                        name: data.userName || '',
+                        email: data.userEmail || '',
+                        contact: data.userPhone || ''
+                    },
+                    theme: { color: '#5c1e28' },
+                    handler: async function (paymentResponse) {
+                        Swal.fire({
+                            title: 'Verifying Payment...',
+                            text: 'Please wait',
+                            allowOutsideClick: false,
+                            didOpen: () => { Swal.showLoading(); }
+                        });
+
+                        try {
+                            const verifyRes = await fetch('/checkout/verify-payment', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    razorpay_order_id: paymentResponse.razorpay_order_id,
+                                    razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                                    razorpay_signature: paymentResponse.razorpay_signature,
+                                    orderId: data.orderId
+                                })
+                            });
+
+                            const verifyData = await verifyRes.json();
+                            Swal.close();
+
+                            if (verifyData.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Payment Successful!',
+                                    text: 'Your payment has been received successfully.',
+                                    confirmButtonColor: '#5c1e28'
+                                }).then(() => {
+                                    window.location.href = `/order/payment-success?orderId=${data.orderId}`;
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Verification Failed',
+                                    text: verifyData.message || 'Payment verification failed.',
+                                    confirmButtonColor: '#5c1e28'
+                                });
+                            }
+                        } catch (err) {
+                            console.error('Error verifying payment:', err);
+                            Swal.close();
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to verify payment.',
+                                confirmButtonColor: '#5c1e28'
+                            });
+                        }
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Failed',
+                        text: 'Payment was not completed. You can try again anytime from My Orders.',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                });
+                rzp.open();
+            } catch (error) {
+                console.error('Error retrying payment:', error);
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'A network error occurred. Please try again.',
+                    confirmButtonColor: '#5c1e28'
+                });
+            }
+        }
+    </script>
 </body>
 </html>

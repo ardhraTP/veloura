@@ -10,6 +10,7 @@ import {
 } from '../../services/addressService.js';
 import User from "../../model/User.js";
 import Address from "../../model/Address.js";
+import Order from "../../model/Order.js";
 
 
 export const getAddresses = async (req, res) => {
@@ -17,9 +18,9 @@ export const getAddresses = async (req, res) => {
         const userId = req.session.userId;
 
         const user = await User.findById(userId);
-        const addresses = await getUserAddresses(userId); 
+        const addresses = await getUserAddresses(userId);
 
-        res.render('user/manage-addresses', { addresses,user, activeTab: 'addresses', isLoggedIn: true });
+        res.render('user/manage-addresses', { addresses, user, activeTab: 'addresses', isLoggedIn: true });
     } catch (error) {
         console.error('get addresses error:', error);
         res.redirect('/profile');
@@ -37,7 +38,6 @@ export const getAddAddress = async (req, res) => {
         res.redirect('/profile/addresses');
     }
 };
-
 
 
 //add new address

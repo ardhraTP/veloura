@@ -430,7 +430,7 @@
                 <!-- Top 10 Products -->
                 <div class="best-seller-card">
                     <h3 class="best-seller-title"><i class="fas fa-box-open"
-                            style="color: var(--primary-red); margin-right: 8px;"></i> Top 10 Products</h3>
+                            style="color: var(--primary-red); margin-right: 8px;"></i> Top 10 Products</h3> 
                     <div style="overflow-x: auto;">
                         <table class="best-seller-table">
                             <thead>
@@ -615,7 +615,6 @@
                         }
                     });
 
-                    // Update Top Selling Products/Categories/Brands in the DOM
                     renderTopSellers(data.topProducts, data.topCategories, data.topBrands);
 
                 } catch (error) {
@@ -623,9 +622,7 @@
                 }
             }
 
-            // Function to render Best Selling tables on the dashboard
             function renderTopSellers(products, categories, brands) {
-                // Update Top Products Table
                 const productsBody = document.getElementById('topProductsBody');
                 if (productsBody) {
                     productsBody.innerHTML = products.map((p, idx) => `

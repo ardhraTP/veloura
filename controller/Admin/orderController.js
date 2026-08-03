@@ -16,8 +16,16 @@ export const getAdminOrdersPage = async (req, res) => {
         const status = req.query.status || 'all';
 
         let query = {};
+
         if (status !== 'all') {
-            query.orderStatus = status;
+            if (status === 'Return Requested') {
+                query.$or = [
+                    { orderStatus: 'Return Requested' },
+                    { 'items.itemStatus': 'Return Requested' }
+                ];
+            } else {
+                query.orderStatus = status;
+            }
         }
 
         if (payment !== 'all') {
@@ -36,18 +44,32 @@ export const getAdminOrdersPage = async (req, res) => {
 
         if (search) {
             const matchingUsers = await User.find({
-                $or: [{ name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } }
                 ]
             });
 
             const userIds = matchingUsers.map(u => u._id);
 
-            query.$or = [
-                { orderId: { $regex: search, $options: 'i' } },
-                { user: { $in: userIds } },
-                { 'deliveryAddress.fullName': { $regex: search, $options: 'i' } }
-            ];
+            const searchCondition = {
+                $or: [
+                    { orderId: { $regex: search, $options: 'i' } },
+                    { user: { $in: userIds } },
+                    { 'deliveryAddress.fullName': { $regex: search, $options: 'i' } }
+                ]
+            };
+
+            if (query.$or) {
+                const existingOr = query.$or;
+                delete query.$or;
+                query.$and = [
+                    { $or: existingOr },
+                    searchCondition
+                ];
+            } else {
+                query.$or = searchCondition.$or;
+            }
         }
 
         const totalOrders = await Order.countDocuments(query);
@@ -112,7 +134,6 @@ export const updateAdminOrderStatus = async (req, res) => {
         }
 
         if (status === 'Cancelled') {
-
             for (const item of order.items) {
                 if (item.itemStatus !== 'Cancelled') {
                     await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
@@ -122,7 +143,23 @@ export const updateAdminOrderStatus = async (req, res) => {
             order.orderStatus = 'Cancelled';
             order.cancellationReason = cancellationReason || 'Cancelled by administrator';
 
-            if (order.paymentMethod !== 'COD') {
+            const isOnlineOrWallet = order.paymentMethod === 'Online' || 
+                                     order.paymentMethod === 'Wallet' || 
+                                     order.paymentMethod === 'Online Payment';
+
+            if (isOnlineOrWallet && order.paymentStatus !== 'Refunded') {
+                const user = await User.findById(order.user);
+                if (user) {
+                    const refundAmount = order.totalAmount;
+                    user.walletBalance = (user.walletBalance || 0) + refundAmount;
+                    user.walletHistory.push({
+                        amount: refundAmount,
+                        type: 'Credited',
+                        description: `Refund for cancelled order ${order.orderId}`,
+                        date: new Date()
+                    });
+                    await user.save();
+                }
                 order.paymentStatus = 'Refunded';
             }
         } else if (status === 'Returned') {
@@ -134,7 +171,19 @@ export const updateAdminOrderStatus = async (req, res) => {
             }
             order.orderStatus = 'Returned';
 
-            if (order.paymentMethod !== 'COD') {
+            if (order.paymentStatus !== 'Refunded') {
+                const user = await User.findById(order.user);
+                if (user) {
+                    const refundAmount = order.totalAmount;
+                    user.walletBalance = (user.walletBalance || 0) + refundAmount;
+                    user.walletHistory.push({
+                        amount: refundAmount,
+                        type: 'Credited',
+                        description: `Refund for returned order ${order.orderId}`,
+                        date: new Date()
+                    });
+                    await user.save();
+                }
                 order.paymentStatus = 'Refunded';
             }
         } else {
@@ -206,68 +255,6 @@ export const updateItemStatus = async (req,res)=>{
         });
     }
 };
-
-
-//approve return and refund to wallet
-// export const approveReturn = async (req,res)=>{
-//     try{
-//         const {orderId,itemId} = req.body;
-
-//         if(!orderId || !itemId){
-//             return res.json({
-//                 success:false,
-//                 message:'Order ID and item ID are required'
-//             });
-//         }
-
-//         const order = await Order.findOne({orderId:orderId});
-
-//         if(!order){
-//             return res.json({
-//                 success:false,
-//                 message:'Order not found'
-//             });
-//         }
-
-//         const item = order.items.find(i => i._id.toString() === itemId);
-
-//         if(!item){
-//             return res.json({
-//                 success:false,
-//                 message:'Item is not marked as returned'
-//             });
-//         }
-
-//         const refundAmount = item.price * item.quantity;
-
-//         const user = await User.findById(order.user);
-//         user.walletBalance += refundAmount;
-//         user.walletHistory.push({
-//             amount: refundAmount,
-//             type: 'Credited',
-//             description: `Refund for returned item in order ${orderId}`,
-//             date: new Date()
-//         });
-
-//         await user.save();
-
-//         order.paymentStatus = 'Refunded';
-//         await order.save();
-
-//         res.json({
-//             success:true,
-//             message:`Return approved. ₹${refundAmount}  refunded to wallet`,
-//             order:order,
-//             refundAmount: refundAmount
-//         });
-//     }catch(error){
-//         console.error('Error approving return:',error);
-//         res.json({
-//             success:false,
-//             message:error.message || 'Failed to approve return'
-//         });
-//     }
-// };
 
 
 export const approveReturn = async (req,res)=>{

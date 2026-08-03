@@ -17,10 +17,6 @@ export const getUserCart = async (userId) => {
             let cartUpdated = false;
             for (const item of cart.items) {
                 if (item.variant) {
-                    if (item.quantity > item.variant.quantity) {
-                        item.quantity = Math.max(0, item.variant.quantity);
-                        cartUpdated = true;
-                    }
                     if (item.product && item.variant.regularPrice) {
                         const { finalPrice, discountPercentage } = calculateOfferPrice(item.product, item.variant.regularPrice, item.variant.salePrice);
                         if (item.price !== finalPrice || item.discountPercentage !== discountPercentage) {
@@ -175,25 +171,6 @@ export const removeFromCart = async (userId, variantId) => {
 };
 
 export const syncCartQuantitiesForVariant = async (variantId, newQuantity) => {
-    try {
-        const carts = await Cart.find({ "items.variant": variantId });
-        for (const cart of carts) {
-            let updated = false;
-            for (const item of cart.items) {
-                if (item.variant && item.variant.toString() === variantId.toString()) {
-                    if (item.quantity > newQuantity) {
-                        item.quantity = Math.max(0, newQuantity);
-                        updated = true;
-                    }
-                }
-            }
-            if (updated) {
-                cart.totalAmount = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-                await cart.save();
-            }
-        }
-    } catch (error) {
-        console.error('Error syncing cart quantities for variant:', error);
-        throw error;
-    }
+    // Keep user cart item quantity intact so checkout stock validation can detect when stock falls below requested quantity
+    return;
 };

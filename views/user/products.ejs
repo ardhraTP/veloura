@@ -128,6 +128,7 @@
                             <% } else if (products) { %>
                                 <% products.forEach(product => { %>
                                     <%
+                                        const isUnlisted = product.status === 'INACTIVE';
                                         const firstVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null;
                                         const productImage = firstVariant && firstVariant.images && firstVariant.images.length > 0 ? firstVariant.images[0] : null;
                                         const salePrice = firstVariant ? firstVariant.salePrice : null;
@@ -137,7 +138,9 @@
                                     %>
                                     <a href="/product/<%= product._id %>" class="product-card">
                                         <div class="product-image-container">
-                                            <% if (discountPercent > 0) { %>
+                                            <% if (isUnlisted) { %>
+                                                <span class="badge badge-unavailable">UNAVAILABLE</span>
+                                            <% } else if (discountPercent > 0) { %>
                                                 <span class="badge"><%= discountPercent %>% OFF</span>
                                             <% } else if (hasDiscount) { %>
                                                 <span class="badge">SALE</span>
@@ -192,8 +195,8 @@
                                             %>
                                             <button class="collections-add-cart-btn" 
                                                     onclick="event.preventDefault(); event.stopPropagation(); addToCartFromCollections(this, '<%= product._id %>', '<%= availableVariant ? availableVariant._id : '' %>');"
-                                                    <%= isOutOfStock ? 'disabled' : '' %>>
-                                                <%= isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CART' %>
+                                                    <%= (isUnlisted || isOutOfStock) ? 'disabled' : '' %>>
+                                                <%= isUnlisted ? 'CURRENTLY UNAVAILABLE' : (isOutOfStock ? 'OUT OF STOCK' : 'ADD TO CART') %>
                                             </button>
                                         </div>
                                     </a>

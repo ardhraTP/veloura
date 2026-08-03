@@ -97,7 +97,6 @@ export const getDashboardData = async (req, res) => {
             groupFormat = "%Y-%m";
         }
 
-        // 1. Chart Sales Data
         const chartData = await Order.aggregate([
             {
                 $match: {
@@ -239,9 +238,7 @@ export const getUsers = async (req, res) => {
         let page = parseInt(req.query.page) || 1;
         let limit = 5;
 
-
         const query = buildUserQuery(req.query.search, req.query.status);
-
 
         const { users, totalPages } = await getUsersWithPagination(query, page, limit);
 
@@ -250,7 +247,7 @@ export const getUsers = async (req, res) => {
             currentPage: page,
             totalPages,
             searchQuery: req.query.search || '',
-            currentStatus: req.query.status || 'all'
+            currentStatus: req.query.status || 'all',
         });
 
     } catch (error) {

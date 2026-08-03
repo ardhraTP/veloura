@@ -106,12 +106,12 @@ export const getOrderDetails = async (req, res) => {
     }
 };
 
-//cancel specific variant in an order
 export const cancelOrderProduct = async (req, res) => {
     try {
 
         const orderId = req.params.id;
         const { itemId, reason, comment } = req.body;
+        const userId = req.session.userId;
 
         const order = await Order.findById(orderId);
         if (!order) {
@@ -134,10 +134,13 @@ export const cancelOrderProduct = async (req, res) => {
 
         item.itemStatus = 'Cancelled';
         item.cancellationReason = comment ? `${reason} - ${comment}` : reason;
-        item.cancelledAt = new Date();
 
         let refundAmount = 0;
-        if (order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded') {
+        const isOnlineOrWallet = order.paymentMethod === 'Online' || 
+                                 order.paymentMethod === 'Wallet' || 
+                                 order.paymentMethod === 'Online Payment';
+
+        if (isOnlineOrWallet) {
             const itemSubtotal = item.price * item.quantity;
             const totalDiscount = order.discount || 0;
             const totalTax = order.tax || 0;
@@ -156,7 +159,7 @@ export const cancelOrderProduct = async (req, res) => {
             refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
 
             const user = await User.findById(order.user);
-            if (user && order.paymentMethod === 'Wallet') {
+            if (user && refundAmount > 0) {
                 user.walletBalance = (user.walletBalance || 0) + refundAmount;
                 user.walletHistory.push({
                     amount: refundAmount,
@@ -246,7 +249,7 @@ export const downloadInvoice = async (req, res) => {
             return res.status(404).send('Order not found');
         }
 
-        // Calculate dynamic subtotal, tax, and total amount based on active items only
+       
         let invoiceSubtotal = 0;
         order.items.forEach(item => {
             if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
@@ -271,16 +274,15 @@ export const downloadInvoice = async (req, res) => {
             .fontSize(9)
             .text('PREMIUM BEAUTY RITUALS', 50, 78);
 
-        // Invoice Header
+      
         doc.fillColor('#2C2C2C')
             .font('Helvetica-Bold')
             .fontSize(20)
             .text('INVOICE', 400, 50, { align: 'right' });
 
-        // Horizontal Line
         doc.moveTo(50, 95).lineTo(550, 95).strokeColor('#E6DED4').stroke();
 
-        // Billing Details
+      
         doc.fillColor('#5C1E28')
             .font('Helvetica-Bold')
             .fontSize(10)
@@ -295,7 +297,7 @@ export const downloadInvoice = async (req, res) => {
             .text(`${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`, 50, 175)
             .text(`Phone: +91 ${order.deliveryAddress.phone}`, 50, 190);
 
-        // Order Details (Right side)
+      
         doc.fillColor('#5C1E28')
             .font('Helvetica-Bold')
             .fontSize(10)
@@ -309,7 +311,6 @@ export const downloadInvoice = async (req, res) => {
             .text(`Method: ${order.paymentMethod}`, 320, 175)
             .text(`Status: ${order.paymentStatus}`, 320, 190);
             
-        // Table Border Top
         doc.moveTo(50, 220).lineTo(550, 220).strokeColor('#E6DED4').stroke();
         // Table Header
         let y = 235;
@@ -323,7 +324,6 @@ export const downloadInvoice = async (req, res) => {
         doc.text('Total', 480, y, { width: 70, align: 'right' });
         // Table Divider
         doc.moveTo(50, 250).lineTo(550, 250).strokeColor('#E6DED4').stroke();
-        // Render Order Items
         y = 265;
         doc.fillColor('#2C2C2C')
             .font('Helvetica')
@@ -344,9 +344,7 @@ export const downloadInvoice = async (req, res) => {
             doc.text(`Rs.${itemTotal.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
             y += 20;
         });
-        // Totals divider
         doc.moveTo(50, y + 5).lineTo(550, y + 5).strokeColor('#E6DED4').stroke();
-        // Order Summary breakdown
         y += 20;
         doc.font('Helvetica')
             .text('Subtotal:', 350, y, { width: 110, align: 'right' });
@@ -370,7 +368,6 @@ export const downloadInvoice = async (req, res) => {
                 .fillColor('#D92525')
                 .text(`Rs.${order.discount.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
         }
-        // Final Grand Total
         y += 20;
         doc.moveTo(350, y - 5).lineTo(550, y - 5).strokeColor('#5C1E28').stroke();
         doc.fillColor('#5C1E28')
@@ -378,12 +375,10 @@ export const downloadInvoice = async (req, res) => {
             .fontSize(11)
             .text('Grand Total:', 350, y, { width: 110, align: 'right' });
         doc.text(`Rs.${invoiceTotalAmount.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
-        // Footer Note
         doc.fillColor('#999999')
             .font('Helvetica-Oblique')
             .fontSize(8)
             .text('Thank you for shopping with Veloura! For queries, contact support@veloura.com', 50, 720, { align: 'center', width: 500 });
-        // Finalize document stream
         doc.end();
     } catch (error) {
         console.error('Error generating PDF invoice:', error);
@@ -420,64 +415,89 @@ export const getPaymentSuccess = async (req,res)=>{
 };
 
 
-export const getPaymentFailed = async (req,res)=>{
-    try{
+export const getPaymentFailed = async (req, res) => {
+    try {
         const orderId = req.query.orderId;
         const userId = req.session.userId;
 
         if (orderId) {
             const order = await Order.findOne({ orderId: orderId, user: userId });
-            if (order && order.paymentStatus === 'Pending') {
+            if (order && order.paymentStatus !== 'Completed') {
                 order.paymentStatus = 'Failed';
-                order.orderStatus = 'Cancelled';
+                if (order.orderStatus !== 'Cancelled') {
+                    order.orderStatus = 'Pending';
+                }
                 await order.save();
             }
         }
 
-        res.render('user/payment-failed',{
-            orderId:orderId || null,
-            isLoggedIn:true
+        res.render('user/payment-failed', {
+            orderId: orderId || null,
+            isLoggedIn: true
         });
-    }catch(error){
-        console.error('Error loading payment failed page:',error);
+    } catch (error) {
+        console.error('Error loading payment failed page:', error);
         res.status(500).render('error/500');
     }
 };
 
-export const retryPayment = async (req,res)=>{
-    try{
-        const {orderId} = req.body;
+export const retryPayment = async (req, res) => {
+    try {
+        const { orderId } = req.body;
         const userId = req.session.userId;
 
-        const order = await Order.findOne({orderId: orderId,user:userId});
+        const order = await Order.findOne({ orderId: orderId, user: userId }).populate('items.product items.variant');
 
-        if(!order){
+        if (!order) {
             return res.json({
-                success:false,
-                message:'Order not found'
+                success: false,
+                message: 'Order not found'
             });
         }
 
-        if(order.paymentStatus === 'Completed'){
+        if (order.paymentStatus === 'Completed') {
             return res.json({
-                success:false,
-                message:'Payment already completed'
+                success: false,
+                message: 'Payment already completed for this order'
             });
         }
 
+        const Variant = (await import('../../model/Variant.js')).default;
+        for (const item of order.items) {
+            const variantId = item.variant ? (item.variant._id || item.variant) : null;
+            const variant = variantId ? await Variant.findById(variantId) : null;
+            const prodName = item.product ? item.product.productName : 'Item';
+
+            if (!variant || variant.isDeleted || variant.status === 'INACTIVE') {
+                return res.json({
+                    success: false,
+                    message: `${prodName} is no longer available.`
+                });
+            }
+
+            if (variant.quantity < item.quantity) {
+                return res.json({
+                    success: false,
+                    message: `${prodName} (${variant.color}): Only ${variant.quantity} item(s) available in stock. Cannot retry payment.`
+                });
+            }
+        }
+
+        const User = (await import('../../model/User.js')).default;
+        const user = await User.findById(userId);
 
         const razorpayInstance = (await import('../../config/razorpay.js')).default;
 
         const razorpayOrder = await razorpayInstance.orders.create({
-            amount:Math.round(order.totalAmount * 100),
+            amount: Math.round(order.totalAmount * 100),
             currency: 'INR',
             receipt: order.orderId,
-            notes:{
-                orderId: order.orderId
+            notes: {
+                orderId: order.orderId,
+                userId: userId.toString()
             }
         });
 
-        // Update order with new Razorpay order ID
         order.razorpayOrderId = razorpayOrder.id;
         await order.save();
 
@@ -486,14 +506,17 @@ export const retryPayment = async (req,res)=>{
             razorpayOrderId: razorpayOrder.id,
             amount: order.totalAmount,
             keyId: process.env.RAZORPAY_KEY_ID,
-            orderId: order.orderId
+            orderId: order.orderId,
+            userName: user ? user.name : '',
+            userEmail: user ? user.email : '',
+            userPhone: user ? (user.mobile || '') : ''
         });
 
-    }catch(error){
-        console.error('Error retrying payment:',error);
+    } catch (error) {
+        console.error('Error retrying payment:', error);
         res.json({
-            success:false,
-            message:'Failed to retry payment'
+            success: false,
+            message: 'Failed to retry payment. Please try again.'
         });
     }
 };

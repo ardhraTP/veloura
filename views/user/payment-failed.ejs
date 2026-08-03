@@ -201,7 +201,11 @@
         <% } %>
 
         <div class="buttons">
-            <a href="/checkout" class="btn btn-primary">Retry Payment</a>
+            <% if (orderId) { %>
+                <a href="/profile/orders" class="btn btn-primary">View Orders & Retry Payment</a>
+            <% } else { %>
+                <a href="/profile/orders" class="btn btn-primary">Go to My Orders</a>
+            <% } %>
             <a href="/products" class="btn btn-secondary">Continue Shopping</a>
         </div>
     </div>

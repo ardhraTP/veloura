@@ -33,7 +33,7 @@
                     Swal.fire({
                         icon: 'warning',
                         title: 'Stock Updated',
-                        text: '<%= cartError %>',
+                        text: <%- JSON.stringify(cartError) %>,
                         confirmButtonColor: '#5c1e28'
                     });
                 <% } %>

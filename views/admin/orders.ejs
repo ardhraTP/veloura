@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Management - Veloura Admin</title>
-    
+
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <style>
         :root {
             --primary-red: #5c1e28;
@@ -23,10 +26,10 @@
             --text-dark: #2d2a29;
             --text-gray: #7a7572;
             --border-color: #ebe7e5;
-            
+
             --table-header-bg: #fbf9f8;
             --table-header-text: #7a7572;
-            
+
             --btn-reset-bg: #5c1e28;
             --btn-reset-text: #ffffff;
         }
@@ -53,7 +56,8 @@
             flex-direction: column;
             overflow-y: auto;
             padding: 50px 60px;
-            margin-left: 260px; /* sidebar space */
+            margin-left: 260px;
+            /* sidebar space */
         }
 
         /* --- Top Header Area --- */
@@ -205,7 +209,8 @@
             position: relative;
         }
 
-        .filter-select, .filter-date {
+        .filter-select,
+        .filter-date {
             padding: 10px 24px 10px 15px;
             border: 1px solid var(--border-color);
             border-radius: 6px;
@@ -219,11 +224,13 @@
             font-family: inherit;
         }
 
-        .filter-select:hover, .filter-date:hover {
+        .filter-select:hover,
+        .filter-date:hover {
             border-color: #bfaea8;
         }
 
-        .filter-select:focus, .filter-date:focus {
+        .filter-select:focus,
+        .filter-date:focus {
             border-color: var(--primary-red);
         }
 
@@ -369,6 +376,11 @@
             color: #4B5563;
         }
 
+        .status-return-requested {
+            background-color: #FFF3CD;
+            color: #856404;
+        }
+
         /* Action Edit Icon Button */
         .action-link-btn {
             display: inline-flex;
@@ -499,374 +511,440 @@
             display: flex;
             align-items: center;
         }
-
     </style>
     <script src="/js/prevent-back.js"></script>
 </head>
+
 <body>
 
     <%- include('../partials/admin/sidebar', { selectedTab: 'orders' }) %>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        
-        <!-- Header -->
-        <div class="page-top">
-            <div class="header-title-section">
-                <h1 class="page-title">Order Management</h1>
-                <p class="page-subtitle">Manage and track all customer transactions</p>
-            </div>
-            
-            <!-- Search bar -->
-            <div class="search-box-container">
-                <input type="text" id="orderSearchInput" class="search-input" placeholder="search by order id" value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
-                <button type="button" class="search-btn-luxury" onclick="applyOrdersFilters()">Search</button>
-                <% if (typeof searchQuery !== 'undefined' && searchQuery) { %>
-                    <button type="button" class="cancel-btn-luxury" onclick="clearOrderSearch()">Cancel</button>
-                <% } %>
-            </div>
-        </div>
+        <!-- Main Content -->
+        <main class="main-content">
 
-        <!-- Filter Panel -->
-        <div class="filter-panel">
-            <div class="filter-left">
-                
-                <div class="filter-header">
-                    <div class="filter-icon-bg"><i class="fas fa-sliders-h"></i></div>
-                    <span class="filter-label-text">Filter By</span>
+            <!-- Header -->
+            <div class="page-top">
+                <div class="header-title-section">
+                    <h1 class="page-title">Order Management</h1>
+                    <p class="page-subtitle">Manage and track all customer transactions</p>
                 </div>
-                
-                <!-- Date Filter -->
-                <div class="filter-control-wrap">
-                    <input type="date" id="dateFilter" class="filter-date" value="<%= typeof currentDate !== 'undefined' ? currentDate : '' %>" onchange="applyOrdersFilters()">
-                </div>
-                
-                <!-- Order/Payment Type Filter -->
-                <div class="filter-control-wrap">
-                    <select id="paymentFilter" class="filter-select" onchange="applyOrdersFilters()">
-                        <option value="all" <%= (typeof currentPayment !== 'undefined' && currentPayment === 'all') ? 'selected' : '' %>>Payment Method</option>
-                        <option value="COD" <%= (typeof currentPayment !== 'undefined' && currentPayment === 'COD') ? 'selected' : '' %>>COD</option>
-                        <option value="Online" <%= (typeof currentPayment !== 'undefined' && currentPayment === 'Online') ? 'selected' : '' %>>Online</option>
-                    </select>
-                </div>
-                
-                <!-- Order Status Filter -->
-                <div class="filter-control-wrap">
-                    <select id="statusFilter" class="filter-select" onchange="applyOrdersFilters()">
-                        <option value="all" <%= (typeof currentStatus === 'undefined' || currentStatus === 'all') ? 'selected' : '' %>>Order Status</option>
-                        <option value="Pending" <%= (typeof currentStatus !== 'undefined' && currentStatus === 'Pending') ? 'selected' : '' %>>Pending</option>
-                        <option value="Processing" <%= (typeof currentStatus !== 'undefined' && currentStatus === 'Processing') ? 'selected' : '' %>>Processing</option>
-                        <option value="Shipped" <%= (typeof currentStatus !== 'undefined' && currentStatus === 'Shipped') ? 'selected' : '' %>>Shipped</option>
-                        <option value="Out for Delivery" <%= (typeof currentStatus !== 'undefined' && currentStatus === 'Out for Delivery') ? 'selected' : '' %>>Out for Delivery</option>
-                        <option value="Delivered" <%= (typeof currentStatus !== 'undefined' && currentStatus === 'Delivered') ? 'selected' : '' %>>Delivered</option>
-                        <option value="Cancelled" <%= (typeof currentStatus !== 'undefined' && currentStatus === 'Cancelled') ? 'selected' : '' %>>Cancelled</option>
-                        <option value="Returned" <%= (typeof currentStatus !== 'undefined' && currentStatus === 'Returned') ? 'selected' : '' %>>Returned</option>
-                    </select>
-                </div>
-                
-            </div>
-            
-            <button class="btn-reset-filter" onclick="resetOrdersFilters()">Reset Filter</button>
-        </div>
 
-        <!-- Orders Table -->
-        <div class="table-wrapper">
-            <table class="orders-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>NAME</th>
-                        <th>ADDRESS</th>
-                        <th>DATE</th>
-                        <th>TYPE</th>
-                        <th>STATUS</th>
-                        <th style="text-align: right;">ACTIONS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (orders && orders.length > 0) { %>
-                        <% orders.forEach((order) => { %>
-                            <tr>
-                                <td class="td-id"><%= order.orderId %></td>
-                                <td class="td-name"><%= order.deliveryAddress.fullName %></td>
-                                <td class="td-address" title="<%= order.deliveryAddress.address %>, <%= order.deliveryAddress.city %>">
-                                    <%= order.deliveryAddress.address %>, <%= order.deliveryAddress.city %>
-                                </td>
-                                <td class="td-date">
-                                    <%= new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %>
-                                </td>
-                                <td class="td-payment"><%= order.paymentMethod %></td>
-                                <td>
-                                    <% 
-                                        let statusClass = 'status-pending';
-                                        if (order.orderStatus === 'Delivered') statusClass = 'status-delivered';
-                                        else if (order.orderStatus === 'Processing') statusClass = 'status-processing';
-                                        else if (order.orderStatus === 'Shipped') statusClass = 'status-shipped';
-                                        else if (order.orderStatus === 'Out for Delivery') statusClass = 'status-out-for-delivery';
-                                        else if (order.orderStatus === 'Cancelled') statusClass = 'status-cancelled';
-                                        else if (order.orderStatus === 'Returned') statusClass = 'status-returned';
-                                    %>
-                                    <div id="status-display-<%= order._id %>">
-                                        <span class="status-badge <%= statusClass %>"><%= order.orderStatus %></span>
-                                    </div>
-                                    <div id="status-edit-<%= order._id %>" style="display: none;">
-                                        <select id="status-select-<%= order._id %>" class="status-select-inline" data-original-val="<%= order.orderStatus %>">
-                                            <option value="Pending" <%= order.orderStatus === 'Pending' ? 'selected' : '' %>>Pending</option>
-                                            <option value="Processing" <%= order.orderStatus === 'Processing' ? 'selected' : '' %>>Processing</option>
-                                            <option value="Shipped" <%= order.orderStatus === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-                                            <option value="Out for Delivery" <%= order.orderStatus === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
-                                            <option value="Delivered" <%= order.orderStatus === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-                                            <option value="Cancelled" <%= order.orderStatus === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                                            <option value="Returned" <%= order.orderStatus === 'Returned' ? 'selected' : '' %>>Returned</option>
-                                        </select>
-                                    </div>
-                                </td>
-                                <td style="text-align: right;">
-                                    <div id="actions-normal-<%= order._id %>" style="display: inline-flex; gap: 10px; justify-content: flex-end; align-items: center; width: 100%;">
-                                        <a href="/admin/orders/<%= order._id %>" class="btn-view" title="View Order Details">
-                                            View
-                                        </a>
-                                        <button type="button" class="action-link-btn" onclick="enableStatusEdit('<%= order._id %>')" title="Edit Order Status" style="margin: 0; cursor: pointer;">
-                                            <i class="far fa-edit"></i>
-                                        </button>
-                                    </div>
-                                    <div id="actions-edit-<%= order._id %>" style="display: none; gap: 10px; justify-content: flex-end; align-items: center; width: 100%;">
-                                        <button type="button" class="btn-view" style="color: #137333; border-color: #137333; cursor: pointer;" onclick="saveStatusEdit('<%= order._id %>')" title="Save Status">
-                                            Save
-                                        </button>
-                                        <button type="button" class="action-link-btn" onclick="disableStatusEdit('<%= order._id %>')" title="Cancel" style="margin: 0; cursor: pointer;">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    <% } else { %>
+                <!-- Search bar -->
+                <div class="search-box-container">
+                    <input type="text" id="orderSearchInput" class="search-input" placeholder="search by order id"
+                        value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+                    <button type="button" class="search-btn-luxury" onclick="applyOrdersFilters()">Search</button>
+                    <% if (typeof searchQuery !=='undefined' && searchQuery) { %>
+                        <button type="button" class="cancel-btn-luxury" onclick="clearOrderSearch()">Cancel</button>
+                        <% } %>
+                </div>
+            </div>
+
+            <!-- Filter Panel -->
+            <div class="filter-panel">
+                <div class="filter-left">
+
+                    <div class="filter-header">
+                        <div class="filter-icon-bg"><i class="fas fa-sliders-h"></i></div>
+                        <span class="filter-label-text">Filter By</span>
+                    </div>
+
+                    <!-- Date Filter -->
+                    <div class="filter-control-wrap">
+                        <input type="date" id="dateFilter" class="filter-date"
+                            value="<%= typeof currentDate !== 'undefined' ? currentDate : '' %>"
+                            onchange="applyOrdersFilters()">
+                    </div>
+
+                    <!-- Order/Payment Type Filter -->
+                    <div class="filter-control-wrap">
+                        <select id="paymentFilter" class="filter-select" onchange="applyOrdersFilters()">
+                            <option value="all" <%=(typeof currentPayment !=='undefined' && currentPayment==='all' )
+                                ? 'selected' : '' %>>Payment Method</option>
+                            <option value="COD" <%=(typeof currentPayment !=='undefined' && currentPayment==='COD' )
+                                ? 'selected' : '' %>>COD</option>
+                            <option value="Online" <%=(typeof currentPayment !=='undefined' && currentPayment==='Online'
+                                ) ? 'selected' : '' %>>Online</option>
+                        </select>
+                    </div>
+
+                    <!-- Order Status Filter -->
+                    <div class="filter-control-wrap">
+                        <select id="statusFilter" class="filter-select" onchange="applyOrdersFilters()">
+                            <option value="all" <%=(typeof currentStatus==='undefined' || currentStatus==='all' )
+                                ? 'selected' : '' %>>Order Status</option>
+                            <option value="Pending" <%=(typeof currentStatus !=='undefined' && currentStatus==='Pending'
+                                ) ? 'selected' : '' %>>Pending</option>
+                            <option value="Processing" <%=(typeof currentStatus !=='undefined' &&
+                                currentStatus==='Processing' ) ? 'selected' : '' %>>Processing</option>
+                            <option value="Shipped" <%=(typeof currentStatus !=='undefined' && currentStatus==='Shipped'
+                                ) ? 'selected' : '' %>>Shipped</option>
+                            <option value="Out for Delivery" <%=(typeof currentStatus !=='undefined' &&
+                                currentStatus==='Out for Delivery' ) ? 'selected' : '' %>>Out for Delivery</option>
+                            <option value="Delivered" <%=(typeof currentStatus !=='undefined' &&
+                                currentStatus==='Delivered' ) ? 'selected' : '' %>>Delivered</option>
+                            <option value="Cancelled" <%=(typeof currentStatus !=='undefined' &&
+                                currentStatus==='Cancelled' ) ? 'selected' : '' %>>Cancelled</option>
+                            <option value="Returned" <%=(typeof currentStatus !=='undefined' &&
+                                currentStatus==='Returned' ) ? 'selected' : '' %>>Returned</option>
+                            <option value="Return Requested" <%=(typeof currentStatus !=='undefined' &&
+                                currentStatus==='Return Requested' ) ? 'selected' : '' %>>Return Requested</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <button class="btn-reset-filter" onclick="resetOrdersFilters()">Reset Filter</button>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="table-wrapper">
+                <table class="orders-table">
+                    <thead>
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-gray);">No orders found.</td>
+                            <th>ID</th>
+                            <th>NAME</th>
+                            <th>ADDRESS</th>
+                            <th>DATE</th>
+                            <th>TYPE</th>
+                            <th>STATUS</th>
+                            <th style="text-align: right;">ACTIONS</th>
                         </tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                        <% if (orders && orders.length> 0) { %>
+                            <% orders.forEach((order)=> { %>
+                                <tr>
+                                    <td class="td-id">
+                                        <%= order.orderId %>
+                                    </td>
+                                    <td class="td-name">
+                                        <%= order.deliveryAddress.fullName %>
+                                    </td>
+                                    <td class="td-address"
+                                        title="<%= order.deliveryAddress.address %>, <%= order.deliveryAddress.city %>">
+                                        <%= order.deliveryAddress.address %>, <%= order.deliveryAddress.city %>
+                                    </td>
+                                    <td class="td-date">
+                                        <%= new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit' ,
+                                            month: 'short' , year: 'numeric' }) %>
+                                    </td>
+                                    <td class="td-payment">
+                                        <%= order.paymentMethod %>
+                                    </td>
+                                    <td>
+                                        <% let statusClass='status-pending' ; let displayStatusText=order.orderStatus;
+                                            const hasItemReturnReq=order.items && order.items.some(i=> i.itemStatus ===
+                                            'Return Requested');
 
-        <!-- Pagination -->
-        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-        <div class="pagination-area">
-            <div class="pagination-controls">
-                
-                <% if (currentPage > 1) { %>
-                    <a href="?page=<%= currentPage - 1 %>&search=<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>&date=<%= typeof currentDate !== 'undefined' ? currentDate : '' %>&payment=<%= typeof currentPayment !== 'undefined' ? currentPayment : 'all' %>&status=<%= typeof currentStatus !== 'undefined' ? currentStatus : 'all' %>" class="page-btn">
-                        <span class="page-text"><i class="fas fa-chevron-left" style="font-size: 10px; margin-right: 5px;"></i> Back</span>
-                    </a>
-                <% } %>
-
-                <% for(let i = 1; i <= totalPages; i++) { %>
-                    <a href="?page=<%= i %>&search=<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>&date=<%= typeof currentDate !== 'undefined' ? currentDate : '' %>&payment=<%= typeof currentPayment !== 'undefined' ? currentPayment : 'all' %>&status=<%= typeof currentStatus !== 'undefined' ? currentStatus : 'all' %>" 
-                       class="page-btn <%= currentPage === i ? 'active' : '' %>">
-                       <%= i %>
-                    </a>
-                <% } %>
-
-                <% if (currentPage < totalPages) { %>
-                    <a href="?page=<%= currentPage + 1 %>&search=<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>&date=<%= typeof currentDate !== 'undefined' ? currentDate : '' %>&payment=<%= typeof currentPayment !== 'undefined' ? currentPayment : 'all' %>&status=<%= typeof currentStatus !== 'undefined' ? currentStatus : 'all' %>" class="page-btn">
-                        <span class="page-text">Next <i class="fas fa-chevron-right" style="font-size: 10px; margin-left: 5px;"></i></span>
-                    </a>
-                <% } %>
-                
+                                            if (order.orderStatus === 'Return Requested' || hasItemReturnReq) {
+                                            statusClass = 'status-return-requested';
+                                            displayStatusText = 'Return Requested';
+                                            } else if (order.orderStatus === 'Delivered') {
+                                            statusClass = 'status-delivered';
+                                            } else if (order.orderStatus === 'Processing') {
+                                            statusClass = 'status-processing';
+                                            } else if (order.orderStatus === 'Shipped') {
+                                            statusClass = 'status-shipped';
+                                            } else if (order.orderStatus === 'Out for Delivery') {
+                                            statusClass = 'status-out-for-delivery';
+                                            } else if (order.orderStatus === 'Cancelled') {
+                                            statusClass = 'status-cancelled';
+                                            } else if (order.orderStatus === 'Returned') {
+                                            statusClass = 'status-returned';
+                                            }
+                                            %>
+                                            <div id="status-display-<%= order._id %>">
+                                                <span class="status-badge <%= statusClass %>">
+                                                    <%= displayStatusText %>
+                                                </span>
+                                            </div>
+                                            <div id="status-edit-<%= order._id %>" style="display: none;">
+                                                <select id="status-select-<%= order._id %>" class="status-select-inline"
+                                                    data-original-val="<%= order.orderStatus %>">
+                                                    <option value="Pending" <%=order.orderStatus==='Pending'
+                                                        ? 'selected' : '' %>>Pending</option>
+                                                    <option value="Processing" <%=order.orderStatus==='Processing'
+                                                        ? 'selected' : '' %>>Processing</option>
+                                                    <option value="Shipped" <%=order.orderStatus==='Shipped'
+                                                        ? 'selected' : '' %>>Shipped</option>
+                                                    <option value="Out for Delivery"
+                                                        <%=order.orderStatus==='Out for Delivery' ? 'selected' : '' %>
+                                                        >Out for Delivery</option>
+                                                    <option value="Delivered" <%=order.orderStatus==='Delivered'
+                                                        ? 'selected' : '' %>>Delivered</option>
+                                                    <option value="Cancelled" <%=order.orderStatus==='Cancelled'
+                                                        ? 'selected' : '' %>>Cancelled</option>
+                                                    <option value="Returned" <%=order.orderStatus==='Returned'
+                                                        ? 'selected' : '' %>>Returned</option>
+                                                    <option value="Return Requested"
+                                                        <%=(order.orderStatus==='Return Requested' || hasItemReturnReq)
+                                                        ? 'selected' : '' %>>Return Requested</option>
+                                                </select>
+                                            </div>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <div id="actions-normal-<%= order._id %>"
+                                            style="display: inline-flex; gap: 10px; justify-content: flex-end; align-items: center; width: 100%;">
+                                            <a href="/admin/orders/<%= order._id %>" class="btn-view"
+                                                title="View Order Details">
+                                                View
+                                            </a>
+                                            <button type="button" class="action-link-btn"
+                                                onclick="enableStatusEdit('<%= order._id %>')" title="Edit Order Status"
+                                                style="margin: 0; cursor: pointer;">
+                                                <i class="far fa-edit"></i>
+                                            </button>
+                                        </div>
+                                        <div id="actions-edit-<%= order._id %>"
+                                            style="display: none; gap: 10px; justify-content: flex-end; align-items: center; width: 100%;">
+                                            <button type="button" class="btn-view"
+                                                style="color: #137333; border-color: #137333; cursor: pointer;"
+                                                onclick="saveStatusEdit('<%= order._id %>')" title="Save Status">
+                                                Save
+                                            </button>
+                                            <button type="button" class="action-link-btn"
+                                                onclick="disableStatusEdit('<%= order._id %>')" title="Cancel"
+                                                style="margin: 0; cursor: pointer;">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="7"
+                                                style="text-align: center; padding: 40px; color: var(--text-gray);">No
+                                                orders found.</td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
             </div>
-        </div>
-        <% } %>
 
-    </main>
+            <!-- Pagination -->
+            <% if (typeof totalPages !=='undefined' && totalPages> 1) { %>
+                <div class="pagination-area">
+                    <div class="pagination-controls">
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('orderSearchInput');
-            
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    applyOrdersFilters();
-                }
-            });
-        });
+                        <% if (currentPage> 1) { %>
+                            <a href="?page=<%= currentPage - 1 %>&search=<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>&date=<%= typeof currentDate !== 'undefined' ? currentDate : '' %>&payment=<%= typeof currentPayment !== 'undefined' ? currentPayment : 'all' %>&status=<%= typeof currentStatus !== 'undefined' ? currentStatus : 'all' %>"
+                                class="page-btn">
+                                <span class="page-text"><i class="fas fa-chevron-left"
+                                        style="font-size: 10px; margin-right: 5px;"></i> Back</span>
+                            </a>
+                            <% } %>
 
-        // Collect all filter and search parameters and reload page
-        function applyOrdersFilters() {
-            const searchVal = document.getElementById('orderSearchInput').value.trim();
-            const dateVal = document.getElementById('dateFilter').value;
-            const paymentVal = document.getElementById('paymentFilter').value;
-            const statusVal = document.getElementById('statusFilter').value;
+                                <% for(let i=1; i <=totalPages; i++) { %>
+                                    <a href="?page=<%= i %>&search=<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>&date=<%= typeof currentDate !== 'undefined' ? currentDate : '' %>&payment=<%= typeof currentPayment !== 'undefined' ? currentPayment : 'all' %>&status=<%= typeof currentStatus !== 'undefined' ? currentStatus : 'all' %>"
+                                        class="page-btn <%= currentPage === i ? 'active' : '' %>">
+                                        <%= i %>
+                                    </a>
+                                    <% } %>
 
-            const urlParams = new URLSearchParams();
-            
-            if (searchVal) urlParams.append('search', searchVal);
-            if (dateVal) urlParams.append('date', dateVal);
-            if (paymentVal !== 'all') urlParams.append('payment', paymentVal);
-            if (statusVal !== 'all') urlParams.append('status', statusVal);
-            
-            urlParams.append('page', '1'); // always reset to page 1 on filter trigger
+                                        <% if (currentPage < totalPages) { %>
+                                            <a href="?page=<%= currentPage + 1 %>&search=<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>&date=<%= typeof currentDate !== 'undefined' ? currentDate : '' %>&payment=<%= typeof currentPayment !== 'undefined' ? currentPayment : 'all' %>&status=<%= typeof currentStatus !== 'undefined' ? currentStatus : 'all' %>"
+                                                class="page-btn">
+                                                <span class="page-text">Next <i class="fas fa-chevron-right"
+                                                        style="font-size: 10px; margin-left: 5px;"></i></span>
+                                            </a>
+                                            <% } %>
 
-            window.location.href = `/admin/orders?${urlParams.toString()}`;
-        }
+                    </div>
+                </div>
+                <% } %>
 
-        // Clear search input filter
-        function clearOrderSearch() {
-            document.getElementById('orderSearchInput').value = '';
-            applyOrdersFilters();
-        }
+        </main>
 
-        // Reset all filter controls to defaults
-        function resetOrdersFilters() {
-            document.getElementById('orderSearchInput').value = '';
-            document.getElementById('dateFilter').value = '';
-            document.getElementById('paymentFilter').value = 'all';
-            document.getElementById('statusFilter').value = 'all';
-            window.location.href = '/admin/orders';
-        }
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const searchInput = document.getElementById('orderSearchInput');
 
-        // Inline Status Editing
-        function enableStatusEdit(orderId) {
-            document.getElementById(`status-display-${orderId}`).style.display = 'none';
-            document.getElementById(`actions-normal-${orderId}`).style.display = 'none';
-
-            document.getElementById(`status-edit-${orderId}`).style.display = 'block';
-            document.getElementById(`actions-edit-${orderId}`).style.display = 'inline-flex';
-        }
-
-        function disableStatusEdit(orderId) {
-            const selectEl = document.getElementById(`status-select-${orderId}`);
-            const originalVal = selectEl.getAttribute('data-original-val');
-            if (originalVal) {
-                selectEl.value = originalVal;
-            }
-
-            document.getElementById(`status-edit-${orderId}`).style.display = 'none';
-            document.getElementById(`actions-edit-${orderId}`).style.display = 'none';
-
-            document.getElementById(`status-display-${orderId}`).style.display = 'block';
-            document.getElementById(`actions-normal-${orderId}`).style.display = 'inline-flex';
-        }
-
-        async function saveStatusEdit(orderId) {
-            const selectEl = document.getElementById(`status-select-${orderId}`);
-            const selectedStatus = selectEl.value;
-            const originalVal = selectEl.getAttribute('data-original-val');
-
-            if (selectedStatus === originalVal) {
-                disableStatusEdit(orderId);
-                return;
-            }
-
-            const confirmation = await Swal.fire({
-                title: 'Update Status?',
-                text: `Are you sure you want to change the order status to ${selectedStatus}?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#5c1e28',
-                cancelButtonColor: '#888380',
-                confirmButtonText: 'OK',
-                cancelButtonText: 'Cancel'
-            });
-
-            if (!confirmation.isConfirmed) {
-                return;
-            }
-
-            let cancellationReason = '';
-            if (selectedStatus === 'Cancelled') {
-                const reasonPrompt = await Swal.fire({
-                    title: 'Cancellation Reason',
-                    input: 'textarea',
-                    inputPlaceholder: 'Type reason here... (Optional)',
-                    showCancelButton: true,
-                    confirmButtonColor: '#5c1e28',
-                    confirmButtonText: 'OK',
-                    cancelButtonText: 'Back'
-                });
-
-                if (reasonPrompt.isDismissed) {
-                    return;
-                }
-                cancellationReason = reasonPrompt.value ? reasonPrompt.value.trim() : 'Cancelled by administrator';
-            }
-
-            try {
-                Swal.fire({
-                    title: 'Processing...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
+                searchInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        applyOrdersFilters();
                     }
                 });
+            });
 
-                const response = await fetch(`/admin/orders/${orderId}/status`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        status: selectedStatus,
-                        cancellationReason: cancellationReason 
-                    })
+            // Collect all filter and search parameters and reload page
+            function applyOrdersFilters() {
+                const searchVal = document.getElementById('orderSearchInput').value.trim();
+                const dateVal = document.getElementById('dateFilter').value;
+                const paymentVal = document.getElementById('paymentFilter').value;
+                const statusVal = document.getElementById('statusFilter').value;
+
+                const urlParams = new URLSearchParams();
+
+                if (searchVal) urlParams.append('search', searchVal);
+                if (dateVal) urlParams.append('date', dateVal);
+                if (paymentVal !== 'all') urlParams.append('payment', paymentVal);
+                if (statusVal !== 'all') urlParams.append('status', statusVal);
+
+                urlParams.append('page', '1'); // always reset to page 1 on filter trigger
+
+                window.location.href = `/admin/orders?${urlParams.toString()}`;
+            }
+
+            // Clear search input filter
+            function clearOrderSearch() {
+                document.getElementById('orderSearchInput').value = '';
+                applyOrdersFilters();
+            }
+
+            // Reset all filter controls to defaults
+            function resetOrdersFilters() {
+                document.getElementById('orderSearchInput').value = '';
+                document.getElementById('dateFilter').value = '';
+                document.getElementById('paymentFilter').value = 'all';
+                document.getElementById('statusFilter').value = 'all';
+                window.location.href = '/admin/orders';
+            }
+
+            // Inline Status Editing
+            function enableStatusEdit(orderId) {
+                document.getElementById(`status-display-${orderId}`).style.display = 'none';
+                document.getElementById(`actions-normal-${orderId}`).style.display = 'none';
+
+                document.getElementById(`status-edit-${orderId}`).style.display = 'block';
+                document.getElementById(`actions-edit-${orderId}`).style.display = 'inline-flex';
+            }
+
+            function disableStatusEdit(orderId) {
+                const selectEl = document.getElementById(`status-select-${orderId}`);
+                const originalVal = selectEl.getAttribute('data-original-val');
+                if (originalVal) {
+                    selectEl.value = originalVal;
+                }
+
+                document.getElementById(`status-edit-${orderId}`).style.display = 'none';
+                document.getElementById(`actions-edit-${orderId}`).style.display = 'none';
+
+                document.getElementById(`status-display-${orderId}`).style.display = 'block';
+                document.getElementById(`actions-normal-${orderId}`).style.display = 'inline-flex';
+            }
+
+            async function saveStatusEdit(orderId) {
+                const selectEl = document.getElementById(`status-select-${orderId}`);
+                const selectedStatus = selectEl.value;
+                const originalVal = selectEl.getAttribute('data-original-val');
+
+                if (selectedStatus === originalVal) {
+                    disableStatusEdit(orderId);
+                    return;
+                }
+
+                const confirmation = await Swal.fire({
+                    title: 'Update Status?',
+                    text: `Are you sure you want to change the order status to ${selectedStatus}?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#5c1e28',
+                    cancelButtonColor: '#888380',
+                    confirmButtonText: 'OK',
+                    cancelButtonText: 'Cancel'
                 });
 
-                const data = await response.json();
-                Swal.close();
+                if (!confirmation.isConfirmed) {
+                    return;
+                }
 
-                if (data.success || data.sucess) {
+                let cancellationReason = '';
+                if (selectedStatus === 'Cancelled') {
+                    const reasonPrompt = await Swal.fire({
+                        title: 'Cancellation Reason',
+                        input: 'textarea',
+                        inputPlaceholder: 'Type reason here... (Optional)',
+                        showCancelButton: true,
+                        confirmButtonColor: '#5c1e28',
+                        confirmButtonText: 'OK',
+                        cancelButtonText: 'Back'
+                    });
+
+                    if (reasonPrompt.isDismissed) {
+                        return;
+                    }
+                    cancellationReason = reasonPrompt.value ? reasonPrompt.value.trim() : 'Cancelled by administrator';
+                }
+
+                try {
                     Swal.fire({
-                        icon: 'success',
-                        title: 'Updated',
-                        text: 'Order status updated successfully!',
-                        confirmButtonColor: '#5c1e28'
-                    }).then(() => {
-                        const displayDiv = document.getElementById(`status-display-${orderId}`);
-                        const badgeSpan = displayDiv.querySelector('.status-badge');
-                        badgeSpan.textContent = selectedStatus;
-                        
-                        const statusClasses = {
-                            'Pending': 'status-pending',
-                            'Processing': 'status-processing',
-                            'Shipped': 'status-shipped',
-                            'Out for Delivery': 'status-out-for-delivery',
-                            'Delivered': 'status-delivered',
-                            'Cancelled': 'status-cancelled',
-                            'Returned': 'status-returned'
-                        };
-
-                        Object.values(statusClasses).forEach(cls => badgeSpan.classList.remove(cls));
-                        
-                        const newClass = statusClasses[selectedStatus] || 'status-pending';
-                        badgeSpan.classList.add(newClass);
-
-                        selectEl.setAttribute('data-original-val', selectedStatus);
-
-                        if (selectedStatus === 'Cancelled' || selectedStatus === 'Returned') {
-                            window.location.reload();
-                        } else {
-                            disableStatusEdit(orderId);
+                        title: 'Processing...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
                         }
                     });
-                } else {
+
+                    const response = await fetch(`/admin/orders/${orderId}/status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            status: selectedStatus,
+                            cancellationReason: cancellationReason
+                        })
+                    });
+
+                    const data = await response.json();
+                    Swal.close();
+
+                    if (data.success || data.sucess) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Updated',
+                            text: 'Order status updated successfully!',
+                            confirmButtonColor: '#5c1e28'
+                        }).then(() => {
+                            const displayDiv = document.getElementById(`status-display-${orderId}`);
+                            const badgeSpan = displayDiv.querySelector('.status-badge');
+                            badgeSpan.textContent = selectedStatus;
+
+                            const statusClasses = {
+                                'Pending': 'status-pending',
+                                'Processing': 'status-processing',
+                                'Shipped': 'status-shipped',
+                                'Out for Delivery': 'status-out-for-delivery',
+                                'Delivered': 'status-delivered',
+                                'Cancelled': 'status-cancelled',
+                                'Returned': 'status-returned'
+                            };
+
+                            Object.values(statusClasses).forEach(cls => badgeSpan.classList.remove(cls));
+
+                            const newClass = statusClasses[selectedStatus] || 'status-pending';
+                            badgeSpan.classList.add(newClass);
+
+                            selectEl.setAttribute('data-original-val', selectedStatus);
+
+                            if (selectedStatus === 'Cancelled' || selectedStatus === 'Returned') {
+                                window.location.reload();
+                            } else {
+                                disableStatusEdit(orderId);
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Failed to update order',
+                            confirmButtonColor: '#5c1e28'
+                        });
+                    }
+                } catch (error) {
+                    Swal.close();
+                    console.error('Error:', error);
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Failed to update order',
+                        title: 'Network Error',
+                        text: 'An error occurred. Please try again.',
                         confirmButtonColor: '#5c1e28'
                     });
                 }
-            } catch (error) {
-                Swal.close();
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Network Error',
-                    text: 'An error occurred. Please try again.',
-                    confirmButtonColor: '#5c1e28'
-                });
             }
-        }
-    </script>
+        </script>
 </body>
+
 </html>

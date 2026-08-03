@@ -377,6 +377,11 @@ body {
     border-radius: 20px;
 }
 
+.badge-unavailable {
+    background-color: #666666 !important;
+    color: #ffffff !important;
+}
+
 .product-details {
     padding: 0 4px;
 }

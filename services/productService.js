@@ -12,9 +12,9 @@ export const getProducts = async (options) => {
         const page = options.page || 1;
         const limit = 6;
 
+        // Filter products that are not soft deleted (retrieve both ACTIVE and INACTIVE unlisted products)
         let matchFilter = {
-            isDeleted: false,
-            status: 'ACTIVE'
+            isDeleted: false
         };
 
         if (search) {
@@ -43,8 +43,7 @@ export const getProducts = async (options) => {
                             $expr: {
                                 $and: [
                                     { $eq: ['$productId', '$$productId'] },
-                                    { $eq: ['$isDeleted', false] },
-                                    { $ne: ['$status', 'INACTIVE'] }
+                                    { $eq: ['$isDeleted', false] }
                                 ]
                             }
                         }
@@ -125,16 +124,14 @@ export const getProductById = async (productId) => {
     try {
         const product = await Product.findOne({
             _id: productId,
-            isDeleted: false,
-            status: 'ACTIVE'
+            isDeleted: false
         }).populate('categoryId');
 
         if (!product) return null;
 
         const variants = await Variant.find({
             productId: product._id,
-            isDeleted: false,
-            status: { $ne: 'INACTIVE' }
+            isDeleted: false
         });
 
         return {
@@ -151,12 +148,16 @@ export const checkProductAvailability = async (productId, quantity) => {
     try {
         const product = await Product.findOne({
             _id: productId,
-            isDeleted: false,
-            status: 'ACTIVE'
+            isDeleted: false
         });
 
         if (!product) {
             return { available: false, message: 'Product not found' };
+        }
+
+        // Check if product has been unlisted by admin
+        if (product.status === 'INACTIVE') {
+            return { available: false, message: 'Product is currently unavailable' };
         }
 
         const variant = await Variant.findOne({ productId: product._id, isDeleted: false, status: { $ne: 'INACTIVE' } });
@@ -185,8 +186,7 @@ export const getAllCategories = async () => {
 export const getAllBrands = async () => {
     try {
         const brands = await Product.distinct('brand', {
-            isDeleted: false,
-            status: 'ACTIVE'
+            isDeleted: false
         });
         return brands;
     } catch (error) {

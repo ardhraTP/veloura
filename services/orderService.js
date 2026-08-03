@@ -92,18 +92,25 @@ export const cancelOrder = async (orderId,userId,reason)=>{
             );
         }
 
-        if(order.paymentStatus === 'Completed'){
+        // Refund to wallet if order was paid using Online or Wallet payment method
+        const isPaidPayment = order.paymentMethod === 'Online' || 
+                             order.paymentMethod === 'Wallet' || 
+                             order.paymentMethod === 'Online Payment';
+
+        if (isPaidPayment && order.paymentStatus !== 'Refunded') {
             const refundAmount = order.totalAmount;
 
             const user = await User.findById(userId);
-            user.walletBalance += refundAmount;
-            user.walletHistory.push({
-                amount: refundAmount,
-                type:'Credited',
-                description:`Refund for cancelled order ${orderId}`,
-                date: new Date()
-            });
-            await user.save();
+            if (user) {
+                user.walletBalance = (user.walletBalance || 0) + refundAmount;
+                user.walletHistory.push({
+                    amount: refundAmount,
+                    type: 'Credited',
+                    description: `Refund for cancelled order ${orderId}`,
+                    date: new Date()
+                });
+                await user.save();
+            }
             order.paymentStatus = 'Refunded';
         }
         await order.save();
@@ -291,8 +298,8 @@ export const approveReturn = async (orderId,itemId)=>{
         const refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
 
         const user = await User.findById(order.user);
-        if (user && order.paymentMethod === 'Wallet') {
-            user.walletBalance += refundAmount;
+        if (user) {
+            user.walletBalance = (user.walletBalance || 0) + refundAmount;
             user.walletHistory.push({
                 amount: refundAmount,
                 type: 'Credited',

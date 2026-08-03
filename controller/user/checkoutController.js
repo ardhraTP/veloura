@@ -24,22 +24,22 @@ export const getCheckoutPage = async (req, res) => {
         for (const item of cart.items) {
             if (!item.product || item.product.status === 'INACTIVE' || item.product.isDeleted) {
                 hasStockError = true;
-                req.session.cartError = `Product "${item.product ? item.product.productName : 'Unavailable'}" is no longer available.`;
+                req.session.cartError = `${item.product ? item.product.productName : 'Product'} is no longer available.`;
                 break;
             }
             if (!item.variant || item.variant.isDeleted || item.variant.status === 'INACTIVE') {
                 hasStockError = true;
-                req.session.cartError = `Selected shade of "${item.product.productName}" is no longer available.`;
+                req.session.cartError = `${item.product.productName} (${item.variant.color}) is no longer available.`;
                 break;
             }
             if (item.variant.quantity === 0 || item.quantity <= 0) {
                 hasStockError = true;
-                req.session.cartError = `"${item.product.productName} (${item.variant.color})" is out of stock.`;
+                req.session.cartError = `${item.product.productName} (${item.variant.color}): Out of stock.`;
                 break;
             }
             if (item.variant.quantity < item.quantity) {
                 hasStockError = true;
-                req.session.cartError = `Only ${item.variant.quantity} items left in stock for "${item.product.productName} (${item.variant.color})".`;
+                req.session.cartError = `${item.product.productName} (${item.variant.color}): Only ${item.variant.quantity} item(s) available.`;
                 break;
             }
         }
@@ -173,12 +173,44 @@ export const createOrder = async (req,res)=>{
             return res.json({ success: false, message: 'Address not found' });
         }
 
-        for(const item of cart.items){
-            const variant = await Variant.findById(item.variant._id);
-            if(!variant || variant.quantity < item.quantity){
+        // Check stock quantity and availability for each cart item
+        for (const item of cart.items) {
+            const product = item.product;
+            const variantId = item.variant ? (item.variant._id || item.variant) : null;
+            const variant = variantId ? await Variant.findById(variantId) : null;
+
+            if (!product || product.isDeleted) {
                 return res.json({
-                    success:false,
-                    message:`Insufficient stock for  ${item.product.productName} `
+                    success: false,
+                    message: `${product ? product.productName : 'Product'} is no longer available.`
+                });
+            }
+
+            if (product.status === 'INACTIVE') {
+                return res.json({
+                    success: false,
+                    message: `${product.productName} is currently unavailable.`
+                });
+            }
+
+            if (!variant || variant.isDeleted || variant.status === 'INACTIVE') {
+                return res.json({
+                    success: false,
+                    message: `${product.productName} (${variant ? variant.color : 'Shade'}) is no longer available.`
+                });
+            }
+
+            if (variant.quantity === 0) {
+                return res.json({
+                    success: false,
+                    message: `${product.productName} (${variant.color}): Out of stock.`
+                });
+            }
+
+            if (variant.quantity < item.quantity) {
+                return res.json({
+                    success: false,
+                    message: `${product.productName} (${variant.color}): Only ${variant.quantity} item(s) available.`
                 });
             }
         }
@@ -300,12 +332,44 @@ export const placeOrder = async (req, res) => {
         }
 
         
+        // Check stock quantity and availability for each cart item
         for (const item of cart.items) {
-            const variant = await Variant.findById(item.variant._id);
-            if (!variant || variant.quantity < item.quantity) {
+            const product = item.product;
+            const variantId = item.variant ? (item.variant._id || item.variant) : null;
+            const variant = variantId ? await Variant.findById(variantId) : null;
+
+            if (!product || product.isDeleted) {
                 return res.json({
                     success: false,
-                    message: `Insufficient stock for ${item.product.productName}`
+                    message: `${product ? product.productName : 'Product'} is no longer available.`
+                });
+            }
+
+            if (product.status === 'INACTIVE') {
+                return res.json({
+                    success: false,
+                    message: `${product.productName} is currently unavailable.`
+                });
+            }
+
+            if (!variant || variant.isDeleted || variant.status === 'INACTIVE') {
+                return res.json({
+                    success: false,
+                    message: `${product.productName} (${variant ? variant.color : 'Shade'}) is no longer available.`
+                });
+            }
+
+            if (variant.quantity === 0) {
+                return res.json({
+                    success: false,
+                    message: `${product.productName} (${variant.color}): Out of stock.`
+                });
+            }
+
+            if (variant.quantity < item.quantity) {
+                return res.json({
+                    success: false,
+                    message: `${product.productName} (${variant.color}): Only ${variant.quantity} item(s) available.`
                 });
             }
         }
@@ -508,9 +572,11 @@ export const paymentFailed = async (req, res) => {
         const { orderId } = req.body;
 
         const order = await Order.findOne({ orderId: orderId, user: req.session.userId });
-        if (order) {
+        if (order && order.paymentStatus !== 'Completed') {
             order.paymentStatus = 'Failed';
-            order.orderStatus = 'Cancelled';
+            if (order.orderStatus !== 'Cancelled') {
+                order.orderStatus = 'Pending';
+            }
             await order.save();
         }
 

@@ -715,6 +715,23 @@
                 Order ID: <span style="color: #5C1E28; font-weight: 600;"><%= order.orderId %></span>
             </div>
 
+            <% if (order.paymentStatus === 'Failed') { %>
+                <div style="background-color: #FDF2F2; border: 1px solid #F8B4B4; color: #9B1C1C; padding: 16px 20px; border-radius: 12px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 20px;"></i>
+                        <div>
+                            <strong style="display: block; font-size: 15px; margin-bottom: 2px;">Payment Failed</strong>
+                            <span style="font-size: 13px; opacity: 0.9;">We could not process your payment for this order. Please retry payment to complete your purchase.</span>
+                        </div>
+                    </div>
+                    <button type="button" 
+                            onclick="retryPayment('<%= order.orderId %>')"
+                            style="background-color: #5C1E28; color: #ffffff; border: none; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; text-transform: uppercase; white-space: nowrap; box-shadow: 0 2px 8px rgba(92,30,40,0.2);">
+                        <i class="fas fa-redo"></i> Retry Payment
+                    </button>
+                </div>
+            <% } %>
+
             <!-- Handle order status variable mapping safety -->
             <% 
                const isDelivered = order.orderStatus === 'Delivered'; 
@@ -843,8 +860,8 @@
                             <% } %>
                             <% if (order.discount && order.discount > 0) { %>
                                 <div class="summary-row">
-                                    <span>Discount</span>
-                                    <span>₹<%= order.discount.toFixed(2) %></span>
+                                    <span>Coupon Discount <%= (order.coupon && order.coupon.code) ? '(' + order.coupon.code + ')' : '' %></span>
+                                    <span style="color: #27ae60;">-₹<%= order.discount.toFixed(2) %></span>
                                 </div>
                             <% } %>
                             <div class="summary-row total-row">
@@ -897,8 +914,8 @@
                                 <% } %>
                                 <% if (order.discount && order.discount > 0) { %>
                                     <div class="summary-row">
-                                        <span>Discount</span>
-                                        <span>₹<%= order.discount.toFixed(2) %></span>
+                                        <span>Coupon Discount <%= (order.coupon && order.coupon.code) ? '(' + order.coupon.code + ')' : '' %></span>
+                                        <span style="color: #27ae60;">-₹<%= order.discount.toFixed(2) %></span>
                                     </div>
                                 <% } %>
                                 <div class="summary-row total-row">
@@ -1306,6 +1323,135 @@
                     alert('An error occurred. Please try again.');
                 }
             });
+        }
+    </script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        async function retryPayment(orderId) {
+            try {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Initializing Payment...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                }
+
+                const response = await fetch('/order/retry-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: orderId })
+                });
+
+                const data = await response.json();
+                if (typeof Swal !== 'undefined') Swal.close();
+
+                if (!data.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Stock / Payment Error',
+                            text: data.message || 'Unable to retry payment.',
+                            confirmButtonColor: '#5c1e28'
+                        });
+                    } else {
+                        alert(data.message || 'Unable to retry payment.');
+                    }
+                    return;
+                }
+
+                const options = {
+                    key: data.keyId,
+                    amount: Math.round(data.amount * 100),
+                    currency: 'INR',
+                    name: 'Veloura',
+                    description: 'Retry Payment for Order ' + data.orderId,
+                    order_id: data.razorpayOrderId,
+                    prefill: {
+                        name: data.userName || '',
+                        email: data.userEmail || '',
+                        contact: data.userPhone || ''
+                    },
+                    theme: { color: '#5c1e28' },
+                    handler: async function (paymentResponse) {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Verifying Payment...',
+                                text: 'Please wait',
+                                allowOutsideClick: false,
+                                didOpen: () => { Swal.showLoading(); }
+                            });
+                        }
+
+                        try {
+                            const verifyRes = await fetch('/checkout/verify-payment', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    razorpay_order_id: paymentResponse.razorpay_order_id,
+                                    razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                                    razorpay_signature: paymentResponse.razorpay_signature,
+                                    orderId: data.orderId
+                                })
+                            });
+
+                            const verifyData = await verifyRes.json();
+                            if (typeof Swal !== 'undefined') Swal.close();
+
+                            if (verifyData.success) {
+                                if (typeof Swal !== 'undefined') {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Payment Successful!',
+                                        text: 'Your payment has been received successfully.',
+                                        confirmButtonColor: '#5c1e28'
+                                    }).then(() => {
+                                        window.location.reload();
+                                    });
+                                } else {
+                                    alert('Payment Successful!');
+                                    window.location.reload();
+                                }
+                            } else {
+                                if (typeof Swal !== 'undefined') {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Verification Failed',
+                                        text: verifyData.message || 'Payment verification failed.',
+                                        confirmButtonColor: '#5c1e28'
+                                    });
+                                } else {
+                                    alert(verifyData.message || 'Payment verification failed.');
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Error verifying payment:', err);
+                            if (typeof Swal !== 'undefined') Swal.close();
+                            alert('Failed to verify payment.');
+                        }
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function () {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Payment Failed',
+                            text: 'Payment was not completed. You can try again anytime.',
+                            confirmButtonColor: '#5c1e28'
+                        });
+                    } else {
+                        alert('Payment was not completed.');
+                    }
+                });
+                rzp.open();
+            } catch (error) {
+                console.error('Error retrying payment:', error);
+                if (typeof Swal !== 'undefined') Swal.close();
+                alert('A network error occurred. Please try again.');
+            }
         }
     </script>
 </body>
