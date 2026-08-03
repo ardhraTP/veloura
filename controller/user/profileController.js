@@ -291,156 +291,371 @@ export const changePassword = async (req, res) => {
 };
 
 
-export const requestEmailChange = async (req, res) => {
+// ========================================================
+// EMAIL CHANGE FLOW (TWO-STAGE OTP VERIFICATION)
+// ========================================================
+
+// Step 1: Start Email Change -> Send OTP to existing email ID
+export const startEmailChange = async (req, res) => {
     try {
-        const { newEmail } = req.body;
         const userId = req.session.userId;
-
-
-        const validation = validateEmailChange({ newEmail });
-        if (!validation.isValid) {
-            return sendResponse(res, false, validation.error);
-        }
-
-        const emailExists = await checkEmailExists(newEmail, userId);
-        if (emailExists) {
-            return sendResponse(res, false, 'Email already exists');
-        }
-
-
         const user = await getUserById(userId);
+
         if (!user) {
-            return sendResponse(res, false, 'User not found');
+            return res.redirect('/login');
         }
 
+        // Generate 6-digit OTP for current email verification
         const otp = generate();
         user.otp = otp;
         user.otpExpiry = addMinutes(5);
         await saveUser(user);
 
+        // Update session state for current email OTP verification
+        req.session.emailChangeStep = 'verify_current_otp';
+        req.session.currentEmailVerified = false;
+        delete req.session.pendingNewEmail;
 
-        req.session.newEmail = newEmail.toLowerCase().trim();
+        // Send OTP to existing email
+        await sendOTP(user.email, otp, user.name);
 
-        try {
-
-            await sendOTP(newEmail, otp, user.name);
-
-
-            res.redirect('/profile/verify-email-otp');
-        } catch (emailError) {
-            console.error('Failed to send email OTP:', emailError);
-
-
-            delete req.session.newEmail;
-
-            return sendResponse(res, false, 'Failed to send verification email. Please try again.');
-        }
-
+        // Redirect to OTP verification page for existing email
+        res.redirect('/profile/change-email/verify-current-otp');
     } catch (error) {
-        console.error('Request email change error:', error);
-        sendResponse(res, false, 'Something went wrong');
-    }
-};
-
-
-export const getEmailOTPVerify = async (req, res) => {
-    try {
-        const newEmail = req.session.newEmail;
-
-        if (!newEmail) {
-            return res.redirect('/profile/edit');
-        }
-
-        res.render('user/email-otp-verify', {
-            newEmail,
-            error: null,
-            success: null
-        });
-    } catch (error) {
-        console.error('Get email OTP verify error:', error);
+        console.error('Start email change error:', error);
         res.redirect('/profile/edit');
     }
 };
 
+// Step 1 Page: Render OTP verification page for existing email
+export const getVerifyCurrentEmailOTP = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const user = await getUserById(userId);
 
-export const verifyEmailChange = async (req, res) => {
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        // Render OTP verification view configured for current email
+        res.render('user/email-otp-verify', {
+            pageTitle: 'Verify Current Email',
+            emailLabel: 'your existing registered email address',
+            targetEmail: user.email,
+            actionUrl: '/profile/change-email/verify-current-otp',
+            resendUrl: '/profile/change-email/resend-current-otp',
+            buttonText: 'Verify OTP & Continue',
+            error: null,
+            success: null
+        });
+    } catch (error) {
+        console.error('Get verify current email OTP error:', error);
+        res.redirect('/profile/edit');
+    }
+};
+
+// Step 1 Process: Verify OTP for existing email
+export const verifyCurrentEmailOTP = async (req, res) => {
     try {
         const { otp1, otp2, otp3, otp4, otp5, otp6 } = req.body;
         const otp = `${otp1}${otp2}${otp3}${otp4}${otp5}${otp6}`;
         const userId = req.session.userId;
-        const newEmail = req.session.newEmail;
 
-
-        if (!newEmail) {
-            return res.render('user/email-otp-verify', {
-                newEmail: '',
-                error: 'No email change request found. Please try again.',
-                success: null
-            });
+        const user = await getUserById(userId);
+        if (!user) {
+            return res.redirect('/login');
         }
 
-
+        // Validate OTP format
         const validation = validateOTP(otp);
         if (!validation.isValid) {
             return res.render('user/email-otp-verify', {
-                newEmail,
+                pageTitle: 'Verify Current Email',
+                emailLabel: 'your existing registered email address',
+                targetEmail: user.email,
+                actionUrl: '/profile/change-email/verify-current-otp',
+                resendUrl: '/profile/change-email/resend-current-otp',
+                buttonText: 'Verify OTP & Continue',
                 error: validation.error,
                 success: null
             });
         }
 
-
-        const user = await getUserById(userId);
-        if (!user) {
-            return res.render('user/email-otp-verify', {
-                newEmail,
-                error: 'User not found',
-                success: null
-            });
-        }
-
-
+        // Verify if OTP matches and is not expired
         if (!isValid(user, otp)) {
             return res.render('user/email-otp-verify', {
-                newEmail,
-                error: 'Invalid or expired OTP',
+                pageTitle: 'Verify Current Email',
+                emailLabel: 'your existing registered email address',
+                targetEmail: user.email,
+                actionUrl: '/profile/change-email/verify-current-otp',
+                resendUrl: '/profile/change-email/resend-current-otp',
+                buttonText: 'Verify OTP & Continue',
+                error: 'Invalid or expired OTP. Please try again.',
                 success: null
             });
         }
 
-
-        user.email = newEmail;
+        // Clear user OTP and update session status
         clear(user);
         await saveUser(user);
 
+        req.session.currentEmailVerified = true;
+        req.session.emailChangeStep = 'enter_new_email';
 
-        req.session.user.email = newEmail;
-        delete req.session.newEmail;
-
-
-        req.session.emailUpdateSuccess = 'Email updated successfully';
-        res.redirect('/profile');
-
+        // Redirect to form for entering new email
+        res.redirect('/profile/change-email/form');
     } catch (error) {
-        console.error('Verify email change error:', error);
-        const newEmail = req.session.newEmail || '';
+        console.error('Verify current email OTP error:', error);
+        const user = await getUserById(req.session.userId);
         res.render('user/email-otp-verify', {
-            newEmail,
+            pageTitle: 'Verify Current Email',
+            emailLabel: 'your existing registered email address',
+            targetEmail: user ? user.email : '',
+            actionUrl: '/profile/change-email/verify-current-otp',
+            resendUrl: '/profile/change-email/resend-current-otp',
+            buttonText: 'Verify OTP & Continue',
             error: 'Something went wrong. Please try again.',
             success: null
         });
     }
 };
 
-
-
-export const resendEmailOTP = async (req, res) => {
+// Resend OTP to current email
+export const resendCurrentEmailOTP = async (req, res) => {
     try {
         const userId = req.session.userId;
-        const newEmail = req.session.newEmail;
+        const user = await getUserById(userId);
+
+        if (!user) {
+            return sendResponse(res, false, 'User not found');
+        }
+
+        const newOTP = generate();
+        user.otp = newOTP;
+        user.otpExpiry = addMinutes(5);
+        await saveUser(user);
+
+        await sendOTP(user.email, newOTP, user.name);
+        sendResponse(res, true, 'OTP resent successfully to your current email address');
+    } catch (error) {
+        console.error('Resend current email OTP error:', error);
+        sendResponse(res, false, 'Failed to resend OTP');
+    }
+};
+
+// Step 2 Page: Render Change Email Form (Existing, New, Confirm)
+export const getChangeEmailForm = async (req, res) => {
+    try {
+        // Guard: check if current email was verified
+        if (!req.session.currentEmailVerified) {
+            return res.redirect('/profile/change-email/start');
+        }
+
+        const user = await getUserById(req.session.userId);
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        res.render('user/change-email-form', {
+            user,
+            error: null
+        });
+    } catch (error) {
+        console.error('Get change email form error:', error);
+        res.redirect('/profile/edit');
+    }
+};
+
+// Step 2 Process: Handle Change Email Form submission -> Send OTP to new email
+export const processChangeEmailForm = async (req, res) => {
+    try {
+        if (!req.session.currentEmailVerified) {
+            return res.redirect('/profile/change-email/start');
+        }
+
+        const { existingEmail, newEmail, confirmEmail } = req.body;
+        const userId = req.session.userId;
+        const user = await getUserById(userId);
+
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        const cleanedNewEmail = (newEmail || '').toLowerCase().trim();
+        const cleanedConfirmEmail = (confirmEmail || '').toLowerCase().trim();
+
+        // Validation
+        if (!cleanedNewEmail || !cleanedConfirmEmail) {
+            return res.render('user/change-email-form', {
+                user,
+                error: 'Please enter and confirm your new email address'
+            });
+        }
+
+        if (cleanedNewEmail !== cleanedConfirmEmail) {
+            return res.render('user/change-email-form', {
+                user,
+                error: 'New email and confirm email do not match'
+            });
+        }
+
+        if (cleanedNewEmail === user.email.toLowerCase()) {
+            return res.render('user/change-email-form', {
+                user,
+                error: 'New email address must be different from your current email'
+            });
+        }
+
+        const validation = validateEmailChange({ newEmail: cleanedNewEmail });
+        if (!validation.isValid) {
+            return res.render('user/change-email-form', {
+                user,
+                error: validation.error
+            });
+        }
+
+        // Check if new email is already registered by another account
+        const emailExists = await checkEmailExists(cleanedNewEmail, userId);
+        if (emailExists) {
+            return res.render('user/change-email-form', {
+                user,
+                error: 'This email address is already registered with another account'
+            });
+        }
+
+        // Generate OTP for new email verification
+        const otp = generate();
+        user.otp = otp;
+        user.otpExpiry = addMinutes(5);
+        await saveUser(user);
+
+        // Store pending new email in session
+        req.session.pendingNewEmail = cleanedNewEmail;
+        req.session.emailChangeStep = 'verify_new_otp';
+
+        // Send OTP to new email
+        await sendOTP(cleanedNewEmail, otp, user.name);
+
+        // Redirect to OTP verification page for new email
+        res.redirect('/profile/change-email/verify-new-otp');
+    } catch (error) {
+        console.error('Process change email form error:', error);
+        const user = await getUserById(req.session.userId);
+        res.render('user/change-email-form', {
+            user,
+            error: 'Something went wrong. Please try again.'
+        });
+    }
+};
+
+// Step 3 Page: Render OTP verification page for new email
+export const getVerifyNewEmailOTP = async (req, res) => {
+    try {
+        if (!req.session.currentEmailVerified || !req.session.pendingNewEmail) {
+            return res.redirect('/profile/change-email/start');
+        }
+
+        res.render('user/email-otp-verify', {
+            pageTitle: 'Verify New Email',
+            emailLabel: 'your new email address',
+            targetEmail: req.session.pendingNewEmail,
+            actionUrl: '/profile/change-email/verify-new-otp',
+            resendUrl: '/profile/change-email/resend-new-otp',
+            buttonText: 'Verify & Complete Email Change',
+            error: null,
+            success: null
+        });
+    } catch (error) {
+        console.error('Get verify new email OTP error:', error);
+        res.redirect('/profile/edit');
+    }
+};
+
+// Step 3 Process: Verify OTP sent to new email & update user profile
+export const verifyNewEmailOTP = async (req, res) => {
+    try {
+        if (!req.session.currentEmailVerified || !req.session.pendingNewEmail) {
+            return res.redirect('/profile/change-email/start');
+        }
+
+        const { otp1, otp2, otp3, otp4, otp5, otp6 } = req.body;
+        const otp = `${otp1}${otp2}${otp3}${otp4}${otp5}${otp6}`;
+        const userId = req.session.userId;
+        const newEmail = req.session.pendingNewEmail;
+
+        const user = await getUserById(userId);
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        // Validate OTP format
+        const validation = validateOTP(otp);
+        if (!validation.isValid) {
+            return res.render('user/email-otp-verify', {
+                pageTitle: 'Verify New Email',
+                emailLabel: 'your new email address',
+                targetEmail: newEmail,
+                actionUrl: '/profile/change-email/verify-new-otp',
+                resendUrl: '/profile/change-email/resend-new-otp',
+                buttonText: 'Verify & Complete Email Change',
+                error: validation.error,
+                success: null
+            });
+        }
+
+        // Verify OTP validity
+        if (!isValid(user, otp)) {
+            return res.render('user/email-otp-verify', {
+                pageTitle: 'Verify New Email',
+                emailLabel: 'your new email address',
+                targetEmail: newEmail,
+                actionUrl: '/profile/change-email/verify-new-otp',
+                resendUrl: '/profile/change-email/resend-new-otp',
+                buttonText: 'Verify & Complete Email Change',
+                error: 'Invalid or expired OTP. Please try again.',
+                success: null
+            });
+        }
+
+        // Update user email in database
+        user.email = newEmail;
+        clear(user);
+        await saveUser(user);
+
+        // Update session user email
+        req.session.user.email = newEmail;
+
+        // Cleanup temporary session data
+        delete req.session.pendingNewEmail;
+        delete req.session.currentEmailVerified;
+        delete req.session.emailChangeStep;
+
+        req.session.emailUpdateSuccess = 'Email address updated successfully!';
+        res.redirect('/profile');
+    } catch (error) {
+        console.error('Verify new email OTP error:', error);
+        const newEmail = req.session.pendingNewEmail || '';
+        res.render('user/email-otp-verify', {
+            pageTitle: 'Verify New Email',
+            emailLabel: 'your new email address',
+            targetEmail: newEmail,
+            actionUrl: '/profile/change-email/verify-new-otp',
+            resendUrl: '/profile/change-email/resend-new-otp',
+            buttonText: 'Verify & Complete Email Change',
+            error: 'Something went wrong. Please try again.',
+            success: null
+        });
+    }
+};
+
+// Resend OTP to new email
+export const resendNewEmailOTP = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const newEmail = req.session.pendingNewEmail;
 
         if (!newEmail) {
-            return sendResponse(res, false, 'No email change request found');
+            return sendResponse(res, false, 'No new email verification request found');
         }
 
         const user = await getUserById(userId);
@@ -448,24 +663,16 @@ export const resendEmailOTP = async (req, res) => {
             return sendResponse(res, false, 'User not found');
         }
 
-
         const newOTP = generate();
         user.otp = newOTP;
         user.otpExpiry = addMinutes(5);
         await saveUser(user);
 
-        try {
-
-            await sendOTP(newEmail, newOTP, user.name);
-            sendResponse(res, true, 'New OTP sent successfully');
-        } catch (emailError) {
-            console.error('Failed to resend email OTP:', emailError);
-            sendResponse(res, false, 'Failed to send OTP. Please try again.');
-        }
-
+        await sendOTP(newEmail, newOTP, user.name);
+        sendResponse(res, true, 'OTP resent successfully to your new email address');
     } catch (error) {
-        console.error('Resend email OTP error:', error);
-        sendResponse(res, false, 'Failed to send OTP');
+        console.error('Resend new email OTP error:', error);
+        sendResponse(res, false, 'Failed to resend OTP');
     }
 };
 

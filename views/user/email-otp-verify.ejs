@@ -235,10 +235,10 @@
 <body>
     <div class="otp-container">
         <div class="otp-wrapper">
-            <h1 class="verification-title">Verify New Email</h1>
+            <h1 class="verification-title"><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Verify Email Change' %></h1>
             <p class="verification-subtitle">
-                We've sent a 6-digit verification code to your new email address:<br>
-                <span class="new-email"><%= newEmail %></span>
+                We've sent a 6-digit verification code to <%= typeof emailLabel !== 'undefined' ? emailLabel : 'your email address' %>:<br>
+                <span class="new-email"><%= targetEmail %></span>
             </p>
 
             <% if (typeof error !== 'undefined' && error) { %>
@@ -249,7 +249,7 @@
                 <div class="success-message"><%= success %></div>
             <% } %>
 
-            <form action="/profile/verify-email-change" method="POST" id="otpForm">
+            <form action="<%= typeof actionUrl !== 'undefined' ? actionUrl : '/profile/verify-email-change' %>" method="POST" id="otpForm">
                 <div class="otp-inputs">
                     <input type="number" class="otp-input" maxlength="1" id="otp1" name="otp1" required>
                     <input type="number" class="otp-input" maxlength="1" id="otp2" name="otp2" required>
@@ -259,7 +259,7 @@
                     <input type="number" class="otp-input" maxlength="1" id="otp6" name="otp6" required>
                 </div>
 
-                <button type="submit" class="verify-btn" id="verifyBtn">Verify & Update Email</button>
+                <button type="submit" class="verify-btn" id="verifyBtn"><%= typeof buttonText !== 'undefined' ? buttonText : 'Verify & Continue' %></button>
             </form>
 
             <div class="time-remaining">
@@ -352,9 +352,12 @@
         let otpTimerInterval;
 
         function startOTPTimer() {
-            const timeLeftElement = document.getElementById('timeLeft');
             const timeRemainingElement = document.getElementById('timeRemaining');
             
+            if (otpTimerInterval) {
+                clearInterval(otpTimerInterval);
+            }
+
             const storedEndTime = getStoredEmailOTPEndTime();
             const now = Date.now();
             
@@ -370,12 +373,18 @@
                 
                 const minutes = Math.floor(otpTimeLeft / 60);
                 const seconds = otpTimeLeft % 60;
-                timeLeftElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                const timeLeftElement = document.getElementById('timeLeft');
+                if (timeLeftElement) {
+                    timeLeftElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
                 
                 if (otpTimeLeft <= 0) {
                     clearInterval(otpTimerInterval);
-                    timeRemainingElement.innerHTML = '<div class="expired-message">OTP has expired. Please request a new one.</div>';
-                    document.getElementById('verifyBtn').disabled = true;
+                    if (timeRemainingElement) {
+                        timeRemainingElement.innerHTML = '<div class="expired-message">OTP has expired. Please request a new one.</div>';
+                    }
+                    const verifyBtn = document.getElementById('verifyBtn');
+                    if (verifyBtn) verifyBtn.disabled = true;
                     clearStoredEmailOTPEndTime();
                     
                     otpInputs.forEach(input => {
@@ -390,10 +399,13 @@
         let resendTimerInterval;
 
         function startResendTimer() {
-            const resendTimerElement = document.getElementById('resendTimer');
             const resendLink = document.getElementById('resendLink');
             const resendText = document.getElementById('resendText');
             
+            if (resendTimerInterval) {
+                clearInterval(resendTimerInterval);
+            }
+
             const storedEndTime = getStoredEmailResendEndTime();
             const now = Date.now();
             
@@ -404,17 +416,24 @@
                 setStoredEmailResendEndTime(now + (60 * 1000));
             }
             
-            resendTimerElement.textContent = resendTimeLeft;
-            resendLink.classList.add('disabled');
+            if (resendText) {
+                resendText.innerHTML = `Resend Code (<span class="timer" id="resendTimer">${resendTimeLeft}</span>s)`;
+            }
+            if (resendLink) {
+                resendLink.classList.add('disabled');
+            }
             
             resendTimerInterval = setInterval(() => {
                 resendTimeLeft--;
-                resendTimerElement.textContent = resendTimeLeft;
+                const resendTimerElement = document.getElementById('resendTimer');
+                if (resendTimerElement) {
+                    resendTimerElement.textContent = resendTimeLeft;
+                }
                 
                 if (resendTimeLeft <= 0) {
                     clearInterval(resendTimerInterval);
-                    resendLink.classList.remove('disabled');
-                    resendText.innerHTML = 'Resend Code';
+                    if (resendLink) resendLink.classList.remove('disabled');
+                    if (resendText) resendText.innerHTML = 'Resend Code';
                     clearStoredEmailResendEndTime();
                     resendTimeLeft = 60;
                 }
@@ -424,66 +443,92 @@
         function resendOTP(event) {
             event.preventDefault();
             
-            if (resendTimeLeft < 60) {
+            // Hide previous static error/success boxes on the page
+            document.querySelectorAll('.error-message, .success-message').forEach(el => el.style.display = 'none');
+
+            const resendLink = document.getElementById('resendLink');
+            if (resendLink && resendLink.classList.contains('disabled')) {
                 return;
             }
             
-            fetch('/profile/resend-email-otp', {
+            fetch('<%= typeof resendUrl !== "undefined" ? resendUrl : "/profile/resend-email-otp" %>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to send resend request');
+                }
+                return response.json();
+            })
             .then(data => {
-                if (data.success) {
+                if (data && data.success) {
                     Toastify({
-                        text: "OTP has been resent to your new email!",
+                        text: data.message || "OTP has been resent successfully!",
                         duration: 3000,
                         gravity: "top",
                         position: "right",
-                        backgroundColor: "#4CAF50",
+                        style: {
+                            background: "#4CAF50"
+                        },
                         stopOnFocus: true
                     }).showToast();
+
+                    // 1. Restore time remaining HTML element FIRST
+                    const timeRemainingElement = document.getElementById('timeRemaining');
+                    if (timeRemainingElement) {
+                        timeRemainingElement.innerHTML = 'Time remaining: <span class="timer" id="timeLeft">5:00</span>';
+                    }
                     
-                    clearInterval(resendTimerInterval);
-                    const newResendEndTime = Date.now() + (60 * 1000);
-                    setStoredEmailResendEndTime(newResendEndTime);
-                    resendTimeLeft = 60;
-                    startResendTimer();
-                    
-                    clearInterval(otpTimerInterval);
+                    // 2. Clear old OTP timer and start fresh 5-minute countdown
+                    if (otpTimerInterval) clearInterval(otpTimerInterval);
                     const newOTPEndTime = Date.now() + (5 * 60 * 1000);
                     setStoredEmailOTPEndTime(newOTPEndTime);
                     otpTimeLeft = 5 * 60;
                     startOTPTimer();
-                    
-                    document.getElementById('verifyBtn').disabled = false;
+
+                    // 3. Clear old resend timer and start fresh 60-second countdown
+                    if (resendTimerInterval) clearInterval(resendTimerInterval);
+                    const newResendEndTime = Date.now() + (60 * 1000);
+                    setStoredEmailResendEndTime(newResendEndTime);
+                    resendTimeLeft = 60;
+                    startResendTimer();
+
+                    // 4. Re-enable form inputs & verify button
+                    const verifyBtn = document.getElementById('verifyBtn');
+                    if (verifyBtn) verifyBtn.disabled = false;
+
                     otpInputs.forEach(input => {
                         input.disabled = false;
                         input.style.backgroundColor = '';
                         input.value = '';
                     });
-                    otpInputs[0].focus();
+                    if (otpInputs[0]) otpInputs[0].focus();
                 } else {
                     Toastify({
-                        text: data.message || "Failed to resend OTP",
+                        text: (data && data.message) ? data.message : "Failed to resend OTP",
                         duration: 3000,
                         gravity: "top",
                         position: "right",
-                        backgroundColor: "#f44336",
+                        style: {
+                            background: "#f44336"
+                        },
                         stopOnFocus: true
                     }).showToast();
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error resending OTP:', error);
                 Toastify({
                     text: "Failed to resend OTP. Please try again.",
                     duration: 3000,
                     gravity: "top",
                     position: "right",
-                    backgroundColor: "#f44336",
+                    style: {
+                        background: "#f44336"
+                    },
                     stopOnFocus: true
                 }).showToast();
             });
@@ -507,7 +552,9 @@
                     duration: 3000,
                     gravity: "top",
                     position: "right",
-                    backgroundColor: "#f44336",
+                    style: {
+                        background: "#f44336"
+                    },
                     stopOnFocus: true
                 }).showToast();
                 return;
@@ -520,7 +567,9 @@
                     duration: 3000,
                     gravity: "top",
                     position: "right",
-                    backgroundColor: "#f44336",
+                    style: {
+                        background: "#f44336"
+                    },
                     stopOnFocus: true
                 }).showToast();
                 return;

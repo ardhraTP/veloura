@@ -54,7 +54,7 @@ const orderSchema = new mongoose.Schema({
         },
         returnRejectionReason: {
             type: String
-        },
+        }
     }],
     subtotal: {
         type: Number,

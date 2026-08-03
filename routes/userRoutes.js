@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import { isAuthenticated, isGuest } from '../middleware/userAuth.js';
 import { upload } from '../middleware/upload.js';
 import passport from 'passport';
@@ -35,10 +35,15 @@ import {
     updateProfile,
     uploadProfileImage,
     changePassword,
-    requestEmailChange,
-    getEmailOTPVerify,
-    verifyEmailChange,
-    resendEmailOTP,
+    startEmailChange,
+    getVerifyCurrentEmailOTP,
+    verifyCurrentEmailOTP,
+    resendCurrentEmailOTP,
+    getChangeEmailForm,
+    processChangeEmailForm,
+    getVerifyNewEmailOTP,
+    verifyNewEmailOTP,
+    resendNewEmailOTP,
     getChangePasswordPage,
     getWalletPage,
     addMoneyToWallet
@@ -235,10 +240,26 @@ router.post('/profile/change-password', isAuthenticated, changePassword);
 router.get('/profile/wallet', isAuthenticated, getWalletPage);
 router.post('/profile/wallet/add-money', isAuthenticated, addMoneyToWallet);
 
-router.post('/profile/request-email-change', isAuthenticated, requestEmailChange);
-router.get('/profile/verify-email-otp', isAuthenticated, getEmailOTPVerify);
-router.post('/profile/verify-email-change', isAuthenticated, verifyEmailChange);
-router.post('/profile/resend-email-otp', isAuthenticated, resendEmailOTP);
+// Two-stage Email change routes
+router.get('/profile/change-email/start', isAuthenticated, startEmailChange);
+
+// Step 1: Verify current email OTP
+router.get('/profile/change-email/verify-current-otp', isAuthenticated, getVerifyCurrentEmailOTP);
+router.post('/profile/change-email/verify-current-otp', isAuthenticated, verifyCurrentEmailOTP);
+router.post('/profile/change-email/resend-current-otp', isAuthenticated, resendCurrentEmailOTP);
+
+// Step 2: Form for existing, new, and confirm email
+router.get('/profile/change-email/form', isAuthenticated, getChangeEmailForm);
+router.post('/profile/change-email/form', isAuthenticated, processChangeEmailForm);
+
+// Step 3: Verify new email OTP
+router.get('/profile/change-email/verify-new-otp', isAuthenticated, getVerifyNewEmailOTP);
+router.post('/profile/change-email/verify-new-otp', isAuthenticated, verifyNewEmailOTP);
+router.post('/profile/change-email/resend-new-otp', isAuthenticated, resendNewEmailOTP);
+
+// Legacy route redirects for backward compatibility
+router.get('/profile/verify-email-otp', isAuthenticated, (req, res) => res.redirect('/profile/change-email/start'));
+router.post('/profile/request-email-change', isAuthenticated, startEmailChange);
 
 // Address management routes
 router.get('/profile/addresses', isAuthenticated, getAddresses);

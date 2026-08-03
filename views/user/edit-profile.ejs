@@ -753,7 +753,7 @@
                                         <div class="email-field">
                                             <input type="email" id="email" name="email" value="<%= user.email %>"
                                                 disabled>
-                                            <a class="change-email-link" onclick="openEmailModal()">Change</a>
+                                            <a class="change-email-link" href="/profile/change-email/start">Change</a>
                                         </div>
                                     </div>
 
@@ -985,8 +985,7 @@
         }
 
         function openEmailModal() {
-            document.getElementById('emailModal').classList.add('active');
-            hideEmailModalError();
+            window.location.href = '/profile/change-email/start';
         }
 
         function closeEmailModal() {
