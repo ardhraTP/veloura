@@ -80,6 +80,7 @@ export const getAdminOrdersPage = async (req, res) => {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
+            
 
         res.render('admin/orders', {
             orders: orders,
@@ -134,20 +135,21 @@ export const updateAdminOrderStatus = async (req, res) => {
         }
 
         if (status === 'Cancelled') {
+            const adminReason = cancellationReason || 'Cancelled by administrator';
+
             for (const item of order.items) {
                 if (item.itemStatus !== 'Cancelled') {
                     await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
                     item.itemStatus = 'Cancelled';
+                    item.cancellationReason = adminReason;
+                    item.cancelledAt = new Date();
                 }
             }
             order.orderStatus = 'Cancelled';
-            order.cancellationReason = cancellationReason || 'Cancelled by administrator';
+            order.cancellationReason = adminReason;
 
-            const isOnlineOrWallet = order.paymentMethod === 'Online' || 
-                                     order.paymentMethod === 'Wallet' || 
-                                     order.paymentMethod === 'Online Payment';
-
-            if (isOnlineOrWallet && order.paymentStatus !== 'Refunded') {
+            // Only refund into wallet if payment was completed/paid successfully
+            if (order.paymentStatus === 'Completed') {
                 const user = await User.findById(order.user);
                 if (user) {
                     const refundAmount = order.totalAmount;
@@ -156,6 +158,7 @@ export const updateAdminOrderStatus = async (req, res) => {
                         amount: refundAmount,
                         type: 'Credited',
                         description: `Refund for cancelled order ${order.orderId}`,
+                        orderId: order.orderId,
                         date: new Date()
                     });
                     await user.save();
@@ -171,7 +174,7 @@ export const updateAdminOrderStatus = async (req, res) => {
             }
             order.orderStatus = 'Returned';
 
-            if (order.paymentStatus !== 'Refunded') {
+            if (order.paymentStatus === 'Completed') {
                 const user = await User.findById(order.user);
                 if (user) {
                     const refundAmount = order.totalAmount;
@@ -180,6 +183,7 @@ export const updateAdminOrderStatus = async (req, res) => {
                         amount: refundAmount,
                         type: 'Credited',
                         description: `Refund for returned order ${order.orderId}`,
+                        orderId: order.orderId,
                         date: new Date()
                     });
                     await user.save();
@@ -209,49 +213,107 @@ export const updateAdminOrderStatus = async (req, res) => {
 };
 
 
-export const updateItemStatus = async (req,res)=>{
-    try{
-        const {orderId,itemId,status} = req.body;
+export const updateItemStatus = async (req, res) => {
+    try {
+        const { orderId, itemId, status, cancellationReason } = req.body;
 
-        if(!orderId || !itemId || !status){
+        if (!orderId || !itemId || !status) {
             return res.json({
-                success:false,
-                message:'Order ID, item ID,and status are required'
+                success: false,
+                message: 'Order ID, item ID, and status are required'
             });
         }
 
-        const order = await Order.findOne({orderId:orderId});
+        const order = await Order.findOne({ orderId: orderId });
 
-        if(!order){
+        if (!order) {
             return res.json({
-                success:false,
-                message:'Order not found'
+                success: false,
+                message: 'Order not found'
             });
         }
 
         const item = order.items.find(i => i._id.toString() === itemId);
-        
-        if(!item){
+
+        if (!item) {
             return res.json({
-                success:false,
-                message:'Item not found in order'
+                success: false,
+                message: 'Item not found in order'
             });
         }
 
-        item.itemStatus = status;
+        if (status === 'Cancelled' && item.itemStatus !== 'Cancelled') {
+            const adminReason = cancellationReason || 'Cancelled by administrator';
+            item.itemStatus = 'Cancelled';
+            item.cancellationReason = adminReason;
+            item.cancelledAt = new Date();
+
+            await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
+
+            // Only refund if payment was actually completed
+            if (order.paymentStatus === 'Completed') {
+                const itemSubtotal = item.price * item.quantity;
+                const totalDiscount = order.discount || 0;
+                const totalTax = order.tax || 0;
+                const totalShipping = order.shippingFee || 0;
+
+                let itemDiscountShare = 0;
+                let itemTaxShare = 0;
+                let itemShippingShare = 0;
+
+                if (order.subtotal > 0) {
+                    itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
+                    itemTaxShare = (itemSubtotal / order.subtotal) * totalTax;
+                    itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
+                }
+
+                const refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
+
+                const user = await User.findById(order.user);
+                if (user && refundAmount > 0) {
+                    user.walletBalance = (user.walletBalance || 0) + refundAmount;
+                    user.walletHistory.push({
+                        amount: refundAmount,
+                        type: 'Credited',
+                        description: `Refund for cancelled item in Order ${order.orderId}`,
+                        orderId: order.orderId,
+                        date: new Date()
+                    });
+                    await user.save();
+                }
+
+                const allItemsReturnedOrCancelled = order.items.every(
+                    i => i.itemStatus === 'Returned' || i.itemStatus === 'Cancelled'
+                );
+                if (allItemsReturnedOrCancelled) {
+                    order.paymentStatus = 'Refunded';
+                } else {
+                    order.paymentStatus = 'Partially Refunded';
+                }
+            }
+
+            const allCancelled = order.items.every(i => i.itemStatus === 'Cancelled');
+            if (allCancelled) {
+                order.orderStatus = 'Cancelled';
+                order.cancellationReason = adminReason;
+            }
+        } else {
+            item.itemStatus = status;
+        }
+
         await order.save();
 
         res.json({
-            success:true,
-            message:'Item status updated successfully',
-            order:order
+            success: true,
+            message: 'Item status updated successfully',
+            order: order
         });
 
-    }catch(error){
-        console.error('Error updating item status:',error);
+    } catch (error) {
+        console.error('Error updating item status:', error);
         res.json({
-            success:false,
-            message:error.message || 'Failed to update item status'
+            success: false,
+            message: error.message || 'Failed to update item status'
         });
     }
 };
@@ -337,6 +399,7 @@ export const approveReturn = async (req,res)=>{
             amount: refundAmount,
             type: 'Credited',
             description: `Refund for returned item (${item.product ? 'Cosmetic Item' : 'Product'}) in Order ${orderId}`,
+            orderId: order.orderId || orderId,
             date: new Date()
         });
         await user.save();

@@ -379,23 +379,25 @@
         /* Download Invoice Button container */
         .invoice-download-container {
             margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
         }
 
         .btn-download-invoice {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            width: 100%;
+            gap: 8px;
+            width: auto;
             background-color: #5C1E28;
             color: #FFFFFF;
             border: 1px solid #5C1E28;
-            border-radius: 4px;
-            padding: 14px;
+            border-radius: 6px;
+            padding: 9px 20px;
             font-family: 'Inter', sans-serif;
             font-size: 11px;
             font-weight: 600;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             text-transform: uppercase;
             text-decoration: none;
             cursor: pointer;
@@ -711,11 +713,23 @@
 
         <main class="content-area">
             <h1 class="page-title">Order Details</h1>
-            <div style="margin-top: -25px; margin-bottom: 30px; font-size: 14px; color: #666666; font-weight: 500; letter-spacing: 0.5px;">
-                Order ID: <span style="color: #5C1E28; font-weight: 600;"><%= order.orderId %></span>
+            <div style="margin-top: -25px; margin-bottom: 30px; font-size: 14px; color: #666666; font-weight: 500; letter-spacing: 0.5px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
+                <div>Order ID: <span style="color: #5C1E28; font-weight: 600;"><%= order.orderId %></span></div>
+                <span style="color: #ccc;">|</span>
+                <div>Payment Method: <span style="color: #2C2C2C; font-weight: 600;">
+                    <% if (order.paymentMethod === 'COD') { %>
+                        Cash on Delivery
+                    <% } else if (order.paymentMethod === 'Online' || order.paymentMethod === 'Online Payment') { %>
+                        Online Payment
+                    <% } else if (order.paymentMethod === 'Wallet') { %>
+                        Wallet Payment
+                    <% } else { %>
+                        <%= order.paymentMethod || 'N/A' %>
+                    <% } %>
+                </span></div>
             </div>
 
-            <% if (order.paymentStatus === 'Failed') { %>
+            <% if (order.paymentStatus === 'Failed' && order.orderStatus !== 'Cancelled') { %>
                 <div style="background-color: #FDF2F2; border: 1px solid #F8B4B4; color: #9B1C1C; padding: 16px 20px; border-radius: 12px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <i class="fas fa-exclamation-triangle" style="font-size: 20px;"></i>
@@ -774,11 +788,34 @@
                                 <div class="status-badge">
                                     <i class="fas fa-check-circle"></i> Delivered
                                 </div>
-                                <button class="btn-order-action" onclick="handleReturnOrder('<%= order._id %>', '<%= item._id %>')">Return</button>
-                            <% } else if (item.itemStatus === 'Cancelled') { %>
+                                <% 
+                                   const prodIdStr = item.product ? (item.product._id ? item.product._id.toString() : item.product.toString()) : '';
+                                   const prodNameEscaped = (item.product && item.product.productName) ? item.product.productName.replace(/'/g, "\\'").replace(/"/g, '&quot;') : 'Product';
+                                   const existingProdReview = (typeof userReviews !== 'undefined' && userReviews && Array.isArray(userReviews)) 
+                                       ? userReviews.find(r => r.product && r.product.toString() === prodIdStr) 
+                                       : null;
+                                %>
+                                <% if (existingProdReview) { %>
+                                    <div style="font-size: 11px; color: #10B981; font-weight: 600; margin-top: 4px; text-align: right;">
+                                        <i class="fas fa-check-circle"></i> <%= existingProdReview.status === 'Approved' ? 'Reviewed' : 'Review Pending' %>
+                                    </div>
+                                <% } else { %>
+                                    <button type="button" 
+                                            class="btn-order-action" 
+                                            style="background-color: #5C1E28; border-color: #5C1E28;"
+                                            onclick="openReviewModal('<%= order._id %>', '<%= prodIdStr %>', '<%= prodNameEscaped %>')">
+                                        <i class="fas fa-star" style="margin-right: 4px;"></i> Write Review
+                                    </button>
+                                <% } %>
+                                <button class="btn-order-action" style="margin-top: 6px;" onclick="handleReturnOrder('<%= order._id %>', '<%= item._id %>')">Return</button>
+                            <% } else if (item.itemStatus === 'Cancelled' || order.orderStatus === 'Cancelled') { %>
                                 <div class="status-badge cancelled">
                                     <i class="fas fa-times-circle"></i> Cancelled
                                 </div>
+                                <% const reasonToShow = item.cancellationReason || order.cancellationReason; %>
+                                <% if (reasonToShow) { %>
+                                    <div style="font-size: 11px; color: #E02424; margin-top: 5px; font-weight: 500; text-align: right; max-width: 180px;">Reason: <%= reasonToShow %></div>
+                                <% } %>
                             <% } else if (item.itemStatus === 'Returned') { %>
                                 <div class="status-badge returned">
                                     <i class="fas fa-undo-alt"></i> Returned
@@ -818,156 +855,121 @@
                 <p>No items found in this order.</p>
             <% } %>
 
-            <!-- Conditional layouts -->
-            <% if (!isDelivered) { %>
-                <!-- IN PROGRESS STATE: Delivered Address and Total Summary Side-by-Side -->
-                <div class="details-layout-grid">
-                    <!-- Delivered Address Card -->
-                    <div class="info-card">
-                        <h4 class="card-header-title">Delivered Address</h4>
-                        <% if (order.deliveryAddress) { %>
-                            <h5 class="address-name"><%= order.deliveryAddress.fullName %></h5>
-                            <p class="address-text">
-                                <%= order.deliveryAddress.address %><br>
-                                <%= order.deliveryAddress.city %>, <%= order.deliveryAddress.state %><br>
-                                - <%= order.deliveryAddress.pincode %>
-                            </p>
-                            <p class="address-phone">
-                                <i class="fas fa-phone-alt"></i> +91 <%= order.deliveryAddress.phone %>
-                            </p>
-                        <% } else { %>
-                            <p>No address information available.</p>
-                        <% } %>
-                    </div>
+            <!-- Delivered Address and Total Summary Side-by-Side -->
+            <div class="details-layout-grid">
+                <!-- Delivered Address Card -->
+                <div class="info-card">
+                    <h4 class="card-header-title">Delivered Address</h4>
+                    <% if (order.deliveryAddress) { %>
+                        <h5 class="address-name"><%= order.deliveryAddress.fullName %></h5>
+                        <p class="address-text">
+                            <%= order.deliveryAddress.address %><br>
+                            <%= order.deliveryAddress.city %>, <%= order.deliveryAddress.state %><br>
+                            - <%= order.deliveryAddress.pincode %>
+                        </p>
+                        <p class="address-phone">
+                            <i class="fas fa-phone-alt"></i> +91 <%= order.deliveryAddress.phone %>
+                        </p>
+                    <% } else { %>
+                        <p>No address information available.</p>
+                    <% } %>
+                </div>
 
-                    <!-- Total Summary Card -->
-                    <div class="info-card">
-                        <h4 class="card-header-title">Total Summary</h4>
-                        <div class="summary-list">
+                <!-- Total Summary Card -->
+                <div class="info-card">
+                    <h4 class="card-header-title">Total Summary</h4>
+                    <div class="summary-list">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span>₹<%= displaySubtotal ? displaySubtotal.toFixed(2) : '0.00' %></span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Shipping</span>
+                            <span class="text-green"><%= (!order.shippingFee || order.shippingFee === 0) ? 'FREE' : '₹' + order.shippingFee.toFixed(2) %></span>
+                        </div>
+                        <% if (displayTax && displayTax > 0) { %>
                             <div class="summary-row">
-                                <span>Subtotal</span>
-                                <span>₹<%= displaySubtotal ? displaySubtotal.toFixed(2) : '0.00' %></span>
+                                <span>Tax (5%)</span>
+                                <span>₹<%= displayTax.toFixed(2) %></span>
                             </div>
+                        <% } %>
+                        <% if (order.discount && order.discount > 0) { %>
                             <div class="summary-row">
-                                <span>Shipping</span>
-                                <span class="text-green"><%= (!order.shippingFee || order.shippingFee === 0) ? 'FREE' : '₹' + order.shippingFee.toFixed(2) %></span>
+                                <span>Coupon Discount <%= (order.coupon && order.coupon.code) ? '(' + order.coupon.code + ')' : '' %></span>
+                                <span style="color: #27ae60;">₹<%= order.discount.toFixed(2) %></span>
                             </div>
-                            <% if (displayTax && displayTax > 0) { %>
-                                <div class="summary-row">
-                                    <span>Tax (5%)</span>
-                                    <span>₹<%= displayTax.toFixed(2) %></span>
-                                </div>
-                            <% } %>
-                            <% if (order.discount && order.discount > 0) { %>
-                                <div class="summary-row">
-                                    <span>Coupon Discount <%= (order.coupon && order.coupon.code) ? '(' + order.coupon.code + ')' : '' %></span>
-                                    <span style="color: #27ae60;">-₹<%= order.discount.toFixed(2) %></span>
-                                </div>
-                            <% } %>
-                            <div class="summary-row total-row">
-                                <span class="total-label">Total</span>
-                                <span class="total-value">₹<%= displayTotal ? displayTotal.toFixed(2) : '0.00' %></span>
-                            </div>
+                        <% } %>
+                        <div class="summary-row">
+                            <span>Payment Method</span>
+                            <span style="font-weight: 600; color: #2C2C2C;">
+                                <% if (order.paymentMethod === 'COD') { %>
+                                    Cash on Delivery
+                                <% } else if (order.paymentMethod === 'Online' || order.paymentMethod === 'Online Payment') { %>
+                                    Online Payment
+                                <% } else if (order.paymentMethod === 'Wallet') { %>
+                                    Wallet Payment
+                                <% } else { %>
+                                    <%= order.paymentMethod || 'N/A' %>
+                                <% } %>
+                            </span>
+                        </div>
+                        <div class="summary-row total-row">
+                            <span class="total-label">Total</span>
+                            <span class="total-value">₹<%= displayTotal ? displayTotal.toFixed(2) : '0.00' %></span>
                         </div>
                     </div>
                 </div>
-            <% } else { %>
-                <!-- DELIVERED STATE: Stacked Left (Address & Summary), Share Your Experience and Invoice Right -->
-                <div class="details-layout-grid">
-                    <!-- Left Stacked Column -->
-                    <div class="details-column-stacked">
-                        <!-- Delivered Address Card -->
-                        <div class="info-card">
-                            <h4 class="card-header-title">Delivered Address</h4>
-                            <% if (order.deliveryAddress) { %>
-                                <h5 class="address-name"><%= order.deliveryAddress.fullName %></h5>
-                                <p class="address-text">
-                                    <%= order.deliveryAddress.address %><br>
-                                    <%= order.deliveryAddress.city %>, <%= order.deliveryAddress.state %><br>
-                                    - <%= order.deliveryAddress.pincode %>
-                                </p>
-                                <p class="address-phone">
-                                    <i class="fas fa-phone-alt"></i> +91 <%= order.deliveryAddress.phone %>
-                                </p>
-                            <% } else { %>
-                                <p>No address information available.</p>
-                            <% } %>
-                        </div>
+            </div>
 
-                        <!-- Total Summary Card -->
-                        <div class="info-card">
-                            <h4 class="card-header-title">Total Summary</h4>
-                            <div class="summary-list">
-                                <div class="summary-row">
-                                    <span>Subtotal</span>
-                                    <span>₹<%= displaySubtotal ? displaySubtotal.toFixed(2) : '0.00' %></span>
-                                </div>
-                                <div class="summary-row">
-                                    <span>Shipping</span>
-                                    <span class="text-green"><%= (!order.shippingFee || order.shippingFee === 0) ? 'FREE' : '₹' + order.shippingFee.toFixed(2) %></span>
-                                </div>
-                                <% if (displayTax && displayTax > 0) { %>
-                                    <div class="summary-row">
-                                        <span>Tax (5%)</span>
-                                        <span>₹<%= displayTax.toFixed(2) %></span>
-                                    </div>
-                                <% } %>
-                                <% if (order.discount && order.discount > 0) { %>
-                                    <div class="summary-row">
-                                        <span>Coupon Discount <%= (order.coupon && order.coupon.code) ? '(' + order.coupon.code + ')' : '' %></span>
-                                        <span style="color: #27ae60;">-₹<%= order.discount.toFixed(2) %></span>
-                                    </div>
-                                <% } %>
-                                <div class="summary-row total-row">
-                                    <span class="total-label">Total</span>
-                                    <span class="total-value">₹<%= displayTotal ? displayTotal.toFixed(2) : '0.00' %></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column (Review & Invoice) -->
-                    <div>
-                        <!-- Share Your Experience Card -->
-                        <div class="info-card">
-                            <h4 class="review-title-serif">Share Your Experience</h4>
-                            
-                            <form action="/profile/orders/<%= order._id %>/review" method="POST" id="review-submit-form">
-                                <div class="form-group">
-                                    <label class="form-label">Overall Rating</label>
-                                    <div class="rating-selector" id="rating-star-container">
-                                        <i class="far fa-star rating-star-btn" data-value="1"></i>
-                                        <i class="far fa-star rating-star-btn" data-value="2"></i>
-                                        <i class="far fa-star rating-star-btn" data-value="3"></i>
-                                        <i class="far fa-star rating-star-btn" data-value="4"></i>
-                                        <i class="far fa-star rating-star-btn" data-value="5"></i>
-                                    </div>
-                                    <input type="hidden" name="rating" id="selected-rating-value" value="0" required>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Review Title</label>
-                                    <input type="text" name="title" class="review-input" placeholder="Summarize your thoughts" required>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Your Review</label>
-                                    <textarea name="comment" class="review-textarea" placeholder="Tell us what you loved (or didn't) about this product..." required></textarea>
-                                </div>
-
-                                <button type="submit" class="btn-submit-review">Submit Review</button>
-                            </form>
-                        </div>
-
-                        <!-- Download Invoice Button -->
-                        <div class="invoice-download-container">
-                            <a href="/profile/orders/<%= order._id %>/invoice" class="btn-download-invoice">
-                                Download Invoice PDF <i class="fas fa-download"></i>
-                            </a>
-                        </div>
-                    </div>
+            <!-- Download Invoice Option (Last) -->
+            <% if (isDelivered || order.orderStatus === 'Delivered') { %>
+                <div class="invoice-download-container" style="margin-top: 25px;">
+                    <a href="/profile/orders/<%= order._id %>/invoice" class="btn-download-invoice">
+                        Download Invoice PDF <i class="fas fa-download"></i>
+                    </a>
                 </div>
             <% } %>
+
+            <!-- Per-Product Review Modal Pop-up -->
+            <div id="product-review-modal" class="modal-overlay" style="display: none;">
+                <div class="cancel-modal-content">
+                    <span class="close-modal-btn" onclick="closeReviewModal()">&times;</span>
+                    <h2 class="modal-title" style="font-family: 'Playfair Display', serif; color: #5C1E28; margin-bottom: 4px;">Write a Review</h2>
+                    <p id="review-modal-product-name" style="font-size: 14px; color: #666; font-weight: 500; margin-top: 0; margin-bottom: 20px;"></p>
+                    
+                    <form id="per-product-review-form" onsubmit="submitPerProductReview(event)">
+                        <input type="hidden" id="modal-order-id" name="orderId">
+                        <input type="hidden" id="modal-product-id" name="productId">
+                        <input type="hidden" id="modal-rating-value" name="rating" value="0">
+
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label class="form-label" style="font-size: 11px; font-weight: 600; color: #5C1E28; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Rating *</label>
+                            <div class="modal-rating-selector" style="display: flex; gap: 8px; font-size: 24px; color: #F59E0B; cursor: pointer;">
+                                <i class="far fa-star modal-star" data-value="1"></i>
+                                <i class="far fa-star modal-star" data-value="2"></i>
+                                <i class="far fa-star modal-star" data-value="3"></i>
+                                <i class="far fa-star modal-star" data-value="4"></i>
+                                <i class="far fa-star modal-star" data-value="5"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label class="form-label" style="font-size: 11px; font-weight: 600; color: #5C1E28; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Review Title (Optional)</label>
+                            <input type="text" id="modal-review-title" class="review-input" placeholder="e.g. Amazing texture and long lasting!" style="width: 100%; padding: 10px 14px; border: 1px solid #EAE5DF; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none; box-sizing: border-box;">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 25px;">
+                            <label class="form-label" style="font-size: 11px; font-weight: 600; color: #5C1E28; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Your Review *</label>
+                            <textarea id="modal-review-comment" class="review-textarea" placeholder="Share details of your experience with this product..." required style="width: 100%; height: 90px; padding: 10px 14px; border: 1px solid #EAE5DF; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none; resize: none; box-sizing: border-box;"></textarea>
+                        </div>
+
+                        <div class="modal-actions" style="display: flex; gap: 15px;">
+                            <button type="submit" class="btn-modal-submit" style="flex: 1; background-color: #5C1E28; color: #FFFFFF; border: 1px solid #5C1E28; border-radius: 4px; padding: 12px; font-weight: 600; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer;">Submit Review</button>
+                            <button type="button" class="btn-modal-cancel" onclick="closeReviewModal()" style="flex: 1; background-color: #FFFFFF; color: #5C1E28; border: 1px solid #5C1E28; border-radius: 4px; padding: 12px; font-weight: 600; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             <!-- Return Order Modal Pop -->
             <div id="return-order-modal" class="modal-overlay" style="display: none;">
@@ -1451,6 +1453,187 @@
                 console.error('Error retrying payment:', error);
                 if (typeof Swal !== 'undefined') Swal.close();
                 alert('A network error occurred. Please try again.');
+            }
+        }
+
+        // ── Per-Product Review Modal Handlers ──────────────────────
+        let currentModalRating = 0;
+
+        function openReviewModal(orderId, productId, productName) {
+            document.getElementById('modal-order-id').value = orderId;
+            document.getElementById('modal-product-id').value = productId;
+            document.getElementById('review-modal-product-name').textContent = 'Product: ' + productName;
+            document.getElementById('modal-review-title').value = '';
+            document.getElementById('modal-review-comment').value = '';
+            
+            setModalRating(0);
+            document.getElementById('product-review-modal').style.display = 'flex';
+        }
+
+        function closeReviewModal() {
+            document.getElementById('product-review-modal').style.display = 'none';
+        }
+
+        function setModalRating(val) {
+            currentModalRating = val;
+            document.getElementById('modal-rating-value').value = val;
+            const stars = document.querySelectorAll('.modal-star');
+            stars.forEach((star) => {
+                const starVal = parseInt(star.getAttribute('data-value'));
+                if (val > 0 && starVal <= val) {
+                    star.classList.remove('far');
+                    star.classList.add('fas');
+                } else {
+                    star.classList.remove('fas');
+                    star.classList.add('far');
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const stars = document.querySelectorAll('.modal-star');
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const val = parseInt(this.getAttribute('data-value'));
+                    setModalRating(val);
+                });
+
+                star.addEventListener('mouseover', function() {
+                    const hoverVal = parseInt(this.getAttribute('data-value'));
+                    stars.forEach(s => {
+                        const sVal = parseInt(s.getAttribute('data-value'));
+                        if (sVal <= hoverVal) {
+                            s.classList.remove('far');
+                            s.classList.add('fas');
+                        } else {
+                            s.classList.remove('fas');
+                            s.classList.add('far');
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseout', function() {
+                    setModalRating(currentModalRating);
+                });
+            });
+        });
+
+        async function submitPerProductReview(event) {
+            event.preventDefault();
+            
+            const orderId = document.getElementById('modal-order-id').value;
+            const productId = document.getElementById('modal-product-id').value;
+            const rating = parseInt(document.getElementById('modal-rating-value').value) || 0;
+            const title = document.getElementById('modal-review-title').value.trim();
+            const comment = document.getElementById('modal-review-comment').value.trim();
+
+            if (rating <= 0) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Rating Required',
+                        text: 'Please select a star rating (1 to 5) before submitting.',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                } else {
+                    alert('Please select a star rating before submitting.');
+                }
+                return;
+            }
+
+            if (!comment) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Comment Required',
+                        text: 'Please enter your review text before submitting.',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                } else {
+                    alert('Please enter your review text before submitting.');
+                }
+                return;
+            }
+
+            // Close review modal pop-up first so confirmation popup appears clearly
+            closeReviewModal();
+
+            let isConfirmed = true;
+            if (typeof Swal !== 'undefined') {
+                const confirmResult = await Swal.fire({
+                    title: 'Submit Review?',
+                    text: 'Are you sure you want to submit your review for admin approval?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#5c1e28',
+                    cancelButtonColor: '#888',
+                    confirmButtonText: 'Yes, Submit',
+                    cancelButtonText: 'Cancel'
+                });
+                isConfirmed = confirmResult.isConfirmed;
+            } else {
+                isConfirmed = confirm('Are you sure you want to submit your review for admin approval?');
+            }
+
+            if (!isConfirmed) {
+                // Re-open review modal if user cancels confirmation
+                document.getElementById('product-review-modal').style.display = 'flex';
+                return;
+            }
+
+            try {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Submitting Review...',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                }
+
+                const response = await fetch(`/profile/orders/${orderId}/review`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        productId: productId,
+                        rating: rating,
+                        title: title,
+                        comment: comment
+                    })
+                });
+
+                const data = await response.json();
+                if (typeof Swal !== 'undefined') Swal.close();
+
+                if (data.success) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Review Submitted',
+                            text: data.message || 'Your review has been submitted for admin approval!',
+                            confirmButtonColor: '#5c1e28'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        alert(data.message || 'Your review has been submitted for admin approval!');
+                        window.location.reload();
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Failed to submit review.',
+                            confirmButtonColor: '#5c1e28'
+                        });
+                    } else {
+                        alert(data.message || 'Failed to submit review.');
+                    }
+                }
+            } catch (err) {
+                console.error('Error submitting review:', err);
+                if (typeof Swal !== 'undefined') Swal.close();
+                alert('Something went wrong. Please try again.');
             }
         }
     </script>

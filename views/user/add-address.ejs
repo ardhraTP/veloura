@@ -565,30 +565,33 @@
                 hasError = true; 
             }
 
+            // Phone validation
             if (!phone) { 
                 showError('phone', 'Please enter your phone number'); 
                 hasError = true; 
-            } else if (!/^[0-9]{10}$/.test(phone)) { 
-                showError('phone', 'Please enter a valid 10-digit phone number'); 
+            } else if (phone.length < 10) { 
+                showError('phone', 'Phone number must be exactly 10 digits'); 
+                hasError = true; 
+            } else if (/^0{10}$/.test(phone) || /^(\d)\1{9}$/.test(phone) || !/^[6-9]\d{9}$/.test(phone)) { 
+                showError('phone', 'Please enter a valid mobile number'); 
                 hasError = true; 
             }
             
+            // Pincode validation
             if (!pincode) { 
                 showError('pincode', 'Please enter your pincode'); 
                 hasError = true; 
-            } else if (!/^[0-9]{6}$/.test(pincode)) { 
+            } else if (pincode.length !== 6 || !/^[0-9]{6}$/.test(pincode) || /^0{6}$/.test(pincode) || /^0+$/.test(pincode) || pincode.startsWith('0')) { 
                 showError('pincode', 'Please enter a valid 6-digit pincode'); 
                 hasError = true; 
             }
             
+            // Address validation (minimum 10 characters, no numbers, no random repeats)
             if (!address) { 
                 showError('address', 'Please enter your address'); 
                 hasError = true; 
-            } else if (address.length < 10) { 
-                showError('address', 'Address must be at least 10 characters'); 
-                hasError = true; 
-            } else if (address.length > 200) { 
-                showError('address', 'Address must not exceed 200 characters'); 
+            } else if (address.length < 10 || /[0-9]/.test(address) || /(.)\1{4,}/.test(address) || !/^[a-zA-Z\s,.\-/#()]+$/.test(address)) { 
+                showError('address', 'Please enter a valid address'); 
                 hasError = true; 
             }
             
@@ -641,7 +644,8 @@
 
         document.getElementById('address').addEventListener('input', function(e) {
             clearAllErrors(); 
-            if (this.value.length > 200) this.value = this.value.slice(0, 200);
+            // Avoid numbers in address field - only characters allowed (no max length limit)
+            this.value = this.value.replace(/[0-9]/g, '');
         });
 
         document.getElementById('city').addEventListener('input', function(e) {

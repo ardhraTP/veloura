@@ -1,8 +1,8 @@
 import Address from '../model/Address.js';
+import User from '../model/User.js';
 
 
 import { isValidName, isValidPhone, isValidPincode, isValidCity, isValidState, isValidAddress } from '../utils/helpers.js';
-
 
 export const validateAddressData = (data) => {
     const { fullName, phone, pincode, address, city, state, addressType } = data;
@@ -11,16 +11,20 @@ export const validateAddressData = (data) => {
         return { isValid: false, error: 'Full name must be 2-50 characters and contain only letters' };
     }
 
-    if (!isValidPhone(phone)) {
+    if (!phone || phone.trim().length < 10) { 
         return { isValid: false, error: 'Phone number must be exactly 10 digits' };
     }
 
+    if (!isValidPhone(phone)) { 
+        return { isValid: false, error: 'Please enter a valid mobile number' };
+    }
+
     if (!isValidPincode(pincode)) {
-        return { isValid: false, error: 'Pincode must be exactly 6 digits' };
+        return { isValid: false, error: 'Please enter a valid 6-digit pincode' };
     }
 
     if (!isValidAddress(address)) {
-        return { isValid: false, error: 'Address must be 10-200 characters' };
+        return { isValid: false, error: 'Please enter a valid address' };
     }
 
     if (!isValidCity(city)) {

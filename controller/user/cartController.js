@@ -6,8 +6,8 @@ export const getCartPage = async (req, res) => {
     try {
         const userId = req.session.userId;
         const cart = await cartService.getUserCart(userId);
-        
-        
+
+
         if (cart && cart.items) {
             for (const item of cart.items) {
                 item.isAvailable = true;
@@ -28,7 +28,7 @@ export const getCartPage = async (req, res) => {
                 }
             }
         }
-        
+
         const cartError = req.session.cartError || null;
         delete req.session.cartError;
 
@@ -87,10 +87,12 @@ export const removeItem = async (req, res) => {
 
         res.json({ success: true, message: 'Item removed from cart', cart });
     } catch (error) {
-        console.log('Error in removeItem:', error);
+        console.log('Error in removeItem:', error); 
         res.json({ success: false, message: error.message });
     }
-}; 
+};
+
+
 
 // Get cart count for navbar
 export const getCartCount = async (req, res) => {

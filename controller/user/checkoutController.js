@@ -86,11 +86,11 @@ export const applyCoupon = async (req, res) => {
         const { couponCode } = req.body;
         const userId = req.session.userId;
 
-       
+
         const cart = await cartService.getUserCart(userId);
         const cartTotal = cart.totalAmount;
 
-       
+
         const result = await couponService.validateCoupon(
             couponCode,
             userId,
@@ -105,7 +105,7 @@ export const applyCoupon = async (req, res) => {
             });
         }
 
-        
+
         req.session.appliedCoupon = {
             code: result.coupon.code,
             discountAmount: result.discountAmount,
@@ -139,7 +139,7 @@ export const applyCoupon = async (req, res) => {
 
 export const removeCoupon = async (req, res) => {
     try {
-        
+
         req.session.appliedCoupon = null;
 
         res.json({
@@ -157,14 +157,14 @@ export const removeCoupon = async (req, res) => {
 };
 
 
-export const createOrder = async (req,res)=>{
-    try{
+export const createOrder = async (req, res) => {
+    try {
         const userId = req.session.userId;
-        const {addressId,paymentMethod,couponCode,discount} = req.body;
+        const { addressId, paymentMethod, couponCode, discount } = req.body;
 
         const cart = await cartService.getUserCart(userId);
-        if(!cart || !cart.items || cart.items.length === 0){
-            return res.json({success:false, message:'Your cart is empty'});
+        if (!cart || !cart.items || cart.items.length === 0) {
+            return res.json({ success: false, message: 'Your cart is empty' });
         }
 
         // Get address
@@ -236,7 +236,7 @@ export const createOrder = async (req,res)=>{
         const totalAmount = subtotal + shippingFee + tax - discountAmount;
 
 
-        const orderId = 'VEL-' + Math.random().toString(36).substring(2,8).toUpperCase();
+        const orderId = 'VEL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
         const deliveryAddress = {
             fullName: selectedAddress.fullName,
@@ -248,7 +248,7 @@ export const createOrder = async (req,res)=>{
             addressType: selectedAddress.addressType
         };
 
-        const orderItems = cart.items.map(item=>({
+        const orderItems = cart.items.map(item => ({
             product: item.product._id,
             variant: item.variant._id,
             quantity: item.quantity,
@@ -257,19 +257,19 @@ export const createOrder = async (req,res)=>{
         }));
 
         const newOrder = new Order({
-            user:userId,
+            user: userId,
             orderId: orderId,
             deliveryAddress: deliveryAddress,
             items: orderItems,
             subtotal: subtotal,
             shippingFee: shippingFee,
             discount: discountAmount,
-            tax:tax,
+            tax: tax,
             totalAmount: totalAmount,
             paymentMethod: 'Online',
             paymentStatus: 'Pending',
             orderStatus: 'Pending',
-            coupon: couponCode ? {code: couponCode,discountAmount: discountAmount} : null
+            coupon: couponCode ? { code: couponCode, discountAmount: discountAmount } : null
         });
 
         await newOrder.save();
@@ -278,7 +278,7 @@ export const createOrder = async (req,res)=>{
             amount: Math.round(totalAmount * 100),
             currency: 'INR',
             receipt: orderId,
-            notes:{
+            notes: {
                 orderId: orderId,
                 userId: userId.toString()
             }
@@ -288,7 +288,7 @@ export const createOrder = async (req,res)=>{
         await newOrder.save();
 
         res.json({
-            success:true,
+            success: true,
             orderId: newOrder.orderId,
             razorpayOrderId: razorpayOrder.id,
             amount: totalAmount * 100,
@@ -296,11 +296,11 @@ export const createOrder = async (req,res)=>{
             currency: 'INR'
         });
 
-    }catch(error){
-        console.error('Error creating Razorpay order:',error);
+    } catch (error) {
+        console.error('Error creating Razorpay order:', error);
         res.json({
-            success:false,
-            message:'Failed to create order'
+            success: false,
+            message: 'Failed to create order'
         });
     }
 };
@@ -311,7 +311,7 @@ export const placeOrder = async (req, res) => {
         const userId = req.session.userId;
         const { addressId, paymentMethod, couponCode, discount } = req.body;
 
-       
+
         if (paymentMethod !== 'COD' && paymentMethod !== 'Wallet') {
             return res.json({
                 success: false,
@@ -319,20 +319,20 @@ export const placeOrder = async (req, res) => {
             });
         }
 
-        
+
         const cart = await cartService.getUserCart(userId);
         if (!cart || !cart.items || cart.items.length === 0) {
             return res.json({ success: false, message: 'Your cart is empty' });
         }
 
-       
+
         const selectedAddress = await addressService.getAddressById(addressId, userId);
         if (!selectedAddress) {
             return res.json({ success: false, message: 'Address not found' });
         }
 
-        
-        // Check stock quantity and availability for each cart item
+
+        // check stock quantity and availability for each cart item
         for (const item of cart.items) {
             const product = item.product;
             const variantId = item.variant ? (item.variant._id || item.variant) : null;
@@ -406,10 +406,10 @@ export const placeOrder = async (req, res) => {
             }
         }
 
-        
+
         const orderId = 'VEL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-        
+
         const deliveryAddress = {
             fullName: selectedAddress.fullName,
             phone: selectedAddress.phone,
@@ -446,14 +446,14 @@ export const placeOrder = async (req, res) => {
 
         await newOrder.save();
 
-       
+
         for (const item of cart.items) {
             await Variant.findByIdAndUpdate(item.variant._id, {
                 $inc: { quantity: -item.quantity }
             });
         }
 
-        
+
         if (paymentMethod === 'Wallet') {
             const user = await User.findById(userId);
             user.walletBalance -= totalAmount;
@@ -461,6 +461,7 @@ export const placeOrder = async (req, res) => {
                 amount: totalAmount,
                 type: 'Debited',
                 description: `Payment for order ${orderId}`,
+                orderId: orderId,
                 date: new Date()
             });
             await user.save();
@@ -470,7 +471,7 @@ export const placeOrder = async (req, res) => {
             await couponService.applyCoupon(couponCode);
         }
 
-       
+
         cart.items = [];
         cart.totalAmount = 0;
         await cart.save();
@@ -494,14 +495,14 @@ export const placeOrder = async (req, res) => {
 // Verify Razorpay payment
 export const verifyPayment = async (req, res) => {
     try {
-        const { 
-            razorpay_order_id, 
-            razorpayOrderId, 
-            razorpay_payment_id, 
-            razorpayPaymentId, 
-            razorpay_signature, 
-            razorpaySignature, 
-            orderId 
+        const {
+            razorpay_order_id,
+            razorpayOrderId,
+            razorpay_payment_id,
+            razorpayPaymentId,
+            razorpay_signature,
+            razorpaySignature,
+            orderId
         } = req.body;
 
         const activeOrderId = razorpay_order_id || razorpayOrderId;
@@ -536,19 +537,19 @@ export const verifyPayment = async (req, res) => {
         order.orderStatus = 'Processing';
         await order.save();
 
-       
+
         for (const item of order.items) {
             await Variant.findByIdAndUpdate(item.variant, {
                 $inc: { quantity: -item.quantity }
             });
         }
 
-    
+
         if (order.coupon && order.coupon.code) {
             await couponService.applyCoupon(order.coupon.code);
         }
 
-       
+
         await orderService.clearUserCart(req.session.userId);
 
         res.json({

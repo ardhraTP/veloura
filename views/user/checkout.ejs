@@ -1668,6 +1668,25 @@
                         });
                     }
                 });
+
+                const addressInput = document.getElementById('address');
+                if (addressInput) {
+                    addressInput.addEventListener('input', function() {
+                        this.value = this.value.replace(/[0-9]/g, '');
+                    });
+                }
+                const phoneInput = document.getElementById('phone');
+                if (phoneInput) {
+                    phoneInput.addEventListener('input', function() {
+                        this.value = this.value.replace(/\D/g, '').slice(0, 10);
+                    });
+                }
+                const pincodeInput = document.getElementById('pincode');
+                if (pincodeInput) {
+                    pincodeInput.addEventListener('input', function() {
+                        this.value = this.value.replace(/\D/g, '').slice(0, 6);
+                    });
+                }
             });
 
             function openAddressModal() {
@@ -1721,16 +1740,34 @@
                     showFieldError('fullName', 'Name must be 2-50 characters and contain only letters.');
                     isValid = false;
                 }
-                if (!/^[0-9]{10}$/.test(data.phone)) {
-                    showFieldError('phone', 'Please enter a valid 10-digit phone number.');
+                
+                // Phone validation
+                if (!data.phone) {
+                    showFieldError('phone', 'Please enter your phone number.');
+                    isValid = false;
+                } else if (data.phone.length < 10) {
+                    showFieldError('phone', 'Phone number must be exactly 10 digits.');
+                    isValid = false;
+                } else if (/^0{10}$/.test(data.phone) || /^(\d)\1{9}$/.test(data.phone) || !/^[6-9]\d{9}$/.test(data.phone)) {
+                    showFieldError('phone', 'Please enter a valid mobile number.');
                     isValid = false;
                 }
-                if (!/^[0-9]{6}$/.test(data.pincode)) {
+
+                // Pincode validation
+                if (!data.pincode) {
+                    showFieldError('pincode', 'Please enter your pincode.');
+                    isValid = false;
+                } else if (data.pincode.length !== 6 || !/^[0-9]{6}$/.test(data.pincode) || /^0{6}$/.test(data.pincode) || /^0+$/.test(data.pincode) || data.pincode.startsWith('0')) {
                     showFieldError('pincode', 'Please enter a valid 6-digit pincode.');
                     isValid = false;
                 }
-                if (data.address.length < 10 || data.address.length > 200) {
-                    showFieldError('address', 'Address must be between 10 and 200 characters.');
+
+                // Address validation (minimum 10 characters, no numbers, no random repeats, no max limit)
+                if (!data.address) {
+                    showFieldError('address', 'Please enter your address.');
+                    isValid = false;
+                } else if (data.address.length < 10 || /[0-9]/.test(data.address) || /(.)\1{4,}/.test(data.address) || !/^[a-zA-Z\s,.\-/#()]+$/.test(data.address)) {
+                    showFieldError('address', 'Please enter a valid address.');
                     isValid = false;
                 }
                 if (!/^[a-zA-Z\s]{2,50}$/.test(data.city)) {

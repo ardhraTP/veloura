@@ -459,57 +459,109 @@
             border-color: var(--primary-red);
         }
 
-        /* --- Premium Pagination --- */
+        /* --- Premium Pagination (Matching Page Theme) --- */
         .pagination-area {
             display: flex;
             justify-content: center;
+            align-items: center;
             margin-top: auto;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            padding-top: 15px;
         }
 
-        .pagination-controls {
-            display: flex;
-            gap: 8px;
-            background-color: white;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-        }
-
-        .page-btn {
-            min-width: 32px;
-            height: 32px;
+        .pagination-container {
             display: flex;
             align-items: center;
-            justify-content: center;
-            border: 1px solid var(--border-color);
-            background-color: white;
+            gap: 16px;
+        }
+
+        /* Standalone PREVIOUS and NEXT buttons */
+        .pagination-nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background-color: var(--card-bg);
             color: var(--text-dark);
-            font-size: 12px;
-            font-weight: 500;
-            border-radius: 2px;
-            cursor: pointer;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
             text-decoration: none;
-            transition: all 0.2s;
-            padding: 0 10px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            user-select: none;
         }
 
-        .page-btn:hover {
-            background-color: #f0f0f0;
-        }
-
-        .page-btn.active {
-            background-color: var(--primary-red);
-            color: white;
+        .pagination-nav-btn:hover:not(.disabled) {
+            background-color: #f7f3f1;
             border-color: var(--primary-red);
+            color: var(--primary-red);
+        }
+
+        .pagination-nav-btn.disabled {
+            cursor: not-allowed;
+            pointer-events: none;
+            color: var(--text-dark);
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            opacity: 1;
+        }
+
+        .nav-icon {
+            font-size: 11px;
+        }
+
+        /* Grouped middle page numbers box */
+        .pagination-numbers-group {
+            display: flex;
+            align-items: center;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+
+        .page-num-btn {
+            min-width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-dark);
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            text-decoration: none;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .page-num-btn:last-child {
+            border-right: none;
+        }
+
+        .page-num-btn:hover:not(.active):not(.dots) {
+            background-color: #f7f3f1;
+            color: var(--primary-red);
+        }
+
+        /* Active page styling - using theme primary red */
+        .page-num-btn.active {
+            background-color: var(--primary-red);
+            color: #ffffff;
             font-weight: 600;
         }
 
-        .page-text {
+        /* Ellipsis / dots styling */
+        .page-num-btn.dots {
             color: var(--text-gray);
-            font-size: 12px;
-            display: flex;
-            align-items: center;
+            cursor: default;
+            background-color: var(--card-bg);
         }
     </style>
     <script src="/js/prevent-back.js"></script>
@@ -724,36 +776,75 @@
             </div>
 
             <!-- Pagination -->
-            <% if (typeof totalPages !=='undefined' && totalPages> 1) { %>
+            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                <%
+                    // Keep search and filter parameters in URL
+                    const searchParam = typeof searchQuery !== 'undefined' ? searchQuery : '';
+                    const dateParam = typeof currentDate !== 'undefined' ? currentDate : '';
+                    const paymentParam = typeof currentPayment !== 'undefined' ? currentPayment : 'all';
+                    const statusParam = typeof currentStatus !== 'undefined' ? currentStatus : 'all';
+                    const queryParams = `search=${encodeURIComponent(searchParam)}&date=${encodeURIComponent(dateParam)}&payment=${encodeURIComponent(paymentParam)}&status=${encodeURIComponent(statusParam)}`;
+
+                    // Determine page numbers to display with dots (...)
+                    let pages = [];
+                    if (totalPages <= 6) {
+                        for (let i = 1; i <= totalPages; i++) {
+                            pages.push(i);
+                        }
+                    } else {
+                        if (currentPage <= 3) {
+                            pages = [1, 2, 3, '...', totalPages - 1, totalPages];
+                        } else if (currentPage >= totalPages - 2) {
+                            pages = [1, 2, '...', totalPages - 2, totalPages - 1, totalPages];
+                        } else {
+                            pages = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+                        }
+                    }
+                %>
+
                 <div class="pagination-area">
-                    <div class="pagination-controls">
+                    <div class="pagination-container">
 
-                        <% if (currentPage> 1) { %>
-                            <a href="?page=<%= currentPage - 1 %>&search=<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>&date=<%= typeof currentDate !== 'undefined' ? currentDate : '' %>&payment=<%= typeof currentPayment !== 'undefined' ? currentPayment : 'all' %>&status=<%= typeof currentStatus !== 'undefined' ? currentStatus : 'all' %>"
-                                class="page-btn">
-                                <span class="page-text"><i class="fas fa-chevron-left"
-                                        style="font-size: 10px; margin-right: 5px;"></i> Back</span>
+                        <!-- Previous Button -->
+                        <% if (currentPage > 1) { %>
+                            <a href="?page=<%= currentPage - 1 %>&<%= queryParams %>" class="pagination-nav-btn">
+                                <i class="fas fa-chevron-left nav-icon"></i> PREVIOUS
                             </a>
-                            <% } %>
+                        <% } else { %>
+                            <span class="pagination-nav-btn disabled">
+                                <i class="fas fa-chevron-left nav-icon"></i> PREVIOUS
+                            </span>
+                        <% } %>
 
-                                <% for(let i=1; i <=totalPages; i++) { %>
-                                    <a href="?page=<%= i %>&search=<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>&date=<%= typeof currentDate !== 'undefined' ? currentDate : '' %>&payment=<%= typeof currentPayment !== 'undefined' ? currentPayment : 'all' %>&status=<%= typeof currentStatus !== 'undefined' ? currentStatus : 'all' %>"
-                                        class="page-btn <%= currentPage === i ? 'active' : '' %>">
-                                        <%= i %>
+                        <!-- Page Numbers Group -->
+                        <div class="pagination-numbers-group">
+                            <% pages.forEach(function(item) { %>
+                                <% if (item === '...') { %>
+                                    <span class="page-num-btn dots">...</span>
+                                <% } else if (item === currentPage) { %>
+                                    <span class="page-num-btn active"><%= item %></span>
+                                <% } else { %>
+                                    <a href="?page=<%= item %>&<%= queryParams %>" class="page-num-btn">
+                                        <%= item %>
                                     </a>
-                                    <% } %>
+                                <% } %>
+                            <% }); %>
+                        </div>
 
-                                        <% if (currentPage < totalPages) { %>
-                                            <a href="?page=<%= currentPage + 1 %>&search=<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>&date=<%= typeof currentDate !== 'undefined' ? currentDate : '' %>&payment=<%= typeof currentPayment !== 'undefined' ? currentPayment : 'all' %>&status=<%= typeof currentStatus !== 'undefined' ? currentStatus : 'all' %>"
-                                                class="page-btn">
-                                                <span class="page-text">Next <i class="fas fa-chevron-right"
-                                                        style="font-size: 10px; margin-left: 5px;"></i></span>
-                                            </a>
-                                            <% } %>
+                        <!-- Next Button -->
+                        <% if (currentPage < totalPages) { %>
+                            <a href="?page=<%= currentPage + 1 %>&<%= queryParams %>" class="pagination-nav-btn">
+                                NEXT <i class="fas fa-chevron-right nav-icon"></i>
+                            </a>
+                        <% } else { %>
+                            <span class="pagination-nav-btn disabled">
+                                NEXT <i class="fas fa-chevron-right nav-icon"></i>
+                            </span>
+                        <% } %>
 
                     </div>
                 </div>
-                <% } %>
+            <% } %>
 
         </main>
 

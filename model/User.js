@@ -69,6 +69,7 @@ const userSchema = new mongoose.Schema({
         amount: { type: Number, required: true },
         type: { type: String, enum: ['Credited', 'Debited'], required: true },
         description: { type: String },
+        orderId: { type: String },
         date: { type: Date, default: Date.now }
     }],
     referralCode: {

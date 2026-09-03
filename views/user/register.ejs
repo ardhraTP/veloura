@@ -709,6 +709,15 @@
             } else if (!/^[0-9]{10}$/.test(phone)) {
                 showError('phone', 'Phone number must be exactly 10 digits');
                 hasError = true;
+            } else if (/^0+$/.test(phone)) {
+                showError('phone', 'Phone number cannot be all zeros');
+                hasError = true;
+            } else if (/^(\d)\1{9}$/.test(phone)) {
+                showError('phone', 'Please enter a valid phone number');
+                hasError = true;
+            } else if (!/^[6-9]\d{9}$/.test(phone)) {
+                showError('phone', 'Please enter a valid phone number starting with 6, 7, 8, or 9');
+                hasError = true;
             }
             
             if (!password) {

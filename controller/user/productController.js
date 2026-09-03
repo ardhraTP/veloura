@@ -88,8 +88,12 @@ export const getProductDetail = async (req,res)=>{
         if(req.session && req.session.userId){
             try{
                 const wishlist = await getUserWishlist(req.session.userId);
-                if(wishlist && wishlist.products){
-                    isInWishlist = wishlist.products.some(p => p._id.toString() === productId);
+                if(wishlist){
+                    if (wishlist.items && wishlist.items.length > 0) {
+                        isInWishlist = wishlist.items.some(item => item.product && item.product._id.toString() === productId);
+                    } else if (wishlist.products) {
+                        isInWishlist = wishlist.products.some(p => p._id.toString() === productId);
+                    }
                 }
             }catch(err){
                 console.error('Error checking wishlist in getProductDetail:',err);

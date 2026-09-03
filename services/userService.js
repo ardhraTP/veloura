@@ -13,8 +13,21 @@ export const validateSignupData = (data) => {
         return { isValid: false, error: 'Please enter a valid email' };
     }
 
-    if (!isValidPhone(phone)) {
+    if (!phone || !phone.trim()) {
+        return { isValid: false, error: 'Please enter your phone number' };
+    }
+
+    const trimmedPhone = phone.trim();
+    if (!/^[0-9]{10}$/.test(trimmedPhone)) {
         return { isValid: false, error: 'Phone number must be 10 digits' };
+    }
+
+    if (/^0+$/.test(trimmedPhone)) {
+        return { isValid: false, error: 'Phone number cannot be all zeros' };
+    }
+
+    if (!isValidPhone(trimmedPhone)) {
+        return { isValid: false, error: 'Please enter a valid 10-digit phone number' };
     }
 
     if (!isValidPassword(password)) {

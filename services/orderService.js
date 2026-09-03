@@ -92,12 +92,12 @@ export const cancelOrder = async (orderId,userId,reason)=>{
             );
         }
 
-        // Refund to wallet if order was paid using Online or Wallet payment method
+        // Refund to wallet if order was paid using Online or Wallet payment method and payment was completed
         const isPaidPayment = order.paymentMethod === 'Online' || 
                              order.paymentMethod === 'Wallet' || 
                              order.paymentMethod === 'Online Payment';
 
-        if (isPaidPayment && order.paymentStatus !== 'Refunded') {
+        if (isPaidPayment && order.paymentStatus === 'Completed') {
             const refundAmount = order.totalAmount;
 
             const user = await User.findById(userId);
@@ -107,6 +107,7 @@ export const cancelOrder = async (orderId,userId,reason)=>{
                     amount: refundAmount,
                     type: 'Credited',
                     description: `Refund for cancelled order ${orderId}`,
+                    orderId: order.orderId || orderId,
                     date: new Date()
                 });
                 await user.save();
@@ -304,6 +305,7 @@ export const approveReturn = async (orderId,itemId)=>{
                 amount: refundAmount,
                 type: 'Credited',
                 description: `Refund for returned item in order ${orderId}`,
+                orderId: order.orderId || orderId,
                 date: new Date()
             });
 

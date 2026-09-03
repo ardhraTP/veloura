@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Users - Veloura</title>
-    
+
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
         :root {
             --primary-red: #5c1e28;
@@ -21,13 +24,14 @@
             --text-gray: #888380;
             --text-light: #b3aea9;
             --border-color: #e5e2e0;
-            
-            --table-header-bg: #742533; /* Dark Maroon */
+
+            --table-header-bg: #742533;
+            /* Dark Maroon */
             --table-header-text: #ffffff;
-            
+
             --btn-block-bg: #f8c8cc;
             --btn-block-text: #b53846;
-            
+
             --btn-unblock-bg: #f4d99c;
             --btn-unblock-text: #5c4e28;
         }
@@ -73,7 +77,7 @@
             border-radius: 4px;
             overflow: hidden;
         }
-        
+
         .filter-icon {
             padding: 12px 15px;
             color: var(--text-dark);
@@ -184,7 +188,7 @@
             border-bottom: 1px solid var(--border-color);
             vertical-align: middle;
         }
-        
+
         .data-table tbody tr {
             background-color: #ffffff;
         }
@@ -201,7 +205,7 @@
             color: var(--text-gray);
             width: 80px;
         }
-        
+
         .td-name {
             font-weight: 600;
         }
@@ -285,210 +289,223 @@
             color: var(--text-gray);
             font-size: 12px;
         }
-
     </style>
-<script src="/js/prevent-back.js"></script>
+    <script src="/js/prevent-back.js"></script>
 </head>
+
 <body>
 
     <%- include('../partials/admin/sidebar', { selectedTab: 'users' }) %>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        
-        <!-- Top Controls -->
-        <div class="page-top">
-            <div class="filter-group">
-                <div class="filter-icon"><i class="fas fa-filter"></i></div>
-                <div class="filter-label">FILTER BY</div>
-                <select name="status" class="filter-select" onchange="filterUsers()">
-                    <option value="all" <%= currentStatus === 'all' ? 'selected' : '' %>>All Users</option>
-                    <option value="active" <%= currentStatus === 'active' ? 'selected' : '' %>>Active</option>
-                    <option value="blocked" <%= currentStatus === 'blocked' ? 'selected' : '' %>>Blocked</option>
-                   
-                </select>
-            </div>
-            
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search by name or email..." value="<%= searchQuery %>">
-                <button type="button" class="search-btn" onclick="performSearch()">
-                    <i class="fas fa-search"></i> Search
-                </button>
-                <% if (searchQuery) { %>
-                <button type="button" class="clear-btn" onclick="clearSearch()">
-                    <i class="fas fa-times"></i>
-                </button>
-                <% } %>
-            </div>
-            
-        </div>
+        <!-- Main Content -->
+        <main class="main-content">
 
-        <!-- Users Table -->
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>S.NO</th>
-                        <th>NAME</th>
-                        <th>EMAIL</th>
-                        <th>MOBILE</th>
-                        <th>UPDATE</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (users && users.length > 0) { %>
-                        <% users.forEach((user, index) => { %>
-                            <tr>
-                                <td class="td-sno"><%= (currentPage - 1) * 5 + (index + 1) %></td>
-                                <td class="td-name"><%= user.name %></td>
-                                <td><%= user.email %></td>
-                                <td><%= user.phone || 'N/A' %></td>
-                                <td>
-                                    <button 
-                                        class="btn-action <%= user.isBlocked ? 'btn-unblock' : 'btn-block' %>" 
-                                        onclick="toggleUserStatus('<%= user._id %>', this)">
-                                        <%= user.isBlocked ? 'UNBLOCK' : 'BLOCK' %>
-                                    </button>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    <% } else { %>
+            <!-- Top Controls -->
+            <div class="page-top">
+                <div class="filter-group">
+                    <div class="filter-icon"><i class="fas fa-filter"></i></div>
+                    <div class="filter-label">FILTER BY</div>
+                    <select name="status" class="filter-select" onchange="filterUsers()">
+                        <option value="all" <%=currentStatus==='all' ? 'selected' : '' %>>All Users</option>
+                        <option value="active" <%=currentStatus==='active' ? 'selected' : '' %>>Active</option>
+                        <option value="blocked" <%=currentStatus==='blocked' ? 'selected' : '' %>>Blocked</option>
+
+                    </select>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search by name or email..."
+                        value="<%= searchQuery %>">
+                    <button type="button" class="search-btn" onclick="performSearch()">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <% if (searchQuery) { %>
+                        <button type="button" class="clear-btn" onclick="clearSearch()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <% } %>
+                </div>
+
+            </div>
+
+            <!-- Users Table -->
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 30px;">No users found.</td>
+                            <th>S.NO</th>
+                            <th>NAME</th>
+                            <th>EMAIL</th>
+                            <th>MOBILE</th>
+                            <th>UPDATE</th>
                         </tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <% if (totalPages > 1) { %>
-        <div class="pagination-area">
-            <div class="pagination-controls">
-                
-                <% if (currentPage > 1) { %>
-                    <a href="?page=<%= currentPage - 1 %>&search=<%= searchQuery %>&status=<%= currentStatus %>" class="page-btn">
-                        <span class="page-text"><i class="fas fa-chevron-left" style="font-size: 10px; margin-right: 5px;"></i> Back</span>
-                    </a>
-                <% } %>
-
-                <% for(let i = 1; i <= totalPages; i++) { %>
-                    <a href="?page=<%= i %>&search=<%= searchQuery %>&status=<%= currentStatus %>" 
-                       class="page-btn <%= currentPage === i ? 'active' : '' %>">
-                       <%= i %>
-                    </a>
-                <% } %>
-
-                <% if (currentPage < totalPages) { %>
-                    <a href="?page=<%= currentPage + 1 %>&search=<%= searchQuery %>&status=<%= currentStatus %>" class="page-btn">
-                        <span class="page-text">Next <i class="fas fa-chevron-right" style="font-size: 10px; margin-left: 5px;"></i></span>
-                    </a>
-                <% } %>
-                
+                    </thead>
+                    <tbody>
+                        <% if (users && users.length> 0) { %>
+                            <% users.forEach((user, index)=> { %>
+                                <tr>
+                                    <td class="td-sno">
+                                        <%= (currentPage - 1) * 5 + (index + 1) %>
+                                    </td>
+                                    <td class="td-name">
+                                        <%= user.name %>
+                                    </td>
+                                    <td>
+                                        <%= user.email %>
+                                    </td>
+                                    <td>
+                                        <%= user.phone || 'N/A' %>
+                                    </td>
+                                    <td>
+                                        <button class="btn-action <%= user.isBlocked ? 'btn-unblock' : 'btn-block' %>"
+                                            onclick="toggleUserStatus('<%= user._id %>', this)">
+                                            <%= user.isBlocked ? 'UNBLOCK' : 'BLOCK' %>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="5" style="text-align: center; padding: 30px;">No users found.
+                                            </td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
             </div>
-        </div>
-        <% } %>
 
-    </main>
+            <!-- Pagination -->
+            <% if (totalPages> 1) { %>
+                <div class="pagination-area">
+                    <div class="pagination-controls">
 
+                        <% if (currentPage> 1) { %>
+                            <a href="?page=<%= currentPage - 1 %>&search=<%= searchQuery %>&status=<%= currentStatus %>"
+                                class="page-btn">
+                                <span class="page-text"><i class="fas fa-chevron-left"
+                                        style="font-size: 10px; margin-right: 5px;"></i> Back</span>
+                            </a>
+                            <% } %>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                                <% for(let i=1; i <=totalPages; i++) { %>
+                                    <a href="?page=<%= i %>&search=<%= searchQuery %>&status=<%= currentStatus %>"
+                                        class="page-btn <%= currentPage === i ? 'active' : '' %>">
+                                        <%= i %>
+                                    </a>
+                                    <% } %>
 
-<script>
-const currentStatus = '<%= currentStatus %>';
-const currentSearch = '<%= searchQuery %>';
+                                        <% if (currentPage < totalPages) { %>
+                                            <a href="?page=<%= currentPage + 1 %>&search=<%= searchQuery %>&status=<%= currentStatus %>"
+                                                class="page-btn">
+                                                <span class="page-text">Next <i class="fas fa-chevron-right"
+                                                        style="font-size: 10px; margin-left: 5px;"></i></span>
+                                            </a>
+                                            <% } %>
 
+                    </div>
+                </div>
+                <% } %>
 
-function performSearch() {
-    const searchValue = document.getElementById('searchInput').value.trim();
-    const statusValue = document.querySelector('.filter-select').value;
-   
-    const params = new URLSearchParams();
-    if (searchValue) params.append('search', searchValue);
-    if (statusValue !== 'all') params.append('status', statusValue);
-    params.append('page', '1'); 
-    
-    window.location.href = `/admin/users?${params.toString()}`;
-}
-
-
-function filterUsers() {
-    const searchValue = document.getElementById('searchInput').value.trim();
-    const statusValue = document.querySelector('.filter-select').value;
-    
-    const params = new URLSearchParams();
-    if (searchValue) params.append('search', searchValue);
-    if (statusValue !== 'all') params.append('status', statusValue);
-    params.append('page', '1');
-    
-    window.location.href = `/admin/users?${params.toString()}`;
-}
+        </main>
 
 
-function clearSearch() {
-    document.getElementById('searchInput').value = '';
-    const statusValue = document.querySelector('.filter-select').value;
-    
-    const params = new URLSearchParams();
-    if (statusValue !== 'all') params.append('status', statusValue);
-    params.append('page', '1');
-    
-    window.location.href = `/admin/users?${params.toString()}`;
-}
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    
-  
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            performSearch();
-        }
-    });
-});
+        <script>
+            const currentStatus = '<%= currentStatus %>';
+            const currentSearch = '<%= searchQuery %>';
 
 
-async function toggleUserStatus(userId, buttonElement) {
-    const isCurrentlyBlocked = buttonElement.innerText.trim() === 'UNBLOCK';
-    const actionText = isCurrentlyBlocked ? 'unblock' : 'block';
-    
-    const result = await Swal.fire({
-        title: `Are you sure?`,
-        text: `Do you want to ${actionText} this user?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: isCurrentlyBlocked ? '#dcb56a' : '#eba4ac',
-        cancelButtonColor: '#2d2a29',
-        confirmButtonText: `Yes, ${actionText}!`
-    });
+            function performSearch() {
+                const searchValue = document.getElementById('searchInput').value.trim();
+                const statusValue = document.querySelector('.filter-select').value;
 
-    if (result.isConfirmed) {
-        try {
-            const response = await fetch(`/admin/users/${userId}/toggle-block`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                if (data.isBlocked) {
-                    buttonElement.className = 'btn-action btn-unblock';
-                    buttonElement.innerText = 'UNBLOCK';
-                } else {
-                    buttonElement.className = 'btn-action btn-block';
-                    buttonElement.innerText = 'BLOCK';
-                }
-                Swal.fire('Success!', data.message, 'success');
-            } else {
-                Swal.fire('Error!', data.message || 'Something went wrong.', 'error');
+                const params = new URLSearchParams();
+                if (searchValue) params.append('search', searchValue);
+                if (statusValue !== 'all') params.append('status', statusValue);
+                params.append('page', '1');
+
+                window.location.href = `/admin/users?${params.toString()}`;
             }
-        } catch (error) {
-            console.error('Error:', error);
-            Swal.fire('Error!', 'Failed to connect to the server.', 'error');
-        }
-    }
-}
-</script>
+
+
+            function filterUsers() {
+                const searchValue = document.getElementById('searchInput').value.trim();
+                const statusValue = document.querySelector('.filter-select').value;
+
+                const params = new URLSearchParams();
+                if (searchValue) params.append('search', searchValue);
+                if (statusValue !== 'all') params.append('status', statusValue);
+                params.append('page', '1');
+
+                window.location.href = `/admin/users?${params.toString()}`;
+            }
+
+
+            function clearSearch() {
+                document.getElementById('searchInput').value = '';
+                const statusValue = document.querySelector('.filter-select').value;
+
+                const params = new URLSearchParams();
+                if (statusValue !== 'all') params.append('status', statusValue);
+                params.append('page', '1');
+
+                window.location.href = `/admin/users?${params.toString()}`;
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const searchInput = document.getElementById('searchInput');
+
+
+                searchInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        performSearch();
+                    }
+                });
+            });
+
+
+            async function toggleUserStatus(userId, buttonElement) {
+                const isCurrentlyBlocked = buttonElement.innerText.trim() === 'UNBLOCK';
+                const actionText = isCurrentlyBlocked ? 'unblock' : 'block';
+
+                const result = await Swal.fire({
+                    title: `Are you sure?`,
+                    text: `Do you want to ${actionText} this user?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: isCurrentlyBlocked ? '#dcb56a' : '#eba4ac',
+                    cancelButtonColor: '#2d2a29',
+                    confirmButtonText: `Yes, ${actionText}!`
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/admin/users/${userId}/toggle-block`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            if (data.isBlocked) {
+                                buttonElement.className = 'btn-action btn-unblock';
+                                buttonElement.innerText = 'UNBLOCK';
+                            } else {
+                                buttonElement.className = 'btn-action btn-block';
+                                buttonElement.innerText = 'BLOCK';
+                            }
+                            Swal.fire('Success!', data.message, 'success');
+                        } else {
+                            Swal.fire('Error!', data.message || 'Something went wrong.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        Swal.fire('Error!', 'Failed to connect to the server.', 'error');
+                    }
+                }
+            }
+        </script>
 </body>
+
 </html>

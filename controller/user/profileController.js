@@ -15,6 +15,8 @@ import {
     updateUserProfileImage,
     saveUser
 } from '../../services/userService.js';
+import category from '../../model/Category.js';
+
 
 
 export const getProfile = async (req, res) => {
@@ -291,166 +293,13 @@ export const changePassword = async (req, res) => {
 };
 
 
-// ========================================================
-// EMAIL CHANGE FLOW (TWO-STAGE OTP VERIFICATION)
-// ========================================================
 
-// Step 1: Start Email Change -> Send OTP to existing email ID
 export const startEmailChange = async (req, res) => {
-    try {
-        const userId = req.session.userId;
-        const user = await getUserById(userId);
-
-        if (!user) {
-            return res.redirect('/login');
-        }
-
-        // Generate 6-digit OTP for current email verification
-        const otp = generate();
-        user.otp = otp;
-        user.otpExpiry = addMinutes(5);
-        await saveUser(user);
-
-        // Update session state for current email OTP verification
-        req.session.emailChangeStep = 'verify_current_otp';
-        req.session.currentEmailVerified = false;
-        delete req.session.pendingNewEmail;
-
-        // Send OTP to existing email
-        await sendOTP(user.email, otp, user.name);
-
-        // Redirect to OTP verification page for existing email
-        res.redirect('/profile/change-email/verify-current-otp');
-    } catch (error) {
-        console.error('Start email change error:', error);
-        res.redirect('/profile/edit');
-    }
+    res.redirect('/profile/change-email/form');
 };
 
-// Step 1 Page: Render OTP verification page for existing email
-export const getVerifyCurrentEmailOTP = async (req, res) => {
-    try {
-        const userId = req.session.userId;
-        const user = await getUserById(userId);
-
-        if (!user) {
-            return res.redirect('/login');
-        }
-
-        // Render OTP verification view configured for current email
-        res.render('user/email-otp-verify', {
-            pageTitle: 'Verify Current Email',
-            emailLabel: 'your existing registered email address',
-            targetEmail: user.email,
-            actionUrl: '/profile/change-email/verify-current-otp',
-            resendUrl: '/profile/change-email/resend-current-otp',
-            buttonText: 'Verify OTP & Continue',
-            error: null,
-            success: null
-        });
-    } catch (error) {
-        console.error('Get verify current email OTP error:', error);
-        res.redirect('/profile/edit');
-    }
-};
-
-// Step 1 Process: Verify OTP for existing email
-export const verifyCurrentEmailOTP = async (req, res) => {
-    try {
-        const { otp1, otp2, otp3, otp4, otp5, otp6 } = req.body;
-        const otp = `${otp1}${otp2}${otp3}${otp4}${otp5}${otp6}`;
-        const userId = req.session.userId;
-
-        const user = await getUserById(userId);
-        if (!user) {
-            return res.redirect('/login');
-        }
-
-        // Validate OTP format
-        const validation = validateOTP(otp);
-        if (!validation.isValid) {
-            return res.render('user/email-otp-verify', {
-                pageTitle: 'Verify Current Email',
-                emailLabel: 'your existing registered email address',
-                targetEmail: user.email,
-                actionUrl: '/profile/change-email/verify-current-otp',
-                resendUrl: '/profile/change-email/resend-current-otp',
-                buttonText: 'Verify OTP & Continue',
-                error: validation.error,
-                success: null
-            });
-        }
-
-        // Verify if OTP matches and is not expired
-        if (!isValid(user, otp)) {
-            return res.render('user/email-otp-verify', {
-                pageTitle: 'Verify Current Email',
-                emailLabel: 'your existing registered email address',
-                targetEmail: user.email,
-                actionUrl: '/profile/change-email/verify-current-otp',
-                resendUrl: '/profile/change-email/resend-current-otp',
-                buttonText: 'Verify OTP & Continue',
-                error: 'Invalid or expired OTP. Please try again.',
-                success: null
-            });
-        }
-
-        // Clear user OTP and update session status
-        clear(user);
-        await saveUser(user);
-
-        req.session.currentEmailVerified = true;
-        req.session.emailChangeStep = 'enter_new_email';
-
-        // Redirect to form for entering new email
-        res.redirect('/profile/change-email/form');
-    } catch (error) {
-        console.error('Verify current email OTP error:', error);
-        const user = await getUserById(req.session.userId);
-        res.render('user/email-otp-verify', {
-            pageTitle: 'Verify Current Email',
-            emailLabel: 'your existing registered email address',
-            targetEmail: user ? user.email : '',
-            actionUrl: '/profile/change-email/verify-current-otp',
-            resendUrl: '/profile/change-email/resend-current-otp',
-            buttonText: 'Verify OTP & Continue',
-            error: 'Something went wrong. Please try again.',
-            success: null
-        });
-    }
-};
-
-// Resend OTP to current email
-export const resendCurrentEmailOTP = async (req, res) => {
-    try {
-        const userId = req.session.userId;
-        const user = await getUserById(userId);
-
-        if (!user) {
-            return sendResponse(res, false, 'User not found');
-        }
-
-        const newOTP = generate();
-        user.otp = newOTP;
-        user.otpExpiry = addMinutes(5);
-        await saveUser(user);
-
-        await sendOTP(user.email, newOTP, user.name);
-        sendResponse(res, true, 'OTP resent successfully to your current email address');
-    } catch (error) {
-        console.error('Resend current email OTP error:', error);
-        sendResponse(res, false, 'Failed to resend OTP');
-    }
-};
-
-// Step 2 Page: Render Change Email Form (Existing, New, Confirm)
 export const getChangeEmailForm = async (req, res) => {
     try {
-        // Guard: check if current email was verified
-        if (!req.session.currentEmailVerified) {
-            return res.redirect('/profile/change-email/start');
-        }
-
         const user = await getUserById(req.session.userId);
         if (!user) {
             return res.redirect('/login');
@@ -466,14 +315,9 @@ export const getChangeEmailForm = async (req, res) => {
     }
 };
 
-// Step 2 Process: Handle Change Email Form submission -> Send OTP to new email
 export const processChangeEmailForm = async (req, res) => {
     try {
-        if (!req.session.currentEmailVerified) {
-            return res.redirect('/profile/change-email/start');
-        }
-
-        const { existingEmail, newEmail, confirmEmail } = req.body;
+        const { newEmail, confirmEmail } = req.body;
         const userId = req.session.userId;
         const user = await getUserById(userId);
 
@@ -484,7 +328,6 @@ export const processChangeEmailForm = async (req, res) => {
         const cleanedNewEmail = (newEmail || '').toLowerCase().trim();
         const cleanedConfirmEmail = (confirmEmail || '').toLowerCase().trim();
 
-        // Validation
         if (!cleanedNewEmail || !cleanedConfirmEmail) {
             return res.render('user/change-email-form', {
                 user,
@@ -514,7 +357,6 @@ export const processChangeEmailForm = async (req, res) => {
             });
         }
 
-        // Check if new email is already registered by another account
         const emailExists = await checkEmailExists(cleanedNewEmail, userId);
         if (emailExists) {
             return res.render('user/change-email-form', {
@@ -523,20 +365,15 @@ export const processChangeEmailForm = async (req, res) => {
             });
         }
 
-        // Generate OTP for new email verification
         const otp = generate();
         user.otp = otp;
         user.otpExpiry = addMinutes(5);
         await saveUser(user);
 
-        // Store pending new email in session
         req.session.pendingNewEmail = cleanedNewEmail;
-        req.session.emailChangeStep = 'verify_new_otp';
 
-        // Send OTP to new email
         await sendOTP(cleanedNewEmail, otp, user.name);
 
-        // Redirect to OTP verification page for new email
         res.redirect('/profile/change-email/verify-new-otp');
     } catch (error) {
         console.error('Process change email form error:', error);
@@ -548,11 +385,10 @@ export const processChangeEmailForm = async (req, res) => {
     }
 };
 
-// Step 3 Page: Render OTP verification page for new email
 export const getVerifyNewEmailOTP = async (req, res) => {
     try {
-        if (!req.session.currentEmailVerified || !req.session.pendingNewEmail) {
-            return res.redirect('/profile/change-email/start');
+        if (!req.session.pendingNewEmail) {
+            return res.redirect('/profile/change-email/form');
         }
 
         res.render('user/email-otp-verify', {
@@ -571,11 +407,10 @@ export const getVerifyNewEmailOTP = async (req, res) => {
     }
 };
 
-// Step 3 Process: Verify OTP sent to new email & update user profile
 export const verifyNewEmailOTP = async (req, res) => {
     try {
-        if (!req.session.currentEmailVerified || !req.session.pendingNewEmail) {
-            return res.redirect('/profile/change-email/start');
+        if (!req.session.pendingNewEmail) {
+            return res.redirect('/profile/change-email/form');
         }
 
         const { otp1, otp2, otp3, otp4, otp5, otp6 } = req.body;
@@ -588,7 +423,6 @@ export const verifyNewEmailOTP = async (req, res) => {
             return res.redirect('/login');
         }
 
-        // Validate OTP format
         const validation = validateOTP(otp);
         if (!validation.isValid) {
             return res.render('user/email-otp-verify', {
@@ -603,7 +437,6 @@ export const verifyNewEmailOTP = async (req, res) => {
             });
         }
 
-        // Verify OTP validity
         if (!isValid(user, otp)) {
             return res.render('user/email-otp-verify', {
                 pageTitle: 'Verify New Email',
@@ -617,18 +450,15 @@ export const verifyNewEmailOTP = async (req, res) => {
             });
         }
 
-        // Update user email in database
         user.email = newEmail;
         clear(user);
         await saveUser(user);
 
-        // Update session user email
-        req.session.user.email = newEmail;
+        if (req.session.user) {
+            req.session.user.email = newEmail;
+        }
 
-        // Cleanup temporary session data
         delete req.session.pendingNewEmail;
-        delete req.session.currentEmailVerified;
-        delete req.session.emailChangeStep;
 
         req.session.emailUpdateSuccess = 'Email address updated successfully!';
         res.redirect('/profile');
@@ -648,7 +478,6 @@ export const verifyNewEmailOTP = async (req, res) => {
     }
 };
 
-// Resend OTP to new email
 export const resendNewEmailOTP = async (req, res) => {
     try {
         const userId = req.session.userId;
@@ -695,7 +524,6 @@ export const getWalletPage = async (req, res) => {
             return res.redirect('/login');
         }
 
-        // Generate a referral code on the fly if not exists
         if (!user.referralCode) {
             const cleanName = user.name.toUpperCase().replace(/[^A-Z0-9]/g, '');
             const randomCode = Math.random().toString(36).substring(2, 6).toUpperCase();

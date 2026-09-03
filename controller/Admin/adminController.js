@@ -51,7 +51,7 @@ export const getDashboard = async (req, res) => {
     try {
         const totalUsers = await User.countDocuments({ isAdmin: false });
         const totalOrders = await Order.countDocuments();
-        
+
         const totalSalesResult = await Order.aggregate([
             { $match: { orderStatus: { $nin: ['Cancelled', 'Returned'] } } },
             { $group: { _id: null, total: { $sum: "$totalAmount" } } }
@@ -113,13 +113,12 @@ export const getDashboardData = async (req, res) => {
             { $sort: { _id: 1 } }
         ]);
 
-        // 2. Top 10 Best Selling Products
         const topProducts = await Order.aggregate([
-            { 
-                $match: { 
+            {
+                $match: {
                     createdAt: { $gte: startDate },
-                    orderStatus: { $nin: ['Cancelled', 'Returned'] } 
-                } 
+                    orderStatus: { $nin: ['Cancelled', 'Returned'] }
+                }
             },
             { $unwind: "$items" },
             {
@@ -143,13 +142,12 @@ export const getDashboardData = async (req, res) => {
         ]);
 
 
-        // 3. Top 10 Best Selling Categories
         const topCategories = await Order.aggregate([
-            { 
-                $match: { 
+            {
+                $match: {
                     createdAt: { $gte: startDate },
-                    orderStatus: { $nin: ['Cancelled', 'Returned'] } 
-                } 
+                    orderStatus: { $nin: ['Cancelled', 'Returned'] }
+                }
             },
             { $unwind: "$items" },
             {
@@ -180,13 +178,12 @@ export const getDashboardData = async (req, res) => {
             { $unwind: "$categoryDetails" }
         ]);
 
-        // 4. Top 10 Best Selling Brands
         const topBrands = await Order.aggregate([
-            { 
-                $match: { 
+            {
+                $match: {
                     createdAt: { $gte: startDate },
-                    orderStatus: { $nin: ['Cancelled', 'Returned'] } 
-                } 
+                    orderStatus: { $nin: ['Cancelled', 'Returned'] }
+                }
             },
             { $unwind: "$items" },
             {

@@ -49,7 +49,6 @@ const variantSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Validation: salePrice should be less than or equal to regularPrice
 variantSchema.pre('save', async function() {
     if (this.salePrice > this.regularPrice) {
         throw new Error('Sale price cannot be greater than regular price');

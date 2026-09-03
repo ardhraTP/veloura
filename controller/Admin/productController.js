@@ -49,7 +49,7 @@ export const getAdminProductsPage = async (req, res) => {
 
         const products = await Product.find(searchFilter)
             .populate('categoryId', 'name')
-            .sort({ updatedAt: -1 })
+            .sort({updatedAt: -1 })
             .skip(skip)
             .limit(limit);
 

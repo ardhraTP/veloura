@@ -620,6 +620,7 @@
                             <thead>
                                 <tr>
                                     <th>Date</th>
+                                    <th>Order ID</th>
                                     <th>Details / Method</th>
                                     <th>Amount</th>
                                     <th>Transaction</th>
@@ -635,6 +636,15 @@
                                         <tr data-type="<%= tx.type %>" data-date="<%= new Date(tx.date).getTime() %>">
                                             <td><%= new Date(tx.date).toLocaleDateString('en-IN') %></td>
                                             <%
+                                                // Extract or format Order ID if available
+                                                let orderIdText = tx.orderId || '-';
+                                                if ((!orderIdText || orderIdText === '-') && tx.description) {
+                                                    const match = tx.description.match(/order\s+([a-zA-Z0-9_-]+)/i) || tx.description.match(/(ORD[-_a-zA-Z0-9]+)/i);
+                                                    if (match && match[1]) {
+                                                        orderIdText = match[1];
+                                                    }
+                                                }
+
                                                 let displayDescription = tx.description || 'Wallet Transaction';
                                                 const descLower = displayDescription.toLowerCase();
                                                 if (descLower.includes('referral') || descLower.includes('welcome bonus')) {
@@ -649,6 +659,15 @@
                                                     displayDescription = 'Order Payment';
                                                 }
                                             %>
+                                            <td style="font-weight: 600; font-size: 13px;">
+                                                <% if (orderIdText && orderIdText !== '-') { %>
+                                                    <a href="/profile/orders/<%= orderIdText %>" style="color: var(--primary-red); text-decoration: underline; font-weight: 600;">
+                                                        <%= orderIdText %>
+                                                    </a>
+                                                <% } else { %>
+                                                    <span style="color: #999999;">-</span>
+                                                <% } %>
+                                            </td>
                                             <td style="font-weight: 600; font-size: 13px; color: var(--text-dark);"><%= displayDescription %></td>
                                             <td class="<%= tx.type === 'Credited' ? 'amount-cred' : 'amount-deb' %>">
                                                 <%= tx.type === 'Credited' ? '+' : '-' %>₹<%= tx.amount.toFixed(2) %>
@@ -662,7 +681,7 @@
                                     <% }) %>
                                 <% } else { %>
                                     <tr id="noTxnRow">
-                                        <td colspan="4" style="text-align: center; color: var(--text-light); padding: 30px;">
+                                        <td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">
                                             No transactions recorded yet.
                                         </td>
                                     </tr>
@@ -925,7 +944,7 @@
                 if (!noTxnRow) {
                     noTxnRow = document.createElement('tr');
                     noTxnRow.id = 'noTxnRow';
-                    noTxnRow.innerHTML = `<td colspan="4" style="text-align: center; color: var(--text-light); padding: 30px;">No transactions match the selected filter.</td>`;
+                    noTxnRow.innerHTML = `<td colspan="5" style="text-align: center; color: var(--text-light); padding: 30px;">No transactions match the selected filter.</td>`;
                     tableBody.appendChild(noTxnRow);
                 } else {
                     noTxnRow.style.display = '';

@@ -22,6 +22,7 @@ export const getUserOrders = async (req, res) => {
             .populate('items.variant')
             .sort({ createdAt: -1 });
 
+
         if (searchQuery) {
             const lowerSearch = searchQuery.toLowerCase();
             orders = orders.filter(order => {
@@ -52,6 +53,8 @@ export const getUserOrders = async (req, res) => {
         const totalPages = Math.ceil(totalOrders / limit);
         const startIndex = (page - 1) * limit;
         const paginatedOrders = orders.slice(startIndex, startIndex + limit);
+
+
 
         res.render('user/my-orders', {
             orders: paginatedOrders,
@@ -94,9 +97,14 @@ export const getOrderDetails = async (req, res) => {
         }
 
         const user = await User.findById(userId);
+
+        // Fetch all reviews submitted by this user
+        const userReviews = await Review.find({ user: userId });
+
         res.render('user/order-details', {
             order: order,
             user: user || { name: req.session.user?.name || 'User' },
+            userReviews: userReviews || [],
             activeTab: 'orders',
             isLoggedIn: true
         });
@@ -136,11 +144,12 @@ export const cancelOrderProduct = async (req, res) => {
         item.cancellationReason = comment ? `${reason} - ${comment}` : reason;
 
         let refundAmount = 0;
-        const isOnlineOrWallet = order.paymentMethod === 'Online' || 
-                                 order.paymentMethod === 'Wallet' || 
-                                 order.paymentMethod === 'Online Payment';
+        const isOnlineOrWallet = order.paymentMethod === 'Online' ||
+            order.paymentMethod === 'Wallet' ||
+            order.paymentMethod === 'Online Payment';
 
-        if (isOnlineOrWallet) {
+        // Only process refund if the payment was actually completed
+        if (isOnlineOrWallet && order.paymentStatus === 'Completed') {
             const itemSubtotal = item.price * item.quantity;
             const totalDiscount = order.discount || 0;
             const totalTax = order.tax || 0;
@@ -165,6 +174,7 @@ export const cancelOrderProduct = async (req, res) => {
                     amount: refundAmount,
                     type: 'Credited',
                     description: `Refund for cancelled item in Order ${order.orderId}`,
+                    orderId: order.orderId,
                     date: new Date()
                 });
                 await user.save();
@@ -241,7 +251,7 @@ export const downloadInvoice = async (req, res) => {
     try {
         const orderId = req.params.id;
         const userId = req.session.userId;
-      
+
         const order = await Order.findOne({ _id: orderId, user: userId })
             .populate('items.product')
             .populate('items.variant');
@@ -249,7 +259,7 @@ export const downloadInvoice = async (req, res) => {
             return res.status(404).send('Order not found');
         }
 
-       
+
         let invoiceSubtotal = 0;
         order.items.forEach(item => {
             if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
@@ -258,14 +268,14 @@ export const downloadInvoice = async (req, res) => {
         });
         const invoiceTax = Math.round(invoiceSubtotal * 0.05);
         const invoiceTotalAmount = Math.max(0, invoiceSubtotal + (order.shippingFee || 0) + invoiceTax - (order.discount || 0));
-       
+
         const doc = new PDFDocument({ margin: 50 });
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=invoice-${order.orderId}.pdf`);
         doc.pipe(res);
 
-        doc.fillColor('#5C1E28') 
+        doc.fillColor('#5C1E28')
             .font('Helvetica-Bold')
             .fontSize(26)
             .text('VELOURA', 50, 50);
@@ -274,7 +284,7 @@ export const downloadInvoice = async (req, res) => {
             .fontSize(9)
             .text('PREMIUM BEAUTY RITUALS', 50, 78);
 
-      
+
         doc.fillColor('#2C2C2C')
             .font('Helvetica-Bold')
             .fontSize(20)
@@ -282,7 +292,7 @@ export const downloadInvoice = async (req, res) => {
 
         doc.moveTo(50, 95).lineTo(550, 95).strokeColor('#E6DED4').stroke();
 
-      
+
         doc.fillColor('#5C1E28')
             .font('Helvetica-Bold')
             .fontSize(10)
@@ -297,7 +307,7 @@ export const downloadInvoice = async (req, res) => {
             .text(`${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`, 50, 175)
             .text(`Phone: +91 ${order.deliveryAddress.phone}`, 50, 190);
 
-      
+
         doc.fillColor('#5C1E28')
             .font('Helvetica-Bold')
             .fontSize(10)
@@ -310,7 +320,7 @@ export const downloadInvoice = async (req, res) => {
             .text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 320, 160)
             .text(`Method: ${order.paymentMethod}`, 320, 175)
             .text(`Status: ${order.paymentStatus}`, 320, 190);
-            
+
         doc.moveTo(50, 220).lineTo(550, 220).strokeColor('#E6DED4').stroke();
         // Table Header
         let y = 235;
@@ -387,29 +397,29 @@ export const downloadInvoice = async (req, res) => {
 }
 
 
-export const getPaymentSuccess = async (req,res)=>{
-    try{
+export const getPaymentSuccess = async (req, res) => {
+    try {
         const orderId = req.query.orderId;
         const userId = req.session.userId;
 
-        if(!orderId){
+        if (!orderId) {
             return res.redirect('/profile/orders');
         }
 
-        const order = await Order.findOne({orderId: orderId,user:userId})
-        .populate('items.product')
-        .populate('items.variant');
+        const order = await Order.findOne({ orderId: orderId, user: userId })
+            .populate('items.product')
+            .populate('items.variant');
 
-        if(!order){
+        if (!order) {
             return res.redirect('/profile/orders');
         }
 
-        res.render('user/payment-success',{
-            order:order,
-            isLoggedIn:true
+        res.render('user/payment-success', {
+            order: order,
+            isLoggedIn: true
         });
-    }catch(error){
-        console.error('Error loading payment success page:',error);
+    } catch (error) {
+        console.error('Error loading payment success page:', error);
         res.status(500).render('error/500');
     }
 };
@@ -525,22 +535,49 @@ export const submitProductReview = async (req, res) => {
     try {
         const orderId = req.params.id;
         const userId = req.session.userId;
-        const { rating, title, comment } = req.body;
+        const { productId, rating, title, comment } = req.body;
 
-        const order = await Order.findById(orderId);
+        if (!productId || !comment) {
+            return res.json({ success: false, message: 'Product and review comment are required' });
+        }
+
+        const mongoose = (await import('mongoose')).default;
+        let order = null;
+
+        if (mongoose.Types.ObjectId.isValid(orderId)) {
+            order = await Order.findById(orderId);
+        }
         if (!order) {
+            order = await Order.findOne({ orderId: orderId, user: userId });
+        }
+
+        if (!order || order.user.toString() !== userId.toString()) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        if (order.items.length === 0) {
-            return res.status(400).json({ success: false, message: 'No items in order' });
+        const item = order.items.find(i => i.product.toString() === productId.toString());
+        if (!item) {
+            return res.status(400).json({ success: false, message: 'Product not found in this order' });
         }
 
-        const product = order.items[0].product;
+        // Check if review already exists for this product by this user
+        const existingReview = await Review.findOne({ user: userId, product: productId });
+        if (existingReview) {
+            existingReview.rating = parseInt(rating) || 5;
+            existingReview.title = title || '';
+            existingReview.comment = comment;
+            existingReview.status = 'Pending';
+            await existingReview.save();
+
+            return res.json({
+                success: true,
+                message: 'Your review has been updated and submitted for admin approval!'
+            });
+        }
 
         const newReview = new Review({
             user: userId,
-            product: product,
+            product: productId,
             rating: parseInt(rating) || 5,
             title: title || '',
             comment: comment,
@@ -549,9 +586,12 @@ export const submitProductReview = async (req, res) => {
 
         await newReview.save();
 
-        res.redirect(`/profile/orders/${orderId}?success=review`);
+        res.json({
+            success: true,
+            message: 'Thank you! Your review has been submitted for admin approval.'
+        });
     } catch (error) {
         console.error('Error submitting product review:', error);
-        res.status(500).render('error/500');
+        res.json({ success: false, message: 'Failed to submit review. Please try again.' });
     }
 };

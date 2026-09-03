@@ -106,7 +106,7 @@ router.post('/orders/approve-return',isAdminAuthenticated,approveReturn);
 router.post('/orders/reject-return',isAdminAuthenticated,rejectReturn);
 router.get('/api/order-stats',isAdminAuthenticated,getOrderStats);
 
-// Review Management Routes
+// Review m-anagement Routes
 router.get('/reviews', isAdminAuthenticated, getReviewsPage);
 router.post('/reviews/approve', isAdminAuthenticated, approveReview);
 router.post('/reviews/reject', isAdminAuthenticated, rejectReview);

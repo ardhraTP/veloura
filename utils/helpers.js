@@ -3,7 +3,15 @@ import bcrypt from 'bcryptjs';
 
 export const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-export const isValidPhone = (phone) => /^[0-9]{10}$/.test(phone);
+export const isValidPhone = (phone) => {
+    if (!phone || typeof phone !== 'string') return false;
+    const trimmed = phone.trim();
+    if (!/^[0-9]{10}$/.test(trimmed)) return false;
+    if (/^0+$/.test(trimmed)) return false;
+    if (/^(\d)\1{9}$/.test(trimmed)) return false;
+    if (!/^[6-9]\d{9}$/.test(trimmed)) return false;
+    return true;
+};
 
 export const isValidPassword = (password) => {
     if (!password || password.length < 8) return false;
@@ -22,7 +30,13 @@ export const isValidName = (name) => {
     return /^[a-zA-Z\s]+$/.test(name.trim());
 };
 
-export const isValidPincode = (pincode) => /^[0-9]{6}$/.test(pincode);
+export const isValidPincode = (pincode) => {
+    if (!pincode || typeof pincode !== 'string') return false;
+    const trimmed = pincode.trim();
+    if (trimmed.length !== 6 || !/^[0-9]{6}$/.test(trimmed)) return false;
+    if (/^0{6}$/.test(trimmed) || /^0+$/.test(trimmed) || trimmed.startsWith('0')) return false;
+    return true;
+};
 
 export const isValidCity = (city) => {
     if (!city || city.trim().length < 2) return false;
@@ -37,8 +51,12 @@ export const isValidState = (state) => {
 };
 
 export const isValidAddress = (address) => {
-    if (!address || address.trim().length < 10) return false;
-    if (address.trim().length > 200) return false;
+    if (!address || typeof address !== 'string') return false;
+    const trimmed = address.trim();
+    if (trimmed.length < 10) return false;
+    if (/[0-9]/.test(trimmed)) return false;
+    if (/(.)\1{4,}/.test(trimmed)) return false;
+    if (!/^[a-zA-Z\s,.\-/#()]+$/.test(trimmed)) return false;
     return true;
 };
 

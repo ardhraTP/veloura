@@ -54,6 +54,9 @@ const orderSchema = new mongoose.Schema({
         },
         returnRejectionReason: {
             type: String
+        },
+        cancelledAt:{
+            type:Date 
         }
     }],
     subtotal: {

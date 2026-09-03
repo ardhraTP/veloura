@@ -651,7 +651,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="profile-section">
-                <div class="profile-avatar">
+                <div class="profile-avatar" id="sidebarProfileAvatar">
                     <% if (user.profileImage) { %>
                         <img src="<%= user.profileImage %>" alt="Profile">
                         <% } else { %>
@@ -730,7 +730,7 @@
                                                     onclick="document.getElementById('profileImageInput').click()">
                                                     <i class="fas fa-upload"></i> Upload Photo
                                                 </button>
-                                                <button type="button" class="btn-remove" onclick="removeProfileImage()">
+                                                <button type="button" class="btn-remove" id="removeImageBtn" onclick="removeProfileImage()" <% if (!user || !user.profileImage) { %> style="display: none;" <% } %>>
                                                     <i class="fas fa-trash"></i> Remove
                                                 </button>
                                             </div>
@@ -753,7 +753,7 @@
                                         <div class="email-field">
                                             <input type="email" id="email" name="email" value="<%= user.email %>"
                                                 disabled>
-                                            <a class="change-email-link" href="/profile/change-email/start">Change</a>
+                                            <a class="change-email-link" href="/profile/change-email/form">Change</a>
                                         </div>
                                     </div>
 
@@ -876,20 +876,78 @@
 
 
                 document.getElementById('deleteProfileImage').value = 'false';
+
+                // Update sidebar avatar preview
+                const sidebarAvatar = document.getElementById('sidebarProfileAvatar');
+                if (sidebarAvatar) {
+                    sidebarAvatar.innerHTML = `<img src="${e.target.result}" alt="Profile">`;
+                }
+
+                // Show remove button when an image is selected
+                const removeBtn = document.getElementById('removeImageBtn');
+                if (removeBtn) {
+                    removeBtn.style.display = 'inline-block';
+                }
             };
             reader.readAsDataURL(file);
         }
 
         function removeProfileImage() {
-            const circle = document.getElementById('profileImageCircle');
-            circle.innerHTML = '<i class="far fa-user" style="font-size:48px;color:#a09d98;"></i>';
+            // Show confirmation dialog before removing the profile picture
+            Swal.fire({
+                title: 'Remove Profile Picture?',
+                text: 'Are you sure you want to remove your profile picture?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#5c1e28',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Remove',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Step 1: Reset main profile image circle to default icon
+                    const circle = document.getElementById('profileImageCircle');
+                    if (circle) {
+                        circle.innerHTML = '<i class="far fa-user" style="font-size:48px;color:#a09d98;"></i>';
+                    }
 
-            document.getElementById('profileImageInput').value = '';
-            document.getElementById('deleteProfileImage').value = 'true';
+                    // Step 2: Reset sidebar profile avatar to default icon
+                    const sidebarAvatar = document.getElementById('sidebarProfileAvatar');
+                    if (sidebarAvatar) {
+                        sidebarAvatar.innerHTML = '<i class="fas fa-user"></i>';
+                    }
 
-            const filenameEl = document.getElementById('uploadFilename');
-            filenameEl.textContent = '';
-            filenameEl.classList.remove('visible');
+                    // Step 3: Clear file input and file name display
+                    const fileInput = document.getElementById('profileImageInput');
+                    if (fileInput) {
+                        fileInput.value = '';
+                    }
+
+                    const filenameEl = document.getElementById('uploadFilename');
+                    if (filenameEl) {
+                        filenameEl.textContent = '';
+                        filenameEl.classList.remove('visible');
+                    }
+
+                    // Step 4: Hide the remove button
+                    const removeBtn = document.getElementById('removeImageBtn');
+                    if (removeBtn) {
+                        removeBtn.style.display = 'none';
+                    }
+
+                    // Step 5: Set hidden input value to true to send delete signal to server
+                    const deleteInput = document.getElementById('deleteProfileImage');
+                    if (deleteInput) {
+                        deleteInput.value = 'true';
+                    }
+
+                    // Step 6: Submit form to save image removal permanently in database
+                    const profileForm = document.getElementById('profileForm');
+                    if (profileForm) {
+                        profileForm.submit();
+                    }
+                }
+            });
         }
 
         //  Form Validation 
@@ -985,7 +1043,7 @@
         }
 
         function openEmailModal() {
-            window.location.href = '/profile/change-email/start';
+            window.location.href = '/profile/change-email/form';
         }
 
         function closeEmailModal() {

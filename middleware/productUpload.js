@@ -1,7 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 
-// Configure storage for product images
+// configure storage for product images
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'public/uploads/temp'); 
@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
     }
 });
 
-// File filter to accept only images
+// file filter to accept only images
 const fileFilter = (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     
@@ -23,7 +23,7 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Configure multer for multiple image upload
+// configure multer for multiple image upload
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,

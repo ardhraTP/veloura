@@ -36,9 +36,6 @@ import {
     uploadProfileImage,
     changePassword,
     startEmailChange,
-    getVerifyCurrentEmailOTP,
-    verifyCurrentEmailOTP,
-    resendCurrentEmailOTP,
     getChangeEmailForm,
     processChangeEmailForm,
     getVerifyNewEmailOTP,
@@ -82,6 +79,7 @@ import {
 import User from '../model/User.js';
 import Address from '../model/Address.js';
 import Cart from '../model/Cart.js';
+import { updateCartQuantity } from '../services/cartService.js';
 
 
 
@@ -157,7 +155,6 @@ router.get('/profile/orders', isAuthenticated, getUserOrders);
 
 
 
-//order route
 router.get('/profile/orders/:id', isAuthenticated, getOrderDetails);
 router.post('/profile/orders/:id/cancel', isAuthenticated, cancelOrderProduct);
 router.post('/profile/orders/:id/return', isAuthenticated, returnOrderProduct);
@@ -165,7 +162,6 @@ router.post('/profile/orders/:id/review', isAuthenticated, submitProductReview);
 
 router.get('/profile/orders/:id/invoice', isAuthenticated, downloadInvoice);
 
-//checkout routes
 
 router.get('/checkout',isAuthenticated,getCheckoutPage);
 router.post('/checkout/create-order',isAuthenticated,createOrder);
@@ -176,7 +172,6 @@ router.post('/checkout/verify-payment',isAuthenticated,verifyPayment);
 router.post('/checkout/payment-failure',isAuthenticated,paymentFailed);
 
 
-//payment status pages
 router.get('/payment-success',isAuthenticated,getPaymentSuccess);
 router.get('/payment-failure',isAuthenticated,getPaymentFailed);
 router.get('/payment-failed',isAuthenticated,getPaymentFailed);
@@ -236,32 +231,21 @@ router.post('/profile/upload-image', isAuthenticated, uploadProfileImage);
 router.get('/profile/password', isAuthenticated, getChangePasswordPage);
 router.post('/profile/change-password', isAuthenticated, changePassword);
 
-// Wallet routes
 router.get('/profile/wallet', isAuthenticated, getWalletPage);
 router.post('/profile/wallet/add-money', isAuthenticated, addMoneyToWallet);
 
-// Two-stage Email change routes
 router.get('/profile/change-email/start', isAuthenticated, startEmailChange);
 
-// Step 1: Verify current email OTP
-router.get('/profile/change-email/verify-current-otp', isAuthenticated, getVerifyCurrentEmailOTP);
-router.post('/profile/change-email/verify-current-otp', isAuthenticated, verifyCurrentEmailOTP);
-router.post('/profile/change-email/resend-current-otp', isAuthenticated, resendCurrentEmailOTP);
-
-// Step 2: Form for existing, new, and confirm email
 router.get('/profile/change-email/form', isAuthenticated, getChangeEmailForm);
 router.post('/profile/change-email/form', isAuthenticated, processChangeEmailForm);
 
-// Step 3: Verify new email OTP
 router.get('/profile/change-email/verify-new-otp', isAuthenticated, getVerifyNewEmailOTP);
 router.post('/profile/change-email/verify-new-otp', isAuthenticated, verifyNewEmailOTP);
 router.post('/profile/change-email/resend-new-otp', isAuthenticated, resendNewEmailOTP);
 
-// Legacy route redirects for backward compatibility
 router.get('/profile/verify-email-otp', isAuthenticated, (req, res) => res.redirect('/profile/change-email/start'));
 router.post('/profile/request-email-change', isAuthenticated, startEmailChange);
 
-// Address management routes
 router.get('/profile/addresses', isAuthenticated, getAddresses);
 router.get('/profile/addresses/add', isAuthenticated, getAddAddress);
 router.post('/profile/addresses/add', isAuthenticated, addAddress);

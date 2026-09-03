@@ -1,11 +1,8 @@
 import * as wishlistService from '../../services/wishlistService.js';
 
-//show wishlist page 
-
 export const getWishlistPage = async (req, res) => {
     try {
         const userId = req.session.userId;
-
         const wishlist = await wishlistService.getUserWishlist(userId);
 
         res.render('user/wishlist', {
@@ -17,18 +14,16 @@ export const getWishlistPage = async (req, res) => {
     }
 };
 
-//add to wishlist
 export const addToWishlist = async (req, res) => {
     try {
         const userId = req.session.userId;
-        const productId = req.body.productId;
+        const { productId, variantId } = req.body;
 
-        //add to wishlist
-        const wishlist = await wishlistService.addToWishlist(userId, productId);
+        const wishlist = await wishlistService.addToWishlist(userId, productId, variantId);
 
         res.json({
             success: true,
-            message: 'Added to wishlsit',
+            message: 'Added to wishlist',
             wishlist: wishlist
         });
     } catch (error) {
@@ -40,14 +35,14 @@ export const addToWishlist = async (req, res) => {
     }
 };
 
-
-//remove from  wishlist 
+// Remove from wishlist
 export const removeFromWishlist = async (req, res) => {
     try {
         const userId = req.session.userId;
         const productId = req.params.productId;
+        const variantId = req.query.variantId || req.body.variantId || null;
 
-        const wishlist = await wishlistService.removeFromWishlist(userId, productId);
+        const wishlist = await wishlistService.removeFromWishlist(userId, productId, variantId);
 
         res.json({
             success: true,
@@ -55,22 +50,22 @@ export const removeFromWishlist = async (req, res) => {
             wishlist: wishlist
         });
     } catch (error) {
-        console.log('Error in removeFromWishlsit:', error);
+        console.log('Error in removeFromWishlist:', error);
         res.json({
             success: false,
-            message: error.message,
+            message: error.message
         });
     }
 };
 
-// Get wishlist count for navbar
+// Get wishlist count for navbar badge
 export const getWishlistCount = async (req, res) => {
     try {
         if (!req.session.userId) {
             return res.json({ count: 0 });
         }
         const wishlist = await wishlistService.getUserWishlist(req.session.userId);
-        const count = wishlist && wishlist.products ? wishlist.products.length : 0;
+        const count = wishlist && wishlist.items ? wishlist.items.length : 0;
         res.json({ count });
     } catch (error) {
         console.log('Error in getWishlistCount:', error);

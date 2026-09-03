@@ -87,7 +87,6 @@ export const getEditAddress = async (req, res) => {
     }
 };
 
-
 export const updateAddress = async (req, res) => {
     try {
         const { id } = req.params;

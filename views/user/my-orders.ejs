@@ -381,34 +381,60 @@
                                         <span class="meta-label">ORDER ID</span>
                                         <span class="meta-value" style="color: #5C1E28; font-weight: 600;"><%= order.orderId %></span>
                                     </div>
+                                    <div class="order-meta-info">
+                                        <span class="meta-label">PAYMENT METHOD</span>
+                                        <span class="meta-value">
+                                            <% if (order.paymentMethod === 'COD') { %>
+                                                Cash on Delivery
+                                            <% } else if (order.paymentMethod === 'Online' || order.paymentMethod === 'Online Payment') { %>
+                                                Online Payment
+                                            <% } else if (order.paymentMethod === 'Wallet') { %>
+                                                Wallet Payment
+                                            <% } else { %>
+                                                <%= order.paymentMethod || 'N/A' %>
+                                            <% } %>
+                                        </span>
+                                    </div>
                                     
                                     <!-- Status Indicator -->
                                     <% 
                                         let dotColor = 'yellow';
                                         let statusText = order.orderStatus || 'Pending';
                                         const isPaymentFailed = order.paymentStatus === 'Failed';
+                                        const isCancelled = order.orderStatus === 'Cancelled';
 
-                                        if (isPaymentFailed) {
+                                        if (isCancelled) {
+                                            dotColor = 'red';
+                                            statusText = 'CANCELLED';
+                                        } else if (order.orderStatus === 'Returned') {
+                                            dotColor = 'red';
+                                            statusText = 'RETURNED';
+                                        } else if (isPaymentFailed) {
                                             dotColor = 'red';
                                             statusText = 'PAYMENT FAILED';
                                         } else if (order.orderStatus === 'Delivered') {
                                             dotColor = 'green';
-                                        } else if (order.orderStatus === 'Cancelled' || order.orderStatus === 'Returned') {
-                                            dotColor = 'red';
                                         }
                                     %>
-                                    <div class="order-status-right" style="display: flex; align-items: center; gap: 12px;">
-                                        <div class="status-header">
-                                            <span class="status-dot <%= dotColor %>"></span>
-                                            <span><%= statusText %></span>
+                                    <div class="order-status-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div class="status-header">
+                                                <span class="status-dot <%= dotColor %>"></span>
+                                                <span><%= statusText %></span>
+                                            </div>
+                                            <% if (isPaymentFailed && !isCancelled) { %>
+                                                <button type="button" 
+                                                        class="btn-retry-payment"
+                                                        onclick="event.preventDefault(); event.stopPropagation(); retryPayment('<%= order.orderId %>');"
+                                                        style="background-color: #5C1E28; color: #ffffff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.8px; box-shadow: 0 2px 8px rgba(92, 30, 40, 0.2); transition: all 0.2s;">
+                                                    <i class="fas fa-redo"></i> Retry Payment
+                                                </button>
+                                            <% } %>
                                         </div>
-                                        <% if (isPaymentFailed) { %>
-                                            <button type="button" 
-                                                    class="btn-retry-payment"
-                                                    onclick="event.preventDefault(); event.stopPropagation(); retryPayment('<%= order.orderId %>');"
-                                                    style="background-color: #5C1E28; color: #ffffff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.8px; box-shadow: 0 2px 8px rgba(92, 30, 40, 0.2); transition: all 0.2s;">
-                                                <i class="fas fa-redo"></i> Retry Payment
-                                            </button>
+                                        <% if (isCancelled && order.cancellationReason) { %>
+                                            <div style="font-size: 11px; color: #dc2626; font-weight: 500; text-align: right;">
+                                                Reason: <%= order.cancellationReason %>
+                                            </div>
                                         <% } %>
                                     </div>
                                 </div>
@@ -428,7 +454,15 @@
                                                             <% } %>
                                                             <span class="product-meta-badge">Qty: <%= item.quantity %></span>
                                                             <span class="product-meta-badge">Price: ₹<%= item.price.toFixed(2) %></span>
+                                                            <% if (item.itemStatus === 'Cancelled') { %>
+                                                                <span class="product-meta-badge" style="background-color: #FDE8E8; color: #E02424;">Cancelled</span>
+                                                            <% } %>
                                                         </div>
+                                                        <% if (item.itemStatus === 'Cancelled' && item.cancellationReason && !isCancelled) { %>
+                                                            <div style="font-size: 11px; color: #dc2626; margin-top: 2px;">
+                                                                Reason: <%= item.cancellationReason %>
+                                                            </div>
+                                                        <% } %>
                                                     </div>
                                                 </div>
                                             <% }); %>

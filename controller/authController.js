@@ -334,7 +334,6 @@ export const forgotPassword = async (req, res) => {
             });
         }
 
-        // Check if user registered with Google
         if (user.authProvider === 'google') {
             return res.render('user/forgot-password', {
                 error: 'This account uses Google Sign-In. Please login with Google or set a password from your profile page.',
