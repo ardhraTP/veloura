@@ -620,7 +620,7 @@
                             </div>
                         </div>
                         <div class="item-details-right">
-                            $<%= (item.price * item.quantity).toFixed(2) %>
+                            ₹<%= (item.price * item.quantity).toFixed(2) %>
                         </div>
                     </div>
                 <% }) %>
@@ -746,7 +746,7 @@
         async function triggerCancelOrder(orderId) {
             const confirmation = await Swal.fire({
                 title: 'Cancel Order?',
-                text: 'Are you sure you want to cancel this order? This will replenish stock levels.',
+                text: 'Are you sure you want to cancel this order?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#e28a70',

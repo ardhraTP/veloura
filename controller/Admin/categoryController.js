@@ -39,15 +39,52 @@ export const getCategoriesPage = async (req, res) => {
 };
 
 
+const validateCategoryNameBackend = (name) => {
+    const trimmed = (name || '').trim();
+    if (!trimmed) return 'Category name is required.';
+    if (trimmed.length < 2) return 'Category name must be at least 2 characters long.';
+    if (trimmed.length > 50) return 'Category name cannot exceed 50 characters.';
+    if (/^[0-9]+$/.test(trimmed)) return 'Category name cannot contain only numbers.';
+    if (!/[a-zA-Z]/.test(trimmed)) return 'Category name must contain at least one letter.';
+    if (!/^[a-zA-Z0-9\s&\-]+$/.test(trimmed)) return 'Category name can only contain letters, numbers, spaces, and hyphens.';
+    return null;
+};
+
+const validateCategoryOfferBackend = (offer) => {
+    const trimmed = (offer || '').trim();
+    if (!trimmed) return null;
+    if (/[a-zA-Z]/.test(trimmed)) return 'Offer percentage cannot contain alphabets.';
+    const cleanStr = trimmed.replace('%', '').trim();
+    if (isNaN(cleanStr) || cleanStr === '' || !/^\d+(\.\d+)?$/.test(cleanStr)) {
+        return 'Offer percentage must be a valid number.';
+    }
+    const offerVal = Number(cleanStr);
+    if (offerVal < 1 || offerVal > 100) {
+        return 'Offer percentage must be between 1 and 100.';
+    }
+    return null;
+};
+
 //add new category
 export const addCategory = async (req, res) => {
     try {
         const { name, offer, description } = req.body;
 
+        const nameError = validateCategoryNameBackend(name);
+        if (nameError) {
+            return res.redirect('/admin/categories?error=' + encodeURIComponent(nameError));
+        }
+
+        const offerError = validateCategoryOfferBackend(offer);
+        if (offerError) {
+            return res.redirect('/admin/categories?error=' + encodeURIComponent(offerError));
+        }
+
+        const trimmedName = name.trim();
 
         //check if name is provided
         const existingCategory = await Category.findOne({
-            name: { $regex: new RegExp('^' + name.trim() + '$', 'i') },
+            name: { $regex: new RegExp('^' + trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') },
             isDeleted: false
         });
 
@@ -56,11 +93,12 @@ export const addCategory = async (req, res) => {
         }
 
         const offerStr = offer ? offer.trim() : '';
-        const parsedDiscount = parseFloat(offerStr.replace(/[^0-9.]/g, '')) || 0;
+        const cleanStr = offerStr.replace('%', '').trim();
+        const parsedDiscount = parseFloat(cleanStr) || 0;
 
         //create new category
         const newCategory = new Category({
-            name: name.trim(),
+            name: trimmedName,
             offer: offerStr,
             categoryDiscount: Math.min(100, Math.max(0, parsedDiscount)),
             description: description ? description.trim() : '',
@@ -83,14 +121,22 @@ export const editCategory = async (req, res) => {
         const categoryId = req.params.id;
         const { name, offer, description } = req.body;
 
-        if (!name || name.trim() === '') {
-            return res.redirect('/admin/categories?error=Category+name+is+required');
+        const nameError = validateCategoryNameBackend(name);
+        if (nameError) {
+            return res.redirect('/admin/categories?error=' + encodeURIComponent(nameError));
         }
+
+        const offerError = validateCategoryOfferBackend(offer);
+        if (offerError) {
+            return res.redirect('/admin/categories?error=' + encodeURIComponent(offerError));
+        }
+
+        const trimmedName = name.trim();
 
         //check if another category with same name exists
         const existingCategory = await Category.findOne({
             _id: { $ne: categoryId },
-            name: { $regex: new RegExp('^' + name.trim() + '$', 'i') },
+            name: { $regex: new RegExp('^' + trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') },
             isDeleted: false
         });
 
@@ -99,11 +145,12 @@ export const editCategory = async (req, res) => {
         }
 
         const offerStr = offer ? offer.trim() : '';
-        const parsedDiscount = parseFloat(offerStr.replace(/[^0-9.]/g, '')) || 0;
+        const cleanStr = offerStr.replace('%', '').trim();
+        const parsedDiscount = parseFloat(cleanStr) || 0;
         const categoryDiscountVal = Math.min(100, Math.max(0, parsedDiscount));
 
         const updateData = {
-            name: name.trim(),
+            name: trimmedName,
             offer: offerStr,
             categoryDiscount: categoryDiscountVal,
             description: description ? description.trim() : ''

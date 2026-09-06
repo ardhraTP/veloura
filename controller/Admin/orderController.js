@@ -136,10 +136,36 @@ export const updateAdminOrderStatus = async (req, res) => {
 
         if (status === 'Cancelled') {
             const adminReason = cancellationReason || 'Cancelled by administrator';
+            const isPaid = order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded';
+            const canRestoreStock = isPaid || order.paymentMethod === 'COD' || order.paymentMethod === 'Wallet';
+            let refundAmount = 0;
 
             for (const item of order.items) {
-                if (item.itemStatus !== 'Cancelled') {
-                    await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
+                if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
+                    if (canRestoreStock) {
+                        await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
+                    }
+
+                    if (isPaid) {
+                        const itemSubtotal = item.price * item.quantity;
+                        const totalDiscount = order.discount || 0;
+                        const totalTax = order.tax || 0;
+                        const totalShipping = order.shippingFee || 0;
+
+                        let itemDiscountShare = 0;
+                        let itemTaxShare = 0;
+                        let itemShippingShare = 0;
+
+                        if (order.subtotal > 0) {
+                            itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
+                            itemTaxShare = (itemSubtotal / order.subtotal) * totalTax;
+                            itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
+                        }
+
+                        const itemRefund = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
+                        refundAmount += itemRefund;
+                    }
+
                     item.itemStatus = 'Cancelled';
                     item.cancellationReason = adminReason;
                     item.cancelledAt = new Date();
@@ -148,11 +174,10 @@ export const updateAdminOrderStatus = async (req, res) => {
             order.orderStatus = 'Cancelled';
             order.cancellationReason = adminReason;
 
-            // Only refund into wallet if payment was completed/paid successfully
-            if (order.paymentStatus === 'Completed') {
+            // Only refund into wallet if payment was paid and there is a balance to refund
+            if (isPaid && refundAmount > 0) {
                 const user = await User.findById(order.user);
                 if (user) {
-                    const refundAmount = order.totalAmount;
                     user.walletBalance = (user.walletBalance || 0) + refundAmount;
                     user.walletHistory.push({
                         amount: refundAmount,
@@ -166,18 +191,44 @@ export const updateAdminOrderStatus = async (req, res) => {
                 order.paymentStatus = 'Refunded';
             }
         } else if (status === 'Returned') {
+            const isPaid = order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded';
+            const canRestoreStock = isPaid || order.paymentMethod === 'COD' || order.paymentMethod === 'Wallet';
+            let refundAmount = 0;
+
             for (const item of order.items) {
                 if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
-                    await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
+                    if (canRestoreStock) {
+                        await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
+                    }
+
+                    if (isPaid) {
+                        const itemSubtotal = item.price * item.quantity;
+                        const totalDiscount = order.discount || 0;
+                        const totalTax = order.tax || 0;
+                        const totalShipping = order.shippingFee || 0;
+
+                        let itemDiscountShare = 0;
+                        let itemTaxShare = 0;
+                        let itemShippingShare = 0;
+
+                        if (order.subtotal > 0) {
+                            itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
+                            itemTaxShare = (itemSubtotal / order.subtotal) * totalTax;
+                            itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
+                        }
+
+                        const itemRefund = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
+                        refundAmount += itemRefund;
+                    }
+
                     item.itemStatus = 'Returned';
                 }
             }
             order.orderStatus = 'Returned';
 
-            if (order.paymentStatus === 'Completed') {
+            if (isPaid && refundAmount > 0) {
                 const user = await User.findById(order.user);
                 if (user) {
-                    const refundAmount = order.totalAmount;
                     user.walletBalance = (user.walletBalance || 0) + refundAmount;
                     user.walletHistory.push({
                         amount: refundAmount,
@@ -248,10 +299,15 @@ export const updateItemStatus = async (req, res) => {
             item.cancellationReason = adminReason;
             item.cancelledAt = new Date();
 
-            await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
+            const isPaid = order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded';
+            const canRestoreStock = isPaid || order.paymentMethod === 'COD' || order.paymentMethod === 'Wallet';
 
-            // Only refund if payment was actually completed
-            if (order.paymentStatus === 'Completed') {
+            if (canRestoreStock) {
+                await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
+            }
+
+            // Only refund if payment was actually completed or partially refunded
+            if (isPaid) {
                 const itemSubtotal = item.price * item.quantity;
                 const totalDiscount = order.discount || 0;
                 const totalTax = order.tax || 0;

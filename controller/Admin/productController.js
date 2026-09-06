@@ -94,14 +94,57 @@ export const getAddProductPage = async (req, res) => {
     }
 };
 
+const validateProductDetailsBackend = async (data) => {
+    const { productName, brand, description, categoryId, offerVal } = data;
+
+    const trimmedName = (productName || '').trim();
+    const trimmedBrand = (brand || '').trim();
+    const trimmedDesc = (description || '').trim();
+
+    if (!trimmedName) return 'Product name is required.';
+    if (trimmedName.length < 2 || trimmedName.length > 100) return 'Product name must be between 2 and 100 characters.';
+    if (/^[0-9]+$/.test(trimmedName)) return 'Product name cannot contain only numbers.';
+    if (!/[a-zA-Z]/.test(trimmedName)) return 'Product name must contain letters.';
+    if (!/^[a-zA-Z0-9\s&\-.'()]+$/.test(trimmedName)) return 'Product name contains invalid characters.';
+
+    if (!trimmedBrand) return 'Brand is required.';
+    if (trimmedBrand.length < 2 || trimmedBrand.length > 100) return 'Brand must be between 2 and 100 characters.';
+    if (/^[0-9]+$/.test(trimmedBrand)) return 'Brand cannot contain only numbers.';
+    if (!/[a-zA-Z]/.test(trimmedBrand)) return 'Brand must contain letters.';
+    if (!/^[a-zA-Z0-9\s&\-.'()]+$/.test(trimmedBrand)) return 'Brand contains invalid characters.';
+
+    if (!trimmedDesc) return 'Description is required.';
+
+    if (!categoryId) return 'Category is required.';
+    const activeCategory = await Category.findOne({ _id: categoryId, isDeleted: false, isListed: true });
+    if (!activeCategory) return 'Selected category does not exist or is inactive.';
+
+    if (offerVal !== undefined && offerVal !== null && offerVal.toString().trim() !== '') {
+        const num = parseFloat(offerVal);
+        if (isNaN(num) || num < 0) return 'Product offer discount cannot be negative.';
+        if (num > 0 && num < 1) return 'Product offer discount must be at least 1%.';
+        if (num > 100) return 'Product offer discount cannot exceed 100%.';
+    }
+
+    return null;
+};
+
 export const addProduct = async (req, res) => {
     try {
         const { productName, brand, description, categoryId, status } = req.body;
+        const offerInputVal = req.body.productOffer || req.body.offer;
 
+        const valError = await validateProductDetailsBackend({
+            productName,
+            brand,
+            description,
+            categoryId,
+            offerVal: offerInputVal
+        });
 
-        if (!productName || !brand || !description || !categoryId) {
+        if (valError) {
             cleanupUploadedFiles(req.files);
-            return res.redirect('/admin/products/add?error=All required fields must be filled');
+            return res.redirect('/admin/products/add?error=' + encodeURIComponent(valError));
         }
 
         const variantsRaw = req.body.variants || {};
@@ -128,7 +171,8 @@ export const addProduct = async (req, res) => {
             return res.redirect('/admin/products/add?error=Please add at least one variant');
         }
 
-        const offerDiscount = Math.min(100, Math.max(0, parseFloat(req.body.productOffer || req.body.offer) || 0));
+        const parsedOffer = parseFloat(offerInputVal) || 0;
+        const offerDiscount = Math.min(100, Math.max(0, parsedOffer));
 
         const newProduct = new Product({
             productName: productName.trim(),
@@ -146,10 +190,9 @@ export const addProduct = async (req, res) => {
 
         const files = req.files || [];
 
-        // Group files by variant index
         const filesByVariant = {};
         files.forEach(file => {
-            const match = file.fieldname.match(/variants\[(\d+)\]\[images\]/);
+            const match = file.fieldname.match(/variants\[(\d+)\]/);
             if (match) {
                 const index = match[1];
                 if (!filesByVariant[index]) {
@@ -161,7 +204,7 @@ export const addProduct = async (req, res) => {
 
         for (let i = 0; i < variantsData.length; i++) {
             const originalIndex = variantsData[i].index;
-            const variantFiles = filesByVariant[originalIndex] || [];
+            const variantFiles = filesByVariant[originalIndex] || filesByVariant[i] || filesByVariant[String(i)] || [];
 
             if (variantFiles.length < 3) {
                 cleanupUploadedFiles(req.files);
@@ -225,12 +268,22 @@ export const updateProductDetails = async (req, res) => {
     try {
         const productId = req.params.id;
         const { productName, brand, description, categoryId, status } = req.body;
+        const offerInputVal = req.body.productOffer || req.body.offer;
 
-        if (!productName || !brand || !description || !categoryId) {
-            return res.json({ success: false, message: 'All required fields must be filled.' });
+        const valError = await validateProductDetailsBackend({
+            productName,
+            brand,
+            description,
+            categoryId,
+            offerVal: offerInputVal
+        });
+
+        if (valError) {
+            return res.json({ success: false, message: valError });
         }
 
-        const offerDiscount = Math.min(100, Math.max(0, parseFloat(req.body.productOffer || req.body.offer) || 0));
+        const parsedOffer = parseFloat(offerInputVal) || 0;
+        const offerDiscount = Math.min(100, Math.max(0, parsedOffer));
 
         const updatedProduct = await Product.findOneAndUpdate(
             { _id: productId, isDeleted: false },
@@ -265,12 +318,22 @@ export const updateProduct = async (req, res) => {
     try {
         const productId = req.params.id;
         const { productName, brand, description, categoryId, status } = req.body;
+        const offerInputVal = req.body.productOffer || req.body.offer;
 
-        if (!productName || !brand || !description || !categoryId) {
-            return res.redirect(`/admin/products/edit/${productId}?error=All required fields must be filled`);
+        const valError = await validateProductDetailsBackend({
+            productName,
+            brand,
+            description,
+            categoryId,
+            offerVal: offerInputVal
+        });
+
+        if (valError) {
+            return res.redirect(`/admin/products/edit/${productId}?error=` + encodeURIComponent(valError));
         }
 
-        const offerDiscount = Math.min(100, Math.max(0, parseFloat(req.body.productOffer || req.body.offer) || 0));
+        const parsedOffer = parseFloat(offerInputVal) || 0;
+        const offerDiscount = Math.min(100, Math.max(0, parsedOffer));
 
         const updatedProduct = await Product.findOneAndUpdate(
             { _id: productId, isDeleted: false },

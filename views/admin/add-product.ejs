@@ -667,32 +667,51 @@
         }
 
         function handleVariantImages(variantIndex, files) {
-            if (files.length === 0) return;
+            if (!files || files.length === 0) return;
             
-            const file = files[0];
+            const fileList = Array.from(files);
             
             // Clear input value so same file can be selected again
-            document.getElementById(`variantImages-${variantIndex}`).value = '';
+            const inputEl = document.getElementById(`variantImages-${variantIndex}`);
+            if (inputEl) inputEl.value = '';
             
-            cropImageHelper(file, function(croppedFile) {
-                if (!croppedFile) return; // User cancelled
-                
-                // Initialize files array if not exists
-                if (!variantsData[variantIndex].files) {
-                    variantsData[variantIndex].files = [];
-                }
-                
-                // Add the cropped file to the beginning of the array
-                variantsData[variantIndex].files.unshift(croppedFile);
-                
-                // Update the file input with all files
-                const dt = new DataTransfer();
-                variantsData[variantIndex].files.forEach(f => dt.items.add(f));
-                document.getElementById(`variantImages-${variantIndex}`).files = dt.files;
-                
-                // Re-render the preview
-                renderVariantImagesPreview(variantIndex);
-            });
+            let fileQueue = [...fileList];
+
+            function processNextFile() {
+                if (fileQueue.length === 0) return;
+
+                const file = fileQueue.shift();
+                cropImageHelper(file, function(croppedFile) {
+                    const finalFile = croppedFile || file;
+                    
+                    if (finalFile) {
+                        if (!variantsData[variantIndex]) {
+                            variantsData[variantIndex] = { files: [] };
+                        }
+                        if (!variantsData[variantIndex].files) {
+                            variantsData[variantIndex].files = [];
+                        }
+                        
+                        variantsData[variantIndex].files.push(finalFile);
+                        
+                        const dt = new DataTransfer();
+                        variantsData[variantIndex].files.forEach(f => dt.items.add(f));
+                        
+                        const fileInput = document.getElementById(`variantImages-${variantIndex}`);
+                        if (fileInput) {
+                            fileInput.files = dt.files;
+                        }
+                        
+                        renderVariantImagesPreview(variantIndex);
+                    }
+                    
+                    if (fileQueue.length > 0) {
+                        processNextFile();
+                    }
+                });
+            }
+
+            processNextFile();
         }
 
         function renderVariantImagesPreview(variantIndex) {
@@ -784,21 +803,87 @@
         }
         // ─────────────────────────────────────────────────────────────
 
-        // Helpers: show/clear inline field errors
-        function showErr(id, errId, show) {
-            const el = document.getElementById(id);
-            const err = document.getElementById(errId);
-            if (!el || !err) return;
-            el.classList.toggle('input-error', show);
-            err.classList.toggle('visible', show);
+        // ── Validation Helpers ───────────────────────────────────────
+        function validateTextWithLetters(value, fieldName) {
+            const trimmed = (value || '').trim();
+            if (!trimmed) {
+                return `${fieldName} is required.`;
+            }
+            if (trimmed.length < 2) {
+                return `${fieldName} must be at least 2 characters long.`;
+            }
+            if (trimmed.length > 100) {
+                return `${fieldName} cannot exceed 100 characters.`;
+            }
+            if (/^[0-9]+$/.test(trimmed)) {
+                return `${fieldName} cannot contain only numbers.`;
+            }
+            if (!/[a-zA-Z]/.test(trimmed)) {
+                return `${fieldName} must contain letters.`;
+            }
+            if (!/^[a-zA-Z0-9\s&\-.'()]+$/.test(trimmed)) {
+                return `${fieldName} contains invalid characters.`;
+            }
+            return null;
         }
 
-        // Clear errors on input
-        ['productName','categoryId','brand','description'].forEach(function(id) {
-            const el = document.getElementById(id);
-            if (el) el.addEventListener('change', function() { showErr(id, id + 'Error', false); });
-            if (el) el.addEventListener('input', function() { showErr(id, id + 'Error', false); });
+        function validateOfferInput(value) {
+            if (value === undefined || value === null || value.toString().trim() === '') {
+                return null;
+            }
+            const num = parseFloat(value);
+            if (isNaN(num) || num < 0) {
+                return 'Product offer discount cannot be negative.';
+            }
+            if (num > 0 && num < 1) {
+                return 'Product offer discount must be at least 1%.';
+            }
+            if (num > 100) {
+                return 'Product offer discount cannot exceed 100%.';
+            }
+            return null;
+        }
+
+        // ── Real-time inline field validation ────────────────────────
+        function setupRealtimeFieldValidation(inputId, errId, validatorFn) {
+            const el = document.getElementById(inputId);
+            const errEl = document.getElementById(errId);
+            if (!el || !errEl) return;
+
+            const handler = function() {
+                const errMsg = validatorFn(el.value);
+                errEl.textContent = errMsg || '';
+                showErr(inputId, errId, !!errMsg);
+            };
+
+            el.addEventListener('input', handler);
+            el.addEventListener('change', handler);
+        }
+
+        setupRealtimeFieldValidation('productName', 'productNameError', function(val) {
+            return validateTextWithLetters(val, 'Product name');
         });
+
+        setupRealtimeFieldValidation('brand', 'brandError', function(val) {
+            return validateTextWithLetters(val, 'Brand');
+        });
+
+        setupRealtimeFieldValidation('description', 'descriptionError', function(val) {
+            return !val || !val.trim() ? 'Description is required.' : null;
+        });
+
+        setupRealtimeFieldValidation('productOffer', 'productOfferError', function(val) {
+            return validateOfferInput(val);
+        });
+
+        const catEl = document.getElementById('categoryId');
+        if (catEl) {
+            catEl.addEventListener('change', function() {
+                const errMsg = !this.value ? 'Please select a valid category.' : null;
+                document.getElementById('categoryIdError').textContent = errMsg || '';
+                showErr('categoryId', 'categoryIdError', !!errMsg);
+            });
+        }
 
         // Form validation before submit
         document.getElementById('productForm').addEventListener('submit', async function(e) {
@@ -811,6 +896,7 @@
             const productNameInput = document.getElementById('productName');
             const brandInput       = document.getElementById('brand');
             const descriptionInput = document.getElementById('description');
+            const offerInput       = document.getElementById('productOffer');
 
             productNameInput.value = productNameInput.value.trim();
             brandInput.value       = brandInput.value.trim();
@@ -820,18 +906,41 @@
             const categoryId  = document.getElementById('categoryId').value;
             const brand       = brandInput.value;
             const description = descriptionInput.value;
+            const offerVal    = offerInput ? offerInput.value : '';
 
-            // Set specific error messages
-            document.getElementById('productNameError').textContent = productName === '' ? 'Product name is required.' : '';
-            document.getElementById('brandError').textContent       = brand === '' ? 'Brand is required.' : '';
-            document.getElementById('descriptionError').textContent = description === '' ? 'Description is required.' : '';
+            // Run detailed validations
+            const nameErr  = validateTextWithLetters(productName, 'Product name');
+            const brandErr = validateTextWithLetters(brand, 'Brand');
+            const descErr  = !description ? 'Description is required.' : null;
+            const catErr   = !categoryId ? 'Please select a valid category.' : null;
+            const offerErr = validateOfferInput(offerVal);
 
-            showErr('productName', 'productNameError', !productName);
-            showErr('categoryId',  'categoryIdError',  !categoryId);
-            showErr('brand',       'brandError',       !brand);
-            showErr('description', 'descriptionError', !description);
+            // Set specific inline error messages
+            document.getElementById('productNameError').textContent = nameErr || '';
+            document.getElementById('brandError').textContent       = brandErr || '';
+            document.getElementById('descriptionError').textContent = descErr || '';
+            document.getElementById('categoryIdError').textContent  = catErr || '';
+            if (document.getElementById('productOfferError')) {
+                document.getElementById('productOfferError').textContent = offerErr || '';
+            }
 
-            if (!productName || !categoryId || !brand || !description) hasError = true;
+            showErr('productName', 'productNameError', !!nameErr);
+            showErr('categoryId',  'categoryIdError',  !!catErr);
+            showErr('brand',       'brandError',       !!brandErr);
+            showErr('description', 'descriptionError', !!descErr);
+            if (document.getElementById('productOfferError')) {
+                showErr('productOffer', 'productOfferError', !!offerErr);
+            }
+
+            if (nameErr || catErr || brandErr || descErr || offerErr) {
+                // Focus on the first invalid field
+                if (nameErr) productNameInput.focus();
+                else if (brandErr) brandInput.focus();
+                else if (catErr) document.getElementById('categoryId').focus();
+                else if (descErr) descriptionInput.focus();
+                else if (offerErr && offerInput) offerInput.focus();
+                return;
+            }
 
             // ── Variant-level fields ─────────────────────────────────
             const variantCards = document.querySelectorAll('.variant-card');
@@ -901,10 +1010,21 @@
                 vErr(hexInput, 'Invalid hex code (e.g. #FF5733).', !isValidHex(hexCode));
                 if (!isValidHex(hexCode)) { hasError = true; continue; }
 
-                const files = (variantsData[idx] && variantsData[idx].files) ? variantsData[idx].files : [];
+                const fileInput = card.querySelector(`input[name="variants[${idx}][images]"]`);
+                let files = (variantsData[idx] && variantsData[idx].files && variantsData[idx].files.length > 0) 
+                    ? variantsData[idx].files 
+                    : (fileInput && fileInput.files ? Array.from(fileInput.files) : []);
+
                 if (files.length < 3) {
                     Swal.fire({ icon: 'warning', title: 'Insufficient Images', text: `Variant ${idx + 1} needs at least 3 images.`, confirmButtonColor: '#5c1e28' });
                     return;
+                }
+
+                // Sync files to file input element via DataTransfer
+                if (fileInput && files.length > 0) {
+                    const dt = new DataTransfer();
+                    files.forEach(f => dt.items.add(f));
+                    fileInput.files = dt.files;
                 }
             }
 
@@ -923,7 +1043,11 @@
             });
 
             if (result.isConfirmed) {
-                form.submit();
+                try {
+                    form.submit();
+                } catch (err) {
+                    HTMLFormElement.prototype.submit.call(form);
+                }
             }
         });
 

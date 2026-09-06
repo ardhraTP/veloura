@@ -790,11 +790,94 @@
                 err.classList.toggle('visible', show);
             }
 
+        // ── Validation Helpers ───────────────────────────────────────
+        function validateTextWithLetters(value, fieldName) {
+            const trimmed = (value || '').trim();
+            if (!trimmed) {
+                return `${fieldName} is required.`;
+            }
+            if (trimmed.length < 2) {
+                return `${fieldName} must be at least 2 characters long.`;
+            }
+            if (trimmed.length > 100) {
+                return `${fieldName} cannot exceed 100 characters.`;
+            }
+            if (/^[0-9]+$/.test(trimmed)) {
+                return `${fieldName} cannot contain only numbers.`;
+            }
+            if (!/[a-zA-Z]/.test(trimmed)) {
+                return `${fieldName} must contain letters.`;
+            }
+            if (!/^[a-zA-Z0-9\s&\-.'()]+$/.test(trimmed)) {
+                return `${fieldName} contains invalid characters.`;
+            }
+            return null;
+        }
+
+        function validateOfferInput(value) {
+            if (value === undefined || value === null || value.toString().trim() === '') {
+                return null;
+            }
+            const num = parseFloat(value);
+            if (isNaN(num) || num < 0) {
+                return 'Product offer discount cannot be negative.';
+            }
+            if (num > 0 && num < 1) {
+                return 'Product offer discount must be at least 1%.';
+            }
+            if (num > 100) {
+                return 'Product offer discount cannot exceed 100%.';
+            }
+            return null;
+        }
+
+        // ── Real-time inline field validation ────────────────────────
+        function setupRealtimeFieldValidation(inputId, errId, validatorFn) {
+            const el = document.getElementById(inputId);
+            const errEl = document.getElementById(errId);
+            if (!el || !errEl) return;
+
+            const handler = function() {
+                const errMsg = validatorFn(el.value);
+                errEl.textContent = errMsg || '';
+                showErr(inputId, errId, !!errMsg);
+            };
+
+            el.addEventListener('input', handler);
+            el.addEventListener('change', handler);
+        }
+
+        setupRealtimeFieldValidation('editProductName', 'editProductNameError', function(val) {
+            return validateTextWithLetters(val, 'Product name');
+        });
+
+        setupRealtimeFieldValidation('editBrand', 'editBrandError', function(val) {
+            return validateTextWithLetters(val, 'Brand');
+        });
+
+        setupRealtimeFieldValidation('editDescription', 'editDescriptionError', function(val) {
+            return !val || !val.trim() ? 'Description is required.' : null;
+        });
+
+        setupRealtimeFieldValidation('editProductOffer', 'editProductOfferError', function(val) {
+            return validateOfferInput(val);
+        });
+
+        const editCatEl = document.getElementById('editCategoryId');
+        if (editCatEl) {
+            editCatEl.addEventListener('change', function() {
+                const errMsg = !this.value ? 'Please select a valid category.' : null;
+                document.getElementById('editCategoryIdError').textContent = errMsg || '';
+                showErr('editCategoryId', 'editCategoryIdError', !!errMsg);
+            });
+        }
+
             // ── Product-level fields ─────────────────────────────────
             // Trim and write back to inputs before validation
             const productNameInput = document.getElementById('editProductName');
             const brandInput       = document.getElementById('editBrand');
             const descriptionInput = document.getElementById('editDescription');
+            const offerInput       = document.getElementById('editProductOffer');
 
             productNameInput.value = productNameInput.value.trim();
             brandInput.value       = brandInput.value.trim();
@@ -804,13 +887,41 @@
             const categoryId  = document.getElementById('editCategoryId').value;
             const brand       = brandInput.value;
             const description = descriptionInput.value;
+            const offerVal    = offerInput ? offerInput.value : '';
 
-            showErr('editProductName', 'editProductNameError', !productName);
-            showErr('editCategoryId',  'editCategoryIdError',  !categoryId);
-            showErr('editBrand',       'editBrandError',       !brand);
-            showErr('editDescription', 'editDescriptionError', !description);
+            // Run detailed validations
+            const nameErr  = validateTextWithLetters(productName, 'Product name');
+            const brandErr = validateTextWithLetters(brand, 'Brand');
+            const descErr  = !description ? 'Description is required.' : null;
+            const catErr   = !categoryId ? 'Please select a valid category.' : null;
+            const offerErr = validateOfferInput(offerVal);
 
-            if (!productName || !categoryId || !brand || !description) hasError = true;
+            // Set specific error messages
+            document.getElementById('editProductNameError').textContent = nameErr || '';
+            document.getElementById('editBrandError').textContent       = brandErr || '';
+            document.getElementById('editDescriptionError').textContent = descErr || '';
+            document.getElementById('editCategoryIdError').textContent  = catErr || '';
+            if (document.getElementById('editProductOfferError')) {
+                document.getElementById('editProductOfferError').textContent = offerErr || '';
+            }
+
+            showErr('editProductName', 'editProductNameError', !!nameErr);
+            showErr('editCategoryId',  'editCategoryIdError',  !!catErr);
+            showErr('editBrand',       'editBrandError',       !!brandErr);
+            showErr('editDescription', 'editDescriptionError', !!descErr);
+            if (document.getElementById('editProductOfferError')) {
+                showErr('editProductOffer', 'editProductOfferError', !!offerErr);
+            }
+
+            if (nameErr || catErr || brandErr || descErr || offerErr) {
+                // Focus on the first invalid field
+                if (nameErr) productNameInput.focus();
+                else if (brandErr) brandInput.focus();
+                else if (catErr) document.getElementById('editCategoryId').focus();
+                else if (descErr) descriptionInput.focus();
+                else if (offerErr && offerInput) offerInput.focus();
+                return;
+            }
 
             // ── Existing variant fields ───────────────────────────────
             const variantCards = form.querySelectorAll('.variant-card[data-variant-id]');

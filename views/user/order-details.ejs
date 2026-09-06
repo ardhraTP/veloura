@@ -816,10 +816,29 @@
                                 <% if (reasonToShow) { %>
                                     <div style="font-size: 11px; color: #E02424; margin-top: 5px; font-weight: 500; text-align: right; max-width: 180px;">Reason: <%= reasonToShow %></div>
                                 <% } %>
-                            <% } else if (item.itemStatus === 'Returned') { %>
+                            <% } else if (item.itemStatus === 'Returned' || order.orderStatus === 'Returned') { %>
                                 <div class="status-badge returned">
                                     <i class="fas fa-undo-alt"></i> Returned
                                 </div>
+                                <% 
+                                   const prodIdStr = item.product ? (item.product._id ? item.product._id.toString() : item.product.toString()) : '';
+                                   const prodNameEscaped = (item.product && item.product.productName) ? item.product.productName.replace(/'/g, "\\'").replace(/"/g, '&quot;') : 'Product';
+                                   const existingProdReview = (typeof userReviews !== 'undefined' && userReviews && Array.isArray(userReviews)) 
+                                       ? userReviews.find(r => r.product && r.product.toString() === prodIdStr) 
+                                       : null;
+                                %>
+                                <% if (existingProdReview) { %>
+                                    <div style="font-size: 11px; color: #10B981; font-weight: 600; margin-top: 4px; text-align: right;">
+                                        <i class="fas fa-check-circle"></i> <%= existingProdReview.status === 'Approved' ? 'Reviewed' : 'Review Pending' %>
+                                    </div>
+                                <% } else { %>
+                                    <button type="button" 
+                                            class="btn-order-action" 
+                                            style="background-color: #5C1E28; border-color: #5C1E28; margin-top: 6px;"
+                                            onclick="openReviewModal('<%= order._id %>', '<%= prodIdStr %>', '<%= prodNameEscaped %>')">
+                                        <i class="fas fa-star" style="margin-right: 4px;"></i> Write Review
+                                    </button>
+                                <% } %>
                             <% } else if (item.itemStatus === 'Return Requested') { %>
                                 <div class="status-badge pending">
                                     <i class="fas fa-history"></i> Return Requested

@@ -85,11 +85,16 @@ export const cancelOrder = async (orderId,userId,reason)=>{
             item.cancellationReason = reason;
         });
 
-        for(const item of order.items){
-            await Variant.findByIdAndUpdate(
-                item.variant,
-                {$inc:{quantity: item.quantity}}
-            );
+        const isPaid = order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded' || order.paymentStatus === 'Refunded';
+        const canRestoreStock = isPaid || order.paymentMethod === 'COD' || order.paymentMethod === 'Wallet';
+
+        if (canRestoreStock) {
+            for (const item of order.items) {
+                await Variant.findByIdAndUpdate(
+                    item.variant,
+                    { $inc: { quantity: item.quantity } }
+                );
+            }
         }
 
         // Refund to wallet if order was paid using Online or Wallet payment method and payment was completed

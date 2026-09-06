@@ -98,7 +98,6 @@ export const getOrderDetails = async (req, res) => {
 
         const user = await User.findById(userId);
 
-        // Fetch all reviews submitted by this user
         const userReviews = await Review.find({ user: userId });
 
         res.render('user/order-details', {
@@ -148,8 +147,8 @@ export const cancelOrderProduct = async (req, res) => {
             order.paymentMethod === 'Wallet' ||
             order.paymentMethod === 'Online Payment';
 
-        // Only process refund if the payment was actually completed
-        if (isOnlineOrWallet && order.paymentStatus === 'Completed') {
+       
+        if (isOnlineOrWallet && (order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded')) {
             const itemSubtotal = item.price * item.quantity;
             const totalDiscount = order.discount || 0;
             const totalTax = order.tax || 0;
@@ -196,11 +195,14 @@ export const cancelOrderProduct = async (req, res) => {
             order.cancellationReason = 'All items cancelled';
         }
 
-        await order.save();
+        const isPaid = order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded' || order.paymentStatus === 'Refunded';
+        const canRestoreStock = isPaid || order.paymentMethod === 'COD' || order.paymentMethod === 'Wallet';
 
-        await Variant.findByIdAndUpdate(item.variant, {
-            $inc: { quantity: item.quantity }
-        });
+        if (canRestoreStock) {
+            await Variant.findByIdAndUpdate(item.variant, {
+                $inc: { quantity: item.quantity }
+            });
+        }
 
         res.json({ success: true, message: 'Item cancelled successfully and stock/wallet updated!' });
     } catch (error) {
