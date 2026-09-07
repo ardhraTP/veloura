@@ -199,8 +199,9 @@ export const getAllOrdersAdmin = async (filters = {})=>{
         }
 
         if(filters.search){
+            const safeSearch = filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             query.$or =[
-                {orderId:{$regex: filters.search,$options: 'i'}}
+                {orderId:{$regex: safeSearch,$options: 'i'}}
             ];
         }
 

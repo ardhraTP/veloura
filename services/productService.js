@@ -17,14 +17,19 @@ export const getProducts = async (options) => {
             isDeleted: false
         };
 
+        // Function to escape special regex characters in search input
+        const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
         if (search) {
-            matchFilter.productName = { $regex: search, $options: 'i' };
+            const safeSearch = escapeRegex(search);
+            matchFilter.productName = { $regex: safeSearch, $options: 'i' };
         }
         if (category) {
             matchFilter.categoryId = new mongoose.Types.ObjectId(category);
         }
         if (brand) {
-            matchFilter.brand = { $regex: brand, $options: 'i' };
+            const safeBrand = escapeRegex(brand);
+            matchFilter.brand = { $regex: safeBrand, $options: 'i' };
         }
 
         const skip = (page - 1) * limit;

@@ -13,7 +13,9 @@ export const getCategoriesPage = async (req, res) => {
         };
 
         if (search) {
-            searchFilter.name = { $regex: search, $options: 'i' };
+            // Escape regex special characters so searching for '*' or other regex symbols doesn't cause a 500 error
+            const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            searchFilter.name = { $regex: safeSearch, $options: 'i' };
         }
 
         const totalCategories = await Category.countDocuments(searchFilter);

@@ -13,10 +13,12 @@ export const getCouponsPage = async (req, res) => {
         const filter = {};
 
         if (search) {
+            // Escape regex special characters so searching for '*' or other regex symbols doesn't cause a 500 error
+            const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             filter.$or = [
-                { code: { $regex: search, $options: 'i' } },
-                { name: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
+                { code: { $regex: safeSearch, $options: 'i' } },
+                { name: { $regex: safeSearch, $options: 'i' } },
+                { description: { $regex: safeSearch, $options: 'i' } }
             ];
         }
 

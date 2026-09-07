@@ -43,10 +43,13 @@ export const getAdminOrdersPage = async (req, res) => {
         }
 
         if (search) {
+            // Escape regex special characters so searching for '*' or other regex symbols doesn't cause a 500 error
+            const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
             const matchingUsers = await User.find({
                 $or: [
-                    { name: { $regex: search, $options: 'i' } },
-                    { email: { $regex: search, $options: 'i' } }
+                    { name: { $regex: safeSearch, $options: 'i' } },
+                    { email: { $regex: safeSearch, $options: 'i' } }
                 ]
             });
 
@@ -54,9 +57,9 @@ export const getAdminOrdersPage = async (req, res) => {
 
             const searchCondition = {
                 $or: [
-                    { orderId: { $regex: search, $options: 'i' } },
+                    { orderId: { $regex: safeSearch, $options: 'i' } },
                     { user: { $in: userIds } },
-                    { 'deliveryAddress.fullName': { $regex: search, $options: 'i' } }
+                    { 'deliveryAddress.fullName': { $regex: safeSearch, $options: 'i' } }
                 ]
             };
 

@@ -29,22 +29,25 @@ export const getReviewsPage = async (req, res) => {
         let matchingProductIds = [];
 
         if (searchQuery) {
+            // Escape regex special characters so searching for '*' or other regex symbols doesn't cause a 500 error
+            const safeSearch = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
             // Find users matching search query
             const users = await User.find({
-                name: { $regex: searchQuery, $options: 'i' }
+                name: { $regex: safeSearch, $options: 'i' }
             }).select('_id');
             matchingUserIds = users.map(u => u._id);
 
             // Find products matching search query
             const products = await Product.find({
-                productName: { $regex: searchQuery, $options: 'i' }
+                productName: { $regex: safeSearch, $options: 'i' }
             }).select('_id');
             matchingProductIds = products.map(p => p._id);
 
             // Combine into query OR
             query.$or = [
-                { comment: { $regex: searchQuery, $options: 'i' } },
-                { title: { $regex: searchQuery, $options: 'i' } },
+                { comment: { $regex: safeSearch, $options: 'i' } },
+                { title: { $regex: safeSearch, $options: 'i' } },
                 { user: { $in: matchingUserIds } },
                 { product: { $in: matchingProductIds } }
             ];
