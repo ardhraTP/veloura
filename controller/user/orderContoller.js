@@ -47,6 +47,22 @@ export const getUserOrders = async (req, res) => {
             });
         }
 
+        // Update orderStatus based on item statuses
+        orders.forEach(order => {
+            if (order.items && order.items.length > 0) {
+                const returnedCount = order.items.filter(i => i.itemStatus === 'Returned').length;
+                const totalNonCancelled = order.items.filter(i => i.itemStatus !== 'Cancelled').length;
+
+                if (returnedCount > 0) {
+                    if (totalNonCancelled > 0 && returnedCount >= totalNonCancelled) {
+                        order.orderStatus = 'Returned';
+                    } else {
+                        order.orderStatus = 'Partially Returned';
+                    }
+                }
+            }
+        });
+
         const page = parseInt(req.query.page) || 1;
         const limit = 4;
         const totalOrders = orders.length;
@@ -96,16 +112,35 @@ export const getOrderDetails = async (req, res) => {
             return res.status(404).send('Order not found');
         }
 
-        const user = await User.findById(userId);
+        if (order && order.items && order.items.length > 0) {
+            const returnedCount = order.items.filter(i => i.itemStatus === 'Returned').length;
+            const totalNonCancelled = order.items.filter(i => i.itemStatus !== 'Cancelled').length;
 
+            if (returnedCount > 0) {
+                if (totalNonCancelled > 0 && returnedCount >= totalNonCancelled) {
+                    order.orderStatus = 'Returned';
+                } else {
+                    order.orderStatus = 'Partially Returned';
+                }
+            }
+        }
+
+        const user = await User.findById(userId);
         const userReviews = await Review.find({ user: userId });
+
+        const successMessage = req.session.success || null;
+        const errorMessage = req.session.error || null;
+        delete req.session.success;
+        delete req.session.error;
 
         res.render('user/order-details', {
             order: order,
             user: user || { name: req.session.user?.name || 'User' },
             userReviews: userReviews || [],
             activeTab: 'orders',
-            isLoggedIn: true
+            isLoggedIn: true,
+            successMessage: successMessage,
+            errorMessage: errorMessage
         });
     } catch (error) {
         console.error('Error fetching order details:', error);
@@ -143,12 +178,13 @@ export const cancelOrderProduct = async (req, res) => {
         item.cancellationReason = comment ? `${reason} - ${comment}` : reason;
 
         let refundAmount = 0;
+        const isPaymentFailed = order.paymentStatus === 'Failed';
         const isOnlineOrWallet = order.paymentMethod === 'Online' ||
             order.paymentMethod === 'Wallet' ||
             order.paymentMethod === 'Online Payment';
 
-       
-        if (isOnlineOrWallet && (order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded')) {
+        // Do not refund if payment failed
+        if (!isPaymentFailed && isOnlineOrWallet && (order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded')) {
             const itemSubtotal = item.price * item.quantity;
             const totalDiscount = order.discount || 0;
             const totalTax = order.tax || 0;
@@ -195,8 +231,8 @@ export const cancelOrderProduct = async (req, res) => {
             order.cancellationReason = 'All items cancelled';
         }
 
-        const isPaid = order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded' || order.paymentStatus === 'Refunded';
-        const canRestoreStock = isPaid || order.paymentMethod === 'COD' || order.paymentMethod === 'Wallet';
+        const isPaid = (order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded' || order.paymentStatus === 'Refunded') && !isPaymentFailed;
+        const canRestoreStock = !isPaymentFailed && (isPaid || order.paymentMethod === 'COD' || order.paymentMethod === 'Wallet');
 
         if (canRestoreStock) {
             await Variant.findByIdAndUpdate(item.variant, {
@@ -204,7 +240,10 @@ export const cancelOrderProduct = async (req, res) => {
             });
         }
 
-        res.json({ success: true, message: 'Item cancelled successfully and stock/wallet updated!' });
+        // Save order changes to MongoDB
+        await order.save();
+
+        res.json({ success: true, message: 'Item cancelled successfully!' });
     } catch (error) {
         console.error('Error in cancelOrderProduct controller:', error);
         res.json({ success: false, message: 'Server error while cancelling order item' });

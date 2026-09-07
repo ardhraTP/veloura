@@ -674,9 +674,8 @@
             clearAllErrors();
         })
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const sessionStatus = urlParams.get('session');
-        const errorType = urlParams.get('error');
+        const sessionStatus = "<%= typeof sessionStatus !== 'undefined' && sessionStatus ? sessionStatus : '' %>";
+        const errorType = "<%= typeof errorType !== 'undefined' && errorType ? errorType : '' %>";
 
         if (sessionStatus === 'expired') {
             Swal.fire({
@@ -690,7 +689,6 @@
                 timerProgressBar: true,
                 customClass: { popup: 'swal-toast-custom' }
             });
-            window.history.replaceState({}, '', '/login');
         } else if (errorType === 'blocked') {
             Swal.fire({
                 icon: 'error',
@@ -699,7 +697,6 @@
                 confirmButtonColor: '#5c1e28',
                 confirmButtonText: 'OK'
             });
-            window.history.replaceState({}, '', '/login');
         } else if (errorType === 'account_deleted') {
             Swal.fire({
                 icon: 'error',
@@ -708,7 +705,6 @@
                 confirmButtonColor: '#5c1e28',
                 confirmButtonText: 'OK'
             });
-            window.history.replaceState({}, '', '/login');
         } else if (errorType === 'session_error') {
             Swal.fire({
                 toast: true,

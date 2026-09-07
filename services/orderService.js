@@ -97,7 +97,7 @@ export const cancelOrder = async (orderId,userId,reason)=>{
             }
         }
 
-        // Refund to wallet if order was paid using Online or Wallet payment method and payment was completed
+        // refund to wallet if order was paid using online or wallet payment method and payment was completed
         const isPaidPayment = order.paymentMethod === 'Online' || 
                              order.paymentMethod === 'Wallet' || 
                              order.paymentMethod === 'Online Payment';
@@ -317,7 +317,19 @@ export const approveReturn = async (orderId,itemId)=>{
             await user.save();
         }
 
-        order.paymentStatus = 'Refunded';
+        const allItemsReturnedOrCancelled = order.items.every(
+            i => i.itemStatus === 'Returned' || i.itemStatus === 'Cancelled'
+        );
+        const hasReturnedItems = order.items.some(i => i.itemStatus === 'Returned');
+
+        if (allItemsReturnedOrCancelled && hasReturnedItems) {
+            order.orderStatus = 'Returned';
+            order.paymentStatus = 'Refunded';
+        } else if (hasReturnedItems) {
+            order.orderStatus = 'Partially Returned';
+            order.paymentStatus = 'Partially Refunded';
+        }
+
         await order.save();
 
         return {order,refundAmount};

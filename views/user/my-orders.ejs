@@ -205,6 +205,10 @@
             background-color: #EF4444;
         }
 
+        .status-dot.plum {
+            background-color: #5C1E28;
+        }
+
         /* Status subtext styling */
         .status-subtext {
             font-size: 11px;
@@ -409,11 +413,15 @@
                                         } else if (order.orderStatus === 'Returned') {
                                             dotColor = 'red';
                                             statusText = 'RETURNED';
+                                        } else if (order.orderStatus === 'Partially Returned') {
+                                            dotColor = 'plum';
+                                            statusText = 'PARTIALLY RETURNED';
                                         } else if (isPaymentFailed) {
                                             dotColor = 'red';
                                             statusText = 'PAYMENT FAILED';
                                         } else if (order.orderStatus === 'Delivered') {
                                             dotColor = 'green';
+                                            statusText = 'DELIVERED';
                                         }
                                     %>
                                     <div class="order-status-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">

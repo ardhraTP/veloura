@@ -376,6 +376,11 @@
             color: #4B5563;
         }
 
+        .status-partially-returned {
+            background-color: #F8ECEE;
+            color: #5C1E28;
+        }
+
         .status-return-requested {
             background-color: #FFF3CD;
             color: #856404;
@@ -704,6 +709,8 @@
                                             statusClass = 'status-cancelled';
                                             } else if (order.orderStatus === 'Returned') {
                                             statusClass = 'status-returned';
+                                            } else if (order.orderStatus === 'Partially Returned') {
+                                            statusClass = 'status-partially-returned';
                                             }
                                             %>
                                             <div id="status-display-<%= order._id %>">

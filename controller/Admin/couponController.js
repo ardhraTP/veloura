@@ -35,14 +35,19 @@ export const getCouponsPage = async (req, res) => {
             .skip(skip)
             .limit(limit);
 
+        const successMessage = req.session.success || null;
+        const errorMessage = req.session.error || null;
+        delete req.session.success;
+        delete req.session.error;
+
         res.render('admin/coupons', {
             coupons: coupons,
             currentPage: page,
             totalPages: totalPages,
             search: search,
             status: status,
-            successMessage: req.query.success || null,
-            errorMessage: req.query.error || null
+            successMessage: successMessage,
+            errorMessage: errorMessage
         });
     } catch (error) {
         console.error('Error in getCouponsPage:', error);
@@ -68,44 +73,52 @@ export const addCoupon = async (req, res) => {
 
 
         if(!name || !name.trim()){
-            return res.redirect('/admin/coupons?error=Coupon Name is required.');
+            req.session.error = 'Coupon Name is required.';
+            return res.redirect('/admin/coupons');
         }
 
         if(!code || !code.trim()){
-            return res.redirect('/admin/coupons?error=Coupon Code is required.');
+            req.session.error = 'Coupon Code is required.';
+            return res.redirect('/admin/coupons');
         }
 
         const cleanCode = code.trim().toUpperCase();
 
         const parsedDiscount = parseFloat(discountValue);
         if(isNaN(parsedDiscount) || parsedDiscount < 1 || parsedDiscount > 100 ){
-            return res.redirect('/admin/coupons?error=Discount percentage must be between 1 and 100.');
+            req.session.error = 'Discount percentage must be between 1 and 100.';
+            return res.redirect('/admin/coupons');
         }
 
         const start =  new Date(startDate);
         const end = new Date(endDate);
 
         if(isNaN(start.getTime()) || isNaN(end.getTime())){
-            return res.redirect('/admin/coupons?error=Please select valid dates.');
+            req.session.error = 'Please select valid dates.';
+            return res.redirect('/admin/coupons');
         }
 
         if(end < start){
-            return res.redirect('/admin/coupons?error=Expiry date cannot be earlier than start date.');
+            req.session.error = 'Expiry date cannot be earlier than start date.';
+            return res.redirect('/admin/coupons');
         }
 
         const parsedMinOrder = parseFloat(minOrderAmount) || 0;
         if(parsedMinOrder < 0){
-            return res.redirect('/admin/coupons?error=Minimum purchase amount cannot be negative.');
+            req.session.error = 'Minimum purchase amount cannot be negative.';
+            return res.redirect('/admin/coupons');
         }
 
         const parsedMaxDiscount  = maxDiscountAmount ? parseFloat(maxDiscountAmount) : null;
         if(parsedMaxDiscount !== null && parsedMaxDiscount < 0){
-            return res.redirect('/admin/coupons?error=Maximum discount amount cannot be negative.');
+            req.session.error = 'Maximum discount amount cannot be negative.';
+            return res.redirect('/admin/coupons');
         }
 
         const parsedUsageLimit = usageLimit ? parseInt(usageLimit) : null;
         if(parsedUsageLimit !== null && parsedUsageLimit <= 0){
-            return res.redirect('/admin/coupons?error=Usage limit must be a positive number.');
+            req.session.error = 'Usage limit must be a positive number.';
+            return res.redirect('/admin/coupons');
         }
 
         const existingCoupon = await Coupon.findOne({
@@ -113,7 +126,8 @@ export const addCoupon = async (req, res) => {
         });
 
         if(existingCoupon){
-            return res.redirect('/admin/coupons?error=Coupon code already exists. Please choose a unique code.');
+            req.session.error = 'Coupon code already exists. Please choose a unique code.';
+            return res.redirect('/admin/coupons');
         }
 
 
@@ -134,10 +148,12 @@ export const addCoupon = async (req, res) => {
 
         await newCoupon.save();
 
-        res.redirect('/admin/coupons?success=Coupon added successfully');
+        req.session.success = 'Coupon added successfully';
+        res.redirect('/admin/coupons');
     } catch (error) {
         console.error('Error in addCoupon:', error);
-        res.redirect('/admin/coupons?error=Error adding coupon');
+        req.session.error = 'Error adding coupon';
+        res.redirect('/admin/coupons');
     }
 };
 
@@ -166,7 +182,8 @@ export const editCoupon = async (req, res) => {
         });
 
         if (existingCoupon) {
-            return res.redirect('/admin/coupons?error=Coupon code already exists');
+            req.session.error = 'Coupon code already exists';
+            return res.redirect('/admin/coupons');
         }
 
         await Coupon.findByIdAndUpdate(couponId, {
@@ -181,10 +198,12 @@ export const editCoupon = async (req, res) => {
             description: description.trim()
         });
 
-        res.redirect('/admin/coupons?success=Coupon updated successfully');
+        req.session.success = 'Coupon updated successfully';
+        res.redirect('/admin/coupons');
     } catch (error) {
         console.error('Error in editCoupon:', error);
-        res.redirect('/admin/coupons?error=Error updating coupon');
+        req.session.error = 'Error updating coupon';
+        res.redirect('/admin/coupons');
     }
 };
 

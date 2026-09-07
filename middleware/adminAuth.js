@@ -7,29 +7,34 @@ export const isAdminAuthenticated = async (req, res, next) => {
             const admin = await User.findById(req.session.adminId);
 
             if (!admin) {
-                req.session.destroy();
-                return res.redirect('/admin/login?error=account_deleted');
+                delete req.session.adminId;
+                req.session.errorType = 'account_deleted';
+                return res.redirect('/admin/login');
             }
 
             if (!admin.isAdmin) {
-                req.session.destroy();
-                return res.redirect('/admin/login?error=unauthorized');
+                delete req.session.adminId;
+                req.session.errorType = 'unauthorized';
+                return res.redirect('/admin/login');
             }
 
             if (admin.isBlocked) {
-                req.session.destroy();
-                return res.redirect('/admin/login?error=blocked');
+                delete req.session.adminId;
+                req.session.errorType = 'blocked';
+                return res.redirect('/admin/login');
             }
 
           return next();
         } catch (error) {
             console.error('Admin auth middleware error:', error);
-            req.session.destroy();
-            return res.redirect('/admin/login?error=session_error');
+            delete req.session.adminId;
+            req.session.errorType = 'session_error';
+            return res.redirect('/admin/login');
         }
     }   
 
-    return res.redirect('/admin/login?session=expired');
+    req.session.sessionStatus = 'expired';
+    return res.redirect('/admin/login');
 }; 
 
 

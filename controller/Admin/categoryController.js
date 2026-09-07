@@ -24,13 +24,18 @@ export const getCategoriesPage = async (req, res) => {
             .skip(skip)
             .limit(limit);
 
+        const successMessage = req.session.success || null;
+        const errorMessage = req.session.error || null;
+        delete req.session.success;
+        delete req.session.error;
+
         res.render('admin/categories', {
             categories: categories,
             currentPage: page,
             totalPages: totalPages,
             search: search,
-            successMessage: req.query.success || null,
-            errorMessage: req.query.error || null
+            successMessage: successMessage,
+            errorMessage: errorMessage
         });
     } catch (error) {
         console.log('Error in getCategoriesPage:', error);
@@ -72,12 +77,14 @@ export const addCategory = async (req, res) => {
 
         const nameError = validateCategoryNameBackend(name);
         if (nameError) {
-            return res.redirect('/admin/categories?error=' + encodeURIComponent(nameError));
+            req.session.error = nameError;
+            return res.redirect('/admin/categories');
         }
 
         const offerError = validateCategoryOfferBackend(offer);
         if (offerError) {
-            return res.redirect('/admin/categories?error=' + encodeURIComponent(offerError));
+            req.session.error = offerError;
+            return res.redirect('/admin/categories');
         }
 
         const trimmedName = name.trim();
@@ -89,7 +96,8 @@ export const addCategory = async (req, res) => {
         });
 
         if (existingCategory) {
-            return res.redirect('/admin/categories?error=Category already exists');
+            req.session.error = 'Category already exists';
+            return res.redirect('/admin/categories');
         }
 
         const offerStr = offer ? offer.trim() : '';
@@ -107,10 +115,12 @@ export const addCategory = async (req, res) => {
 
         await newCategory.save();
 
-        res.redirect('/admin/categories?success=Category added successfully');
+        req.session.success = 'Category added successfully';
+        res.redirect('/admin/categories');
     } catch (error) {
         console.log('Error in addCategory:', error);
-        res.redirect('/admin/categories?error=Error adding category');
+        req.session.error = 'Error adding category';
+        res.redirect('/admin/categories');
     }
 };
 
@@ -123,12 +133,14 @@ export const editCategory = async (req, res) => {
 
         const nameError = validateCategoryNameBackend(name);
         if (nameError) {
-            return res.redirect('/admin/categories?error=' + encodeURIComponent(nameError));
+            req.session.error = nameError;
+            return res.redirect('/admin/categories');
         }
 
         const offerError = validateCategoryOfferBackend(offer);
         if (offerError) {
-            return res.redirect('/admin/categories?error=' + encodeURIComponent(offerError));
+            req.session.error = offerError;
+            return res.redirect('/admin/categories');
         }
 
         const trimmedName = name.trim();
@@ -141,7 +153,8 @@ export const editCategory = async (req, res) => {
         });
 
         if (existingCategory) {
-            return res.redirect('/admin/categories?error=Category name already exists');
+            req.session.error = 'Category name already exists';
+            return res.redirect('/admin/categories');
         }
 
         const offerStr = offer ? offer.trim() : '';
@@ -163,10 +176,12 @@ export const editCategory = async (req, res) => {
         //update category
         await Category.findByIdAndUpdate(categoryId, updateData);
 
-        res.redirect('/admin/categories?success=Category updated successfully');
+        req.session.success = 'Category updated successfully';
+        res.redirect('/admin/categories');
     } catch (error) {
         console.log('Error in editCategory:', error);
-        res.redirect('/admin/categories?error=Error updating category');
+        req.session.error = 'Error updating category';
+        res.redirect('/admin/categories');
     }
 };
 

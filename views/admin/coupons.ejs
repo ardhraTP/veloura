@@ -1408,11 +1408,10 @@
             }
         });
 
-        // Show Swal notifications from URL parameters and strip them
+        // Show Swal notifications from session variables
         document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const successMsg = urlParams.get('success');
-            const errorMsg = urlParams.get('error');
+            const successMsg = "<%= successMessage || '' %>";
+            const errorMsg = "<%= errorMessage || '' %>";
 
             if (successMsg) {
                 Swal.fire({
@@ -1423,12 +1422,6 @@
                     timer: 3000,
                     showConfirmButton: false
                 });
-                const remainingParams = Array.from(urlParams.entries())
-                    .filter(([key]) => key !== 'success' && key !== 'error')
-                    .map(([key, val]) => `${key}=${encodeURIComponent(val)}`)
-                    .join('&');
-                const newUrl = window.location.pathname + (remainingParams ? '?' + remainingParams : '');
-                window.history.replaceState({}, document.title, newUrl);
             } else if (errorMsg) {
                 Swal.fire({
                     icon: 'error',
@@ -1436,12 +1429,6 @@
                     text: errorMsg,
                     confirmButtonColor: '#5c1e28'
                 });
-                const remainingParams = Array.from(urlParams.entries())
-                    .filter(([key]) => key !== 'success' && key !== 'error')
-                    .map(([key, val]) => `${key}=${encodeURIComponent(val)}`)
-                    .join('&');
-                const newUrl = window.location.pathname + (remainingParams ? '?' + remainingParams : '');
-                window.history.replaceState({}, document.title, newUrl);
             }
         });
     </script>

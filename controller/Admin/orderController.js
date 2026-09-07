@@ -136,8 +136,9 @@ export const updateAdminOrderStatus = async (req, res) => {
 
         if (status === 'Cancelled') {
             const adminReason = cancellationReason || 'Cancelled by administrator';
-            const isPaid = order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded';
-            const canRestoreStock = isPaid || order.paymentMethod === 'COD' || order.paymentMethod === 'Wallet';
+            const isPaymentFailed = order.paymentStatus === 'Failed';
+            const isPaid = !isPaymentFailed && (order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded');
+            const canRestoreStock = !isPaymentFailed && (isPaid || order.paymentMethod === 'COD' || order.paymentMethod === 'Wallet');
             let refundAmount = 0;
 
             for (const item of order.items) {
@@ -174,8 +175,8 @@ export const updateAdminOrderStatus = async (req, res) => {
             order.orderStatus = 'Cancelled';
             order.cancellationReason = adminReason;
 
-            // Only refund into wallet if payment was paid and there is a balance to refund
-            if (isPaid && refundAmount > 0) {
+            // Only refund into wallet if payment was completed and not failed
+            if (!isPaymentFailed && isPaid && refundAmount > 0) {
                 const user = await User.findById(order.user);
                 if (user) {
                     user.walletBalance = (user.walletBalance || 0) + refundAmount;
@@ -197,7 +198,11 @@ export const updateAdminOrderStatus = async (req, res) => {
 
             for (const item of order.items) {
                 if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
-                    if (canRestoreStock) {
+                    // Check return reason to avoid restocking damaged or defective products
+                    const returnReasonText = (item.returnReason || order.returnReason || '').toLowerCase();
+                    const isDamagedOrDefective = returnReasonText.includes('damage') || returnReasonText.includes('defect');
+
+                    if (canRestoreStock && !isDamagedOrDefective) {
                         await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
                     }
 
@@ -224,7 +229,19 @@ export const updateAdminOrderStatus = async (req, res) => {
                     item.itemStatus = 'Returned';
                 }
             }
-            order.orderStatus = 'Returned';
+
+            const allItemsReturnedOrCancelled = order.items.every(
+                i => i.itemStatus === 'Returned' || i.itemStatus === 'Cancelled'
+            );
+            const hasReturnedItems = order.items.some(i => i.itemStatus === 'Returned');
+
+            if (allItemsReturnedOrCancelled && hasReturnedItems) {
+                order.orderStatus = 'Returned';
+            } else if (hasReturnedItems) {
+                order.orderStatus = 'Partially Returned';
+            } else {
+                order.orderStatus = 'Returned';
+            }
 
             if (isPaid && refundAmount > 0) {
                 const user = await User.findById(order.user);
@@ -299,15 +316,16 @@ export const updateItemStatus = async (req, res) => {
             item.cancellationReason = adminReason;
             item.cancelledAt = new Date();
 
-            const isPaid = order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded';
-            const canRestoreStock = isPaid || order.paymentMethod === 'COD' || order.paymentMethod === 'Wallet';
+            const isPaymentFailed = order.paymentStatus === 'Failed';
+            const isPaid = !isPaymentFailed && (order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded');
+            const canRestoreStock = !isPaymentFailed && (isPaid || order.paymentMethod === 'COD' || order.paymentMethod === 'Wallet');
 
             if (canRestoreStock) {
                 await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
             }
 
-            // Only refund if payment was actually completed or partially refunded
-            if (isPaid) {
+            // Only refund if payment was actually completed or partially refunded and NOT failed
+            if (!isPaymentFailed && isPaid) {
                 const itemSubtotal = item.price * item.quantity;
                 const totalDiscount = order.discount || 0;
                 const totalTax = order.tax || 0;
@@ -433,10 +451,16 @@ export const approveReturn = async (req,res)=>{
 
         const refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
 
-        const variant = await Variant.findById(item.variant);
-        if(variant){
-            variant.quantity += item.quantity;
-            await variant.save();
+        // Check return reason to avoid restocking damaged or defective products
+        const returnReasonText = (item.returnReason || order.returnReason || '').toLowerCase();
+        const isDamagedOrDefective = returnReasonText.includes('damage') || returnReasonText.includes('defect');
+
+        if (!isDamagedOrDefective) {
+            const variant = await Variant.findById(item.variant);
+            if(variant){
+                variant.quantity += item.quantity;
+                await variant.save();
+            }
         }
 
         item.itemStatus = 'Returned';
@@ -463,11 +487,18 @@ export const approveReturn = async (req,res)=>{
         const allItemsReturnedOrCancelled = order.items.every(
             i => i.itemStatus === 'Returned' || i.itemStatus === 'Cancelled'
         );
+        const hasReturnedItems = order.items.some(i => i.itemStatus === 'Returned');
 
-        if(allItemsReturnedOrCancelled){
+        if(allItemsReturnedOrCancelled && hasReturnedItems){
             order.orderStatus = 'Returned';
             order.paymentStatus = 'Refunded';
-        }else{
+        } else if (hasReturnedItems) {
+            order.orderStatus = 'Partially Returned';
+            order.paymentStatus = 'Partially Refunded';
+        } else if (allItemsReturnedOrCancelled) {
+            order.orderStatus = 'Cancelled';
+            order.paymentStatus = 'Refunded';
+        } else {
             order.paymentStatus = 'Partially Refunded';
         }
 

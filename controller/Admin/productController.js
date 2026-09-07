@@ -66,11 +66,18 @@ export const getAdminProductsPage = async (req, res) => {
             })
         );
 
+        const successMessage = req.session.success || null;
+        const errorMessage = req.session.error || null;
+        delete req.session.success;
+        delete req.session.error;
+
         res.render('admin/products', {
             products: productsWithVariants,
             currentPage: page,
             totalPages: totalPages,
-            search: search
+            search: search,
+            successMessage: successMessage,
+            errorMessage: errorMessage
         });
     } catch (error) {
         console.log('Error in getAdminProductsPage:', error);
@@ -84,9 +91,15 @@ export const getAddProductPage = async (req, res) => {
 
         const categories = await Category.find({ isDeleted: false, isListed: true }).sort({ name: 1 });
 
+        const successMessage = req.session.success || null;
+        const errorMessage = req.session.error || null;
+        delete req.session.success;
+        delete req.session.error;
+
         res.render('admin/add-product', {
             categories: categories,
-            errorMessage: req.query.error || null
+            successMessage: successMessage,
+            errorMessage: errorMessage
         });
     } catch (error) {
         console.log('Error in getAddProductPage:', error);
@@ -144,7 +157,8 @@ export const addProduct = async (req, res) => {
 
         if (valError) {
             cleanupUploadedFiles(req.files);
-            return res.redirect('/admin/products/add?error=' + encodeURIComponent(valError));
+            req.session.error = valError;
+            return res.redirect('/admin/products/add');
         }
 
         const variantsRaw = req.body.variants || {};
@@ -168,7 +182,8 @@ export const addProduct = async (req, res) => {
 
         if (variantsData.length === 0) {
             cleanupUploadedFiles(req.files);
-            return res.redirect('/admin/products/add?error=Please add at least one variant');
+            req.session.error = 'Please add at least one variant';
+            return res.redirect('/admin/products/add');
         }
 
         const parsedOffer = parseFloat(offerInputVal) || 0;
@@ -209,7 +224,8 @@ export const addProduct = async (req, res) => {
             if (variantFiles.length < 3) {
                 cleanupUploadedFiles(req.files);
                 await Product.findByIdAndDelete(newProduct._id);
-                return res.redirect('/admin/products/add?error=Each variant must have at least 3 images');
+                req.session.error = 'Each variant must have at least 3 images';
+                return res.redirect('/admin/products/add');
             }
 
             const processedImages = await processProductImages(variantFiles);
@@ -230,11 +246,13 @@ export const addProduct = async (req, res) => {
             await newVariant.save();
         }
 
-        res.redirect('/admin/products?success=Product added successfully');
+        req.session.success = 'Product added successfully';
+        res.redirect('/admin/products');
     } catch (error) {
         console.error('Error in addProduct:', error.message);
         console.error('Stack:', error.stack);
-        res.redirect('/admin/products/add?error=' + encodeURIComponent(error.message || 'Error adding product'));
+        req.session.error = error.message || 'Error adding product';
+        res.redirect('/admin/products/add');
     }
 };
 
@@ -252,11 +270,17 @@ export const getEditProductPage = async (req, res) => {
 
         const categories = await Category.find({ isDeleted: false, isListed: true }).sort({ name: 1 });
 
+        const successMessage = req.session.success || null;
+        const errorMessage = req.session.error || null;
+        delete req.session.success;
+        delete req.session.error;
+
         res.render('admin/edit-product', {
             product: product,
             variants: variants,
             categories: categories,
-            errorMessage: req.query.error || null
+            successMessage: successMessage,
+            errorMessage: errorMessage
         });
     } catch (error) {
         console.log('Error in getEditProductPage:', error);
@@ -329,7 +353,8 @@ export const updateProduct = async (req, res) => {
         });
 
         if (valError) {
-            return res.redirect(`/admin/products/edit/${productId}?error=` + encodeURIComponent(valError));
+            req.session.error = valError;
+            return res.redirect(`/admin/products/edit/${productId}`);
         }
 
         const parsedOffer = parseFloat(offerInputVal) || 0;
@@ -354,7 +379,8 @@ export const updateProduct = async (req, res) => {
         );
 
         if (!updatedProduct) {
-            return res.redirect('/admin/products?error=Product not found');
+            req.session.error = 'Product not found';
+            return res.redirect('/admin/products');
         }
 
         const variantsRaw = req.body.variants || {};
@@ -384,10 +410,12 @@ export const updateProduct = async (req, res) => {
             }
         }
 
-        res.redirect('/admin/products?success=Product updated successfully');
+        req.session.success = 'Product updated successfully';
+        res.redirect('/admin/products');
     } catch (error) {
         console.log('Error in updateProduct:', error);
-        res.redirect(`/admin/products/edit/${req.params.id}?error=Error updating product`);
+        req.session.error = 'Error updating product';
+        res.redirect(`/admin/products/edit/${req.params.id}`);
     }
 };
 

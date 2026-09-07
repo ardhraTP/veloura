@@ -8,25 +8,29 @@ export const isAuthenticated = async (req, res, next) => {
             const user = await User.findById(req.session.userId);
 
             if (!user) {
-                req.session.destroy();
-                return res.redirect('/login?error=account_deleted');
+                delete req.session.userId;
+                req.session.errorType = 'account_deleted';
+                return res.redirect('/login');
             }
 
             if (user.isBlocked) {
-                req.session.destroy();
-                return res.redirect('/login?error=blocked');
+                delete req.session.userId;
+                req.session.errorType = 'blocked';
+                return res.redirect('/login');
             }
 
             return next();
         } catch (error) {
             console.error('Auth middleware error:', error);
-            req.session.destroy();
-            return res.redirect('/login?error=session_error');
+            delete req.session.userId;
+            req.session.errorType = 'session_error';
+            return res.redirect('/login');
         }
     }
 
 
-    return res.redirect('/login?session=expired');
+    req.session.sessionStatus = 'expired';
+    return res.redirect('/login');
 };
 
 

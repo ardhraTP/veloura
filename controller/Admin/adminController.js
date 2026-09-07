@@ -12,11 +12,29 @@ import User from '../../model/User.js';
 
 
 export const getLogin = (req, res) => {
-    res.render('admin/login', {
-        error: req.session.adminLoginError || null
-    });
+    let error = req.session.adminLoginError || null;
+    const errorType = req.session.errorType || null;
+    const sessionStatus = req.session.sessionStatus || null;
 
-    req.session.adminLoginError = null;
+    if (!error) {
+        if (errorType === 'blocked') {
+            error = 'Your admin account has been blocked.';
+        } else if (errorType === 'account_deleted') {
+            error = 'Account not found.';
+        } else if (errorType === 'unauthorized') {
+            error = 'Access denied. You do not have admin privileges.';
+        } else if (errorType === 'session_error') {
+            error = 'Session error. Please log in again.';
+        } else if (sessionStatus === 'expired') {
+            error = 'Session expired. Please log in again.';
+        }
+    }
+
+    delete req.session.adminLoginError;
+    delete req.session.errorType;
+    delete req.session.sessionStatus;
+
+    res.render('admin/login', { error });
 };
 
 

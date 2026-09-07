@@ -120,9 +120,15 @@ export const signup = async (req, res) => {
 export const getLogin = (req, res) => {
     const error = req.session.loginError || null;
     const success = req.session.loginSuccess || null;
+    const errorType = req.session.errorType || null;
+    const sessionStatus = req.session.sessionStatus || null;
+
     delete req.session.loginError;
     delete req.session.loginSuccess;
-    res.render('user/login', { error, success });
+    delete req.session.errorType;
+    delete req.session.sessionStatus;
+
+    res.render('user/login', { error, success, errorType, sessionStatus });
 };
 
 
