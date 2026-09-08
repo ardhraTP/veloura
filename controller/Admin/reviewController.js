@@ -12,10 +12,8 @@ export const getReviewsPage = async (req, res) => {
         const searchQuery = req.query.search ? req.query.search.trim() : '';
         const dateFilter = req.query.date || '';
 
-        // Build main query
         let query = {};
 
-        // Date Filter
         if (dateFilter) {
             const startOfDay = new Date(dateFilter);
             startOfDay.setHours(0, 0, 0, 0);
@@ -24,27 +22,22 @@ export const getReviewsPage = async (req, res) => {
             query.createdAt = { $gte: startOfDay, $lte: endOfDay };
         }
 
-        // Perform text search filtering on user name, product name or comment if search query is provided
         let matchingUserIds = [];
         let matchingProductIds = [];
 
         if (searchQuery) {
-            // Escape regex special characters so searching for '*' or other regex symbols doesn't cause a 500 error
             const safeSearch = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-            // Find users matching search query
             const users = await User.find({
                 name: { $regex: safeSearch, $options: 'i' }
             }).select('_id');
             matchingUserIds = users.map(u => u._id);
 
-            // Find products matching search query
             const products = await Product.find({
                 productName: { $regex: safeSearch, $options: 'i' }
             }).select('_id');
             matchingProductIds = products.map(p => p._id);
 
-            // Combine into query OR
             query.$or = [
                 { comment: { $regex: safeSearch, $options: 'i' } },
                 { title: { $regex: safeSearch, $options: 'i' } },
@@ -53,7 +46,6 @@ export const getReviewsPage = async (req, res) => {
             ];
         }
 
-        // Fetch paginated reviews
         const reviews = await Review.find(query)
             .populate('user')
             .populate('product')
@@ -64,11 +56,9 @@ export const getReviewsPage = async (req, res) => {
         const totalReviews = await Review.countDocuments(query);
         const totalPages = Math.ceil(totalReviews / limit);
 
-        // Fetch Metrics
         const pendingCount = await Review.countDocuments({ status: 'Pending' });
         const totalApproved = await Review.countDocuments({ status: 'Approved' });
 
-        // Rejected Today
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
         const endOfToday = new Date();
@@ -78,7 +68,6 @@ export const getReviewsPage = async (req, res) => {
             updatedAt: { $gte: startOfToday, $lte: endOfToday }
         });
 
-        // Average Rating of Approved Reviews
         const ratingStats = await Review.aggregate([
             { $match: { status: 'Approved' } },
             { $group: { _id: null, avgRating: { $avg: '$rating' } } }

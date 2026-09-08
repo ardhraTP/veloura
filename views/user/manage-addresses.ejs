@@ -406,138 +406,139 @@
     <!-- Header -->
     <%- include('../partials/navbar') %>
 
-    <!-- Main Container -->
-    <div class="main-container">
-        <!-- Profile Sidebar -->
-        <%- include('../partials/profile-sidebar', { activeTab: 'addresses' }) %>
+        <!-- Main Container -->
+        <div class="main-container">
+            <!-- Profile Sidebar -->
+            <%- include('../partials/profile-sidebar', { activeTab: 'addresses' }) %>
 
-        <!-- Content Area -->
-        <main class="content-area">
-            <div class="page-header">
-                <h1 class="page-title">Manage Addresses</h1>
-                <button class="add-address-btn" onclick="window.location.href='/profile/addresses/add'">
-                    <i class="fas fa-plus"></i> Add New Address
-                </button>
-            </div>
+                <!-- Content Area -->
+                <main class="content-area">
+                    <div class="page-header">
+                        <h1 class="page-title">Manage Addresses</h1>
+                        <button class="add-address-btn" onclick="window.location.href='/profile/addresses/add'">
+                            <i class="fas fa-plus"></i> Add New Address
+                        </button>
+                    </div>
 
-            <div class="address-grid">
-                <% if (addresses && addresses.length> 0) { %>
-                    <% addresses.forEach(address=> { %>
-                        <div class="address-card">
-                            <span class="address-badge">
-                                <%= address.addressType.charAt(0).toUpperCase() + address.addressType.slice(1) %>
-                            </span>
-                            <% if (address.isDefault) { %>
-                                <span class="address-badge"
-                                    style="background-color: #d4edda; color: #155724; top: 20px; right: 80px;">Default</span>
-                                <% } %>
-                                    <h3 class="address-name">
-                                        <%= address.fullName %>
-                                    </h3>
-                                    <p class="address-details">
-                                        <%= address.address %><br>
-                                            <%= address.city %>, <%= address.state %> - <%= address.pincode %><br>
-                                                        Phone: <%= address.phone %>
-                                    </p>
-                                    <div class="address-actions">
-                                        <button class="action-btn"
-                                            onclick="window.location.href='/profile/addresses/edit/<%= address._id %>'">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <% if (!address.isDefault) { %>
-                                            <button class="action-btn"
-                                                onclick="setDefaultAddress('<%= address._id %>')">
-                                                <i class="fas fa-star"></i> Set Default
-                                            </button>
-                                            <% } %>
-                                                <button class="action-btn remove"
-                                                    onclick="removeAddress('<%= address._id %>')">
-                                                    <i class="fas fa-trash"></i> Remove
+                    <div class="address-grid">
+                        <% if (addresses && addresses.length> 0) { %>
+                            <% addresses.forEach(address=> { %>
+                                <div class="address-card">
+                                    <span class="address-badge">
+                                        <%= address.addressType.charAt(0).toUpperCase() + address.addressType.slice(1)
+                                            %>
+                                    </span>
+                                    <% if (address.isDefault) { %>
+                                        <span class="address-badge"
+                                            style="background-color: #d4edda; color: #155724; top: 20px; right: 80px;">Default</span>
+                                        <% } %>
+                                            <h3 class="address-name">
+                                                <%= address.fullName %>
+                                            </h3>
+                                            <p class="address-details">
+                                                <%= address.address %><br>
+                                                    <%= address.city %>, <%= address.state %> - <%= address.pincode %>
+                                                                <br>
+                                                                Phone: <%= address.phone %>
+                                            </p>
+                                            <div class="address-actions">
+                                                <button class="action-btn"
+                                                    onclick="window.location.href='/profile/addresses/edit/<%= address._id %>'">
+                                                    <i class="fas fa-edit"></i> Edit
                                                 </button>
-                                    </div>
-                        </div>
-                        <% }); %>
-                            <% } else { %>
-                                <div
-                                    style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-light);">
-                                    <i class="fas fa-map-marker-alt"
-                                        style="font-size: 48px; margin-bottom: 20px; opacity: 0.3;"></i>
-                                    <h3 style="margin-bottom: 10px;">No addresses found</h3>
-                                    <p>Add your first address to get started</p>
+                                                <% if (!address.isDefault) { %>
+                                                    <button class="action-btn"
+                                                        onclick="setDefaultAddress('<%= address._id %>')">
+                                                        <i class="fas fa-star"></i> Set Default
+                                                    </button>
+                                                    <% } %>
+                                                        <button class="action-btn remove"
+                                                            onclick="removeAddress('<%= address._id %>')">
+                                                            <i class="fas fa-trash"></i> Remove
+                                                        </button>
+                                            </div>
                                 </div>
-                                <% } %>
+                                <% }); %>
+                                    <% } else { %>
+                                        <div
+                                            style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-light);">
+                                            <i class="fas fa-map-marker-alt"
+                                                style="font-size: 48px; margin-bottom: 20px; opacity: 0.3;"></i>
+                                            <h3 style="margin-bottom: 10px;">No addresses found</h3>
+                                            <p>Add your first address to get started</p>
+                                        </div>
+                                        <% } %>
+                    </div>
+                </main>
 
-            </div>
-        </main>
+        </div>
 
-    </div>
+        <!-- Footer -->
+        <%- include('../partials/footer') %>
 
-    <!-- Footer -->
-    <%- include('../partials/footer') %>
+            <script>
+                function removeAddress(id) {
+                    Swal.fire({
+                        title: 'Remove Address?',
+                        text: 'This address will be permanently deleted.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#5c1e28',
+                        cancelButtonColor: '#aaa',
+                        confirmButtonText: 'Yes, Remove',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch(`/profile/addresses/${id}`, {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' }
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Address removed', showConfirmButton: false, timer: 2000 });
+                                        setTimeout(() => window.location.reload(), 2000);
+                                    } else {
+                                        Swal.fire('Error', data.message || 'Failed to remove address', 'error');
+                                    }
+                                })
+                                .catch(() => Swal.fire('Error', 'Failed to remove address', 'error'));
+                        }
+                    });
+                }
 
-    <script>
-        function removeAddress(id) {
-            Swal.fire({
-                title: 'Remove Address?',
-                text: 'This address will be permanently deleted.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#5c1e28',
-                cancelButtonColor: '#aaa',
-                confirmButtonText: 'Yes, Remove',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(`/profile/addresses/${id}`, {
-                        method: 'DELETE',
+                function setDefaultAddress(id) {
+                    fetch(`/profile/addresses/${id}/default`, {
+                        method: 'PUT',
                         headers: { 'Content-Type': 'application/json' }
                     })
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Address removed', showConfirmButton: false, timer: 2000 });
+                                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Default address updated', showConfirmButton: false, timer: 2000 });
                                 setTimeout(() => window.location.reload(), 2000);
                             } else {
-                                Swal.fire('Error', data.message || 'Failed to remove address', 'error');
+                                Swal.fire('Error', data.message || 'Failed to update default address', 'error');
                             }
                         })
-                        .catch(() => Swal.fire('Error', 'Failed to remove address', 'error'));
+                        .catch(() => Swal.fire('Error', 'Failed to update default address', 'error'));
                 }
-            });
-        }
 
-        function setDefaultAddress(id) {
-            fetch(`/profile/addresses/${id}/default`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Default address updated', showConfirmButton: false, timer: 2000 });
-                        setTimeout(() => window.location.reload(), 2000);
-                    } else {
-                        Swal.fire('Error', data.message || 'Failed to update default address', 'error');
-                    }
-                })
-                .catch(() => Swal.fire('Error', 'Failed to update default address', 'error'));
-        }
-
-        function confirmLogout() {
-            Swal.fire({
-                title: 'Logging Out?',
-                text: 'Are you sure you want to log out of Veloura?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#5c1e28',
-                cancelButtonColor: '#aaa',
-                confirmButtonText: 'Yes, Log Out',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) window.location.href = '/logout';
-            });
-        }
-    </script>
+                function confirmLogout() {
+                    Swal.fire({
+                        title: 'Logging Out?',
+                        text: 'Are you sure you want to log out of Veloura?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#5c1e28',
+                        cancelButtonColor: '#aaa',
+                        confirmButtonText: 'Yes, Log Out',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) window.location.href = '/logout';
+                    });
+                }
+            </script>
 </body>
 
 </html>

@@ -38,7 +38,6 @@ export const getAdminProductsPage = async (req, res) => {
         };
 
         if (search) {
-            // Escape regex special characters so searching for '*' or other regex symbols doesn't cause a 500 error
             const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             searchFilter.$or = [
                 { productName: { $regex: safeSearch, $options: 'i' } }

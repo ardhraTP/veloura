@@ -34,7 +34,6 @@ export const buildUserQuery = (search, status) => {
     };
 
     if (search) {
-        // Escape regex special characters so searching for '*' or other regex symbols doesn't cause a 500 error
         const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         query.$or = [
             { name: { $regex: safeSearch, $options: 'i' } },

@@ -724,7 +724,6 @@
                 err.classList.toggle('visible', show);
             }
 
-            // Category name validator helper
             function validateCategoryNameInput(name) {
                 const trimmed = (name || '').trim();
                 
@@ -740,17 +739,14 @@
                     return 'Category name cannot exceed 50 characters.';
                 }
 
-                // Cannot be only numbers (e.g. 123443)
                 if (/^[0-9]+$/.test(trimmed)) {
                     return 'Category name cannot contain only numbers.';
                 }
 
-                // Must contain at least one letter (a-z, A-Z)
                 if (!/[a-zA-Z]/.test(trimmed)) {
                     return 'Category name must contain at least one letter.';
                 }
 
-                // Must contain only allowed characters (letters, numbers, spaces, hyphens, &)
                 if (!/^[a-zA-Z0-9\s&\-]+$/.test(trimmed)) {
                     return 'Category name can only contain letters, numbers, spaces, and hyphens.';
                 }
@@ -758,31 +754,25 @@
                 return null;
             }
 
-            // Offer input validator helper
             function validateCategoryOfferInput(offer) {
                 const trimmed = (offer || '').trim();
 
-                // If offer field is empty, it is optional (no offer)
                 if (!trimmed) {
                     return null;
                 }
 
-                // Check if input contains alphabets
                 if (/[a-zA-Z]/.test(trimmed)) {
                     return 'Offer percentage cannot contain alphabets.';
                 }
 
-                // Remove % symbol if typed by admin (e.g. "20%")
                 const cleanStr = trimmed.replace('%', '').trim();
 
-                // Check if it is a valid positive number
                 if (isNaN(cleanStr) || cleanStr === '' || !/^\d+(\.\d+)?$/.test(cleanStr)) {
                     return 'Offer percentage must be a valid number.';
                 }
 
                 const offerVal = Number(cleanStr);
 
-                // Offer range must be between 1 and 100
                 if (offerVal < 1 || offerVal > 100) {
                     return 'Offer percentage must be between 1 and 100.';
                 }
@@ -790,7 +780,6 @@
                 return null;
             }
 
-            // Add Category validation logic
             const addForm = document.getElementById('addCategoryForm');
             const addNameInput = document.getElementById('addName');
             const addOfferInput = document.getElementById('addOffer');
@@ -872,7 +861,6 @@
                 });
             }
 
-            // Edit Category validation logic
             const editForm = document.getElementById('editForm');
             const editNameInput = document.getElementById('editName');
             const editOfferInput = document.getElementById('editOffer');

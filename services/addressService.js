@@ -11,11 +11,11 @@ export const validateAddressData = (data) => {
         return { isValid: false, error: 'Full name must be 2-50 characters and contain only letters' };
     }
 
-    if (!phone || phone.trim().length < 10) { 
+    if (!phone || phone.trim().length < 10) {
         return { isValid: false, error: 'Phone number must be exactly 10 digits' };
     }
 
-    if (!isValidPhone(phone)) { 
+    if (!isValidPhone(phone)) {
         return { isValid: false, error: 'Please enter a valid mobile number' };
     }
 
@@ -58,7 +58,7 @@ export const createAddress = async (userId, addressData) => {
     const { fullName, phone, pincode, address, city, state, addressType } = addressData;
 
     const existingAddresses = await Address.find({ userId });
-    const isFirstAddress = existingAddresses.length === 0; 
+    const isFirstAddress = existingAddresses.length === 0;
 
 
     const newAddress = new Address({

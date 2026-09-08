@@ -43,7 +43,6 @@ export const getAdminOrdersPage = async (req, res) => {
         }
 
         if (search) {
-            // Escape regex special characters so searching for '*' or other regex symbols doesn't cause a 500 error
             const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
             const matchingUsers = await User.find({
@@ -83,7 +82,6 @@ export const getAdminOrdersPage = async (req, res) => {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
-            
 
         res.render('admin/orders', {
             orders: orders,
@@ -201,7 +199,6 @@ export const updateAdminOrderStatus = async (req, res) => {
 
             for (const item of order.items) {
                 if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
-                    // Check return reason to avoid restocking damaged or defective products
                     const returnReasonText = (item.returnReason || order.returnReason || '').toLowerCase();
                     const isDamagedOrDefective = returnReasonText.includes('damage') || returnReasonText.includes('defect');
 

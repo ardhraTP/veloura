@@ -1,3 +1,5 @@
+import { getSalesReport } from '../controller/Admin/salesReportController.js';
+
 import express from 'express';
 import { isAdminAuthenticated, isAdminGuest } from '../middleware/adminAuth.js';
 import { getLogin, login, getDashboard,getDashboardData, getUsers, toggleBlockUser, logout } from '../controller/Admin/adminController.js';
@@ -65,18 +67,7 @@ router.post('/coupons/edit/:id', isAdminAuthenticated, editCoupon);
 router.patch('/coupons/toggle-status/:id', isAdminAuthenticated, toggleCouponStatus);
 router.delete('/coupons/delete/:id', isAdminAuthenticated, deleteCoupon);
 
-router.get('/sales-report', isAdminAuthenticated, async (req, res) => {
-    try {
-        const orders = await Order.find()
-            .populate('user')
-            .populate('items.product')
-            .sort({ createdAt: -1 });
-        res.render('admin/sales-report', { orders: orders });
-    } catch (error) {
-        console.error('Error fetching orders for sales report:', error);
-        res.status(500).render('error/500');
-    }
-});
+router.get('/sales-report', isAdminAuthenticated, getSalesReport);
 
 
 router.get('/users', isAdminAuthenticated, getUsers);

@@ -346,6 +346,7 @@
                                     <td class="td-sno">
                                         <%= (currentPage - 1) * 5 + (index + 1) %>
                                     </td>
+
                                     <td class="td-name">
                                         <%= user.name %>
                                     </td>
@@ -355,6 +356,7 @@
                                     <td>
                                         <%= user.phone || 'N/A' %>
                                     </td>
+
                                     <td>
                                         <button class="btn-action <%= user.isBlocked ? 'btn-unblock' : 'btn-block' %>"
                                             onclick="toggleUserStatus('<%= user._id %>', this)">

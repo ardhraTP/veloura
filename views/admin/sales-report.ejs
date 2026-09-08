@@ -212,7 +212,7 @@
         .stat-growth {
             font-size: 12px;
             font-weight: 700;
-            color: #2e7d32; /* Green for growth */
+            color: #2e7d32; 
             display: flex;
             align-items: center;
             gap: 4px;
@@ -223,7 +223,6 @@
             color: #888;
         }
 
-        /* Sales Table Container */
         .table-card {
             background: white;
             border-radius: 8px;
@@ -334,6 +333,108 @@
             background-color: #faf7f7;
             transform: translateY(-1px);
         }
+
+        /* Pagination Styles (Matching Order Management Page) */
+        .pagination-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .pagination-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .pagination-nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background-color: #ffffff;
+            color: #2d2a29;
+            border: 1px solid #e6ded4;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            user-select: none;
+        }
+
+        .pagination-nav-btn:hover:not(.disabled) {
+            background-color: #f7f3f1;
+            border-color: #5c1e28;
+            color: #5c1e28;
+        }
+
+        .pagination-nav-btn.disabled {
+            cursor: not-allowed;
+            pointer-events: none;
+            color: #aaa;
+            background-color: #f9f9f9;
+            border-color: #eee;
+            opacity: 0.7;
+        }
+
+        .nav-icon {
+            font-size: 11px;
+        }
+
+        .pagination-numbers-group {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            border: 1px solid #e6ded4;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+
+        .page-num-btn {
+            min-width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #2d2a29;
+            background-color: #ffffff;
+            border-right: 1px solid #e6ded4;
+            border-top: none;
+            border-bottom: none;
+            border-left: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .page-num-btn:last-child {
+            border-right: none;
+        }
+
+        .page-num-btn:hover:not(.active):not(.dots) {
+            background-color: #f7f3f1;
+            color: #5c1e28;
+        }
+
+        .page-num-btn.active {
+            background-color: #5c1e28;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .page-num-btn.dots {
+            cursor: default;
+            color: #888;
+        }
     </style>
 </head>
 <body>
@@ -353,6 +454,7 @@
             <div class="filter-group">
                 <span class="filter-label">Report Period</span>
                 <select id="filterPeriod" class="filter-select" onchange="handlePeriodChange()">
+                    <option value="all">All Reports</option>
                     <option value="daily">Daily Report</option>
                     <option value="weekly">Weekly Report</option>
                     <option value="yearly">Yearly Report</option>
@@ -385,19 +487,22 @@
         </div>
 
         <!-- Sales Report Table -->
-        <div class="table-card">
+        <div class="table-card" style="overflow-x: auto;">
             <table>
                 <thead>
                     <tr>
+                        <th>Date & Time</th>
+                        <th>Order ID</th>
                         <th>Buyer</th>
                         <th>Product Name</th>
-                        <th>Product ID</th>
+                        <th>Category</th>
                         <th>Qty</th>
                         <th>Price</th>
-                        <th>GST</th>
-                        <th>Category</th>
-                        <th>Unit/Type</th>
+                        <th>Discount</th>
+                        <th>GST (18%)</th>
                         <th>Total</th>
+                        <th>Payment</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody id="report-table-body">
@@ -405,6 +510,50 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination -->
+        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+            <div class="pagination-area">
+                <div class="pagination-container">
+                    
+                    <!-- Previous Button -->
+                    <% if (currentPage > 1) { %>
+                        <a href="?page=<%= currentPage - 1 %><%= queryParams ? '&' + queryParams : '' %>" class="pagination-nav-btn">
+                            <i class="fas fa-chevron-left nav-icon"></i> PREVIOUS
+                        </a>
+                    <% } else { %>
+                        <span class="pagination-nav-btn disabled">
+                            <i class="fas fa-chevron-left nav-icon"></i> PREVIOUS
+                        </span>
+                    <% } %>
+
+                    <!-- Page Numbers Group -->
+                    <div class="pagination-numbers-group">
+                        <% pages.forEach(function(item) { %>
+                            <% if (item === '...') { %>
+                                <span class="page-num-btn dots">...</span>
+                            <% } else if (item === currentPage) { %>
+                                <span class="page-num-btn active"><%= item %></span>
+                            <% } else { %>
+                                <a href="?page=<%= item %><%= queryParams ? '&' + queryParams : '' %>" class="page-num-btn"><%= item %></a>
+                            <% } %>
+                        <% }); %>
+                    </div>
+
+                    <!-- Next Button -->
+                    <% if (currentPage < totalPages) { %>
+                        <a href="?page=<%= currentPage + 1 %><%= queryParams ? '&' + queryParams : '' %>" class="pagination-nav-btn">
+                            NEXT <i class="fas fa-chevron-right nav-icon"></i>
+                        </a>
+                    <% } else { %>
+                        <span class="pagination-nav-btn disabled">
+                            NEXT <i class="fas fa-chevron-right nav-icon"></i>
+                        </span>
+                    <% } %>
+
+                </div>
+            </div>
+        <% } %>
 
         <!-- Download Buttons -->
         <div class="action-container">
@@ -448,89 +597,127 @@
     </main>
 
     <script>
-        // Load MongoDB orders rendered via EJS (if any exist)
         const dbOrders = <%- JSON.stringify(orders || []) %>;
 
-        // Fallback Premium Mock Orders (matching the screenshot exactly)
+        const nowTime = new Date();
         const mockOrders = [
             {
+                orderId: "ORD-8821",
                 buyer: "David Chen",
+                buyerPhone: "+91 9876543210",
                 productName: "Velvet Matte Lipstick",
                 productId: "#VL-8821",
                 qty: 1,
                 price: 45.00,
+                discount: 0.00,
                 gst: "18%",
+                gstAmount: 8.10,
                 category: "Lips",
                 unit: "NOS",
                 total: 53.10,
-                date: new Date("2024-10-14T10:00:00Z")
+                paymentMethod: "Online",
+                paymentStatus: "Completed",
+                status: "Delivered",
+                date: new Date(nowTime.getTime() - 2 * 60 * 60 * 1000) // Today
             },
             {
+                orderId: "ORD-3312",
                 buyer: "Sophia Lauren",
+                buyerPhone: "+91 9876543211",
                 productName: "Liquid Silk Lip Stain",
                 productId: "#VL-3312",
                 qty: 2,
                 price: 38.00,
+                discount: 5.00,
                 gst: "18%",
+                gstAmount: 13.68,
                 category: "Lips",
                 unit: "NOS",
-                total: 89.68,
-                date: new Date("2024-10-14T11:30:00Z")
+                total: 84.68,
+                paymentMethod: "COD",
+                paymentStatus: "Completed",
+                status: "Delivered",
+                date: new Date(nowTime.getTime() - 1 * 24 * 60 * 60 * 1000) // 1 day ago
             },
             {
+                orderId: "ORD-0941",
                 buyer: "Marcus Thorne",
+                buyerPhone: "+91 9876543212",
                 productName: "Glossy Rouge",
                 productId: "#VL-0941",
                 qty: 1,
                 price: 42.00,
+                discount: 2.00,
                 gst: "18%",
+                gstAmount: 7.56,
                 category: "Lips",
                 unit: "NOS",
-                total: 49.56,
-                date: new Date("2024-10-14T14:15:00Z")
+                total: 47.56,
+                paymentMethod: "Wallet",
+                paymentStatus: "Completed",
+                status: "Shipped",
+                date: new Date(nowTime.getTime() - 4 * 24 * 60 * 60 * 1000) // 4 days ago
             },
             {
+                orderId: "ORD-7723",
                 buyer: "Elena Rossi",
+                buyerPhone: "+91 9876543213",
                 productName: "Satin Finish Balm",
                 productId: "#VL-7723",
                 qty: 1,
                 price: 35.00,
+                discount: 0.00,
                 gst: "18%",
+                gstAmount: 6.30,
                 category: "Lips",
                 unit: "NOS",
                 total: 41.30,
-                date: new Date("2024-10-14T16:45:00Z")
+                paymentMethod: "Online",
+                paymentStatus: "Completed",
+                status: "Processing",
+                date: new Date(nowTime.getTime() - 15 * 24 * 60 * 60 * 1000) // 15 days ago
             }
         ];
 
-        // Process Database Orders into report structure or use mock data
+        // Process Database Orders into detailed report structure
         let ordersList = [];
 
         if (dbOrders && dbOrders.length > 0) {
             dbOrders.forEach(o => {
                 const buyerName = o.deliveryAddress ? o.deliveryAddress.fullName : (o.user ? (o.user.name || o.user.email) : "Guest");
+                const buyerPhone = o.deliveryAddress ? o.deliveryAddress.phone : (o.user ? (o.user.phone || 'N/A') : 'N/A');
                 const orderDate = new Date(o.createdAt);
-                
+                const itemCount = o.items ? o.items.length : 1;
+                const itemDiscountShare = (o.discount || 0) / itemCount;
+
                 o.items.forEach(item => {
                     const prodName = item.product ? item.product.productName : "Luxury Cosmetic";
+                    const prodCode = item.product ? `#VL-${String(item.product._id).slice(-4).toUpperCase()}` : (o.orderId || '#VL-0000');
                     const priceVal = item.price || 0;
                     const qtyVal = item.quantity || 1;
-                    
-                    // Simple total calculation including 18% GST by default
                     const sub = priceVal * qtyVal;
                     const gstAmount = sub * 0.18;
-                    const totalVal = sub + gstAmount - (o.discount / o.items.length || 0);
+                    const totalVal = Math.max(0, sub + gstAmount - itemDiscountShare);
+                    const categoryName = item.product && item.product.categoryId ? (item.product.categoryId.name || "Cosmetics") : "Cosmetics";
+                    const itemStatus = item.itemStatus || o.orderStatus || 'Ordered';
 
                     ordersList.push({
+                        orderId: o.orderId || prodCode,
                         buyer: buyerName,
+                        buyerPhone: buyerPhone,
                         productName: prodName,
-                        productId: `#VL-${String(item.product ? item.product._id : '').slice(-4).toUpperCase()}`,
+                        productId: prodCode,
                         qty: qtyVal,
                         price: priceVal,
+                        discount: parseFloat(itemDiscountShare.toFixed(2)),
                         gst: "18%",
-                        category: item.product && item.product.categoryId ? (item.product.categoryId.name || "Cosmetic") : "Lips",
+                        gstAmount: parseFloat(gstAmount.toFixed(2)),
+                        category: categoryName,
                         unit: "NOS",
                         total: parseFloat(totalVal.toFixed(2)),
+                        paymentMethod: o.paymentMethod || "COD",
+                        paymentStatus: o.paymentStatus || "Completed",
+                        status: itemStatus,
                         date: orderDate
                     });
                 });
@@ -539,6 +726,9 @@
             ordersList = mockOrders;
         }
 
+        // Global state for active filtered report items
+        let currentFilteredData = [];
+
         // Initialize display date in header
         function setHeaderDate() {
             const today = new Date();
@@ -546,7 +736,7 @@
             document.getElementById('report-date-txt').innerText = `DATE: ${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()}`;
         }
 
-        // Period filter change handler
+        // Period filter change handler - now reloads page with filter
         function handlePeriodChange() {
             const period = document.getElementById("filterPeriod").value;
             const datesWrapper = document.getElementById("customDatesWrapper");
@@ -555,46 +745,42 @@
                 datesWrapper.classList.add('active');
             } else {
                 datesWrapper.classList.remove('active');
-                filterData();
+                // Reload page with period filter
+                window.location.href = `?period=${period}`;
             }
         }
 
-        // Main filter function
+        // Main filter function - now reloads page with query params
         function filterData() {
             const period = document.getElementById("filterPeriod").value;
-            const now = new Date();
-            let filtered = [];
-
-            if (period === 'daily') {
-                // Today's entries
-                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                filtered = ordersList.filter(item => new Date(item.date) >= todayStart);
-            } else if (period === 'weekly') {
-                // Last 7 days
-                const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                filtered = ordersList.filter(item => new Date(item.date) >= oneWeekAgo);
-            } else if (period === 'yearly') {
-                // Last 365 days
-                const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-                filtered = ordersList.filter(item => new Date(item.date) >= oneYearAgo);
-            } else if (period === 'custom') {
-                // Date range picker
+            
+            if (period === 'custom') {
                 const startVal = document.getElementById("startDate").value;
                 const endVal = document.getElementById("endDate").value;
-                if (!startVal || !endVal) return; // Wait until both are filled
                 
-                const start = new Date(startVal);
-                const end = new Date(endVal);
-                end.setHours(23, 59, 59, 999); // Include full end date
-
-                filtered = ordersList.filter(item => {
-                    const d = new Date(item.date);
-                    return d >= start && d <= end;
-                });
+                if (!startVal || !endVal) {
+                    alert('Please select both start and end dates');
+                    return;
+                }
+                
+                // Reload page with custom date range
+                window.location.href = `?period=custom&startDate=${startVal}&endDate=${endVal}`;
+            } else {
+                // For other periods, redirect without date params
+                window.location.href = `?period=${period}`;
             }
+        }
 
-            renderReportTable(filtered);
-            recalculateCards(filtered);
+        // Format Date Helper
+        function formatDate(dateObj) {
+            const d = new Date(dateObj);
+            if (isNaN(d.getTime())) return "N/A";
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            const hours = String(d.getHours()).padStart(2, '0');
+            const mins = String(d.getMinutes()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${mins}`;
         }
 
         // Render rows in HTML Table
@@ -605,7 +791,7 @@
             if (data.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="9">
+                        <td colspan="12">
                             <div class="empty-state">
                                 <p>No sales records found for this period.</p>
                             </div>
@@ -618,15 +804,18 @@
             data.forEach(row => {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
+                    <td>${formatDate(row.date)}</td>
+                    <td><span class="product-id-txt" style="font-weight:600; color:#5c1e28;">${row.orderId}</span></td>
                     <td>${row.buyer}</td>
                     <td><span class="product-name-txt">${row.productName}</span></td>
-                    <td><span class="product-id-txt">${row.productId}</span></td>
+                    <td>${row.category}</td>
                     <td>${String(row.qty).padStart(2, '0')}</td>
                     <td class="price-txt">₹${row.price.toFixed(2)}</td>
+                    <td>₹${row.discount.toFixed(2)}</td>
                     <td>${row.gst}</td>
-                    <td>${row.category}</td>
-                    <td>${row.unit}</td>
                     <td class="total-txt">₹${row.total.toFixed(2)}</td>
+                    <td><span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; background:#f0e6e8; color:#5c1e28; font-weight:600;">${row.paymentMethod}</span></td>
+                    <td><span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; background:#e8f5e9; color:#2e7d32; font-weight:600;">${row.status}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -672,68 +861,165 @@
             }
         }
 
-        // Download Excel (CSV export)
+        // Download Excel (Full Detailed CSV Export with Summary Header & BOM)
         function downloadExcel() {
-            let csv = [];
-            let rows = document.querySelectorAll("table tr");
+            const period = document.getElementById("filterPeriod").value.toUpperCase();
+            const dataToExport = currentFilteredData.length > 0 ? currentFilteredData : ordersList;
+
+            let csvRows = [];
             
-            for (let i = 0; i < rows.length; i++) {
-                let row = [];
-                let cols = rows[i].querySelectorAll("td, th");
-                
-                for (let j = 0; j < cols.length; j++) {
-                    // Clean text and avoid double quotes issues
-                    let txt = cols[j].innerText.trim().replace(/"/g, '""');
-                    row.push('"' + txt + '"');
-                }
-                csv.push(row.join(","));
-            }
+            // 1. Executive Summary Header Block
+            csvRows.push(['VELOURA LUXURY COSMETICS - SALES REPORT']);
+            csvRows.push([`REPORT TYPE:`, period]);
+            csvRows.push([`DATE GENERATED:`, new Date().toLocaleString('en-IN')]);
+            csvRows.push([`TOTAL RECORDS:`, dataToExport.length]);
             
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF" + csv.join("\n");
-            let encodedUri = encodeURI(csvContent);
-            let link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Veloura_Sales_Report.csv");
+            let totalQty = 0;
+            let totalRev = 0;
+            let totalDisc = 0;
+            dataToExport.forEach(item => {
+                totalQty += item.qty;
+                totalRev += item.total;
+                totalDisc += item.discount;
+            });
+
+            csvRows.push([`TOTAL UNITS SOLD:`, totalQty]);
+            csvRows.push([`TOTAL DISCOUNT:`, `Rs. ${totalDisc.toFixed(2)}`]);
+            csvRows.push([`TOTAL REVENUE:`, `Rs. ${totalRev.toFixed(2)}`]);
+            csvRows.push([]); // Spacer row
+
+            // 2. Data Table Column Headers
+            csvRows.push([
+                'Date & Time',
+                'Order ID',
+                'Customer Name',
+                'Customer Phone',
+                'Product Name',
+                'Category',
+                'Quantity',
+                'Unit Price (Rs)',
+                'Discount (Rs)',
+                'GST Tax Rate',
+                'Tax Amount (Rs)',
+                'Total Amount (Rs)',
+                'Payment Method',
+                'Payment Status',
+                'Order Status'
+            ]);
+
+            // 3. Detailed Transaction Data Rows
+            dataToExport.forEach(item => {
+                csvRows.push([
+                    formatDate(item.date),
+                    item.orderId,
+                    item.buyer,
+                    item.buyerPhone || 'N/A',
+                    item.productName,
+                    item.category,
+                    item.qty,
+                    item.price.toFixed(2),
+                    item.discount.toFixed(2),
+                    item.gst,
+                    item.gstAmount.toFixed(2),
+                    item.total.toFixed(2),
+                    item.paymentMethod,
+                    item.paymentStatus,
+                    item.status
+                ]);
+            });
+
+            // 4. Summary Row at the Bottom
+            csvRows.push([]);
+            csvRows.push([
+                'SUMMARY TOTALS',
+                '',
+                '',
+                '',
+                '',
+                '',
+                totalQty,
+                '',
+                totalDisc.toFixed(2),
+                '',
+                '',
+                totalRev.toFixed(2),
+                '',
+                '',
+                ''
+            ]);
+
+            // Format double quotes escaping for CSV
+            let csvContent = csvRows.map(row => 
+                row.map(field => {
+                    let text = String(field !== undefined && field !== null ? field : '').replace(/"/g, '""');
+                    return `"${text}"`;
+                }).join(',')
+            ).join('\r\n');
+
+            // Download using UTF-8 BOM (\uFEFF) Blob for Excel compatibility
+            const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            const dateStr = new Date().toISOString().slice(0, 10);
+            link.setAttribute("download", `Veloura_Sales_Report_${period}_${dateStr}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
 
         // Download PDF via jsPDF & AutoTable
         async function downloadPDF() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape layout is cleaner for wide reports
-
-            // Logo & Header
+            const doc = new jsPDF('l', 'mm', 'a4'); 
+            
+            // Header Section
             doc.setFont("Playfair Display", "bold");
-            doc.setFontSize(26);
-            doc.setTextColor(92, 30, 40); // Maroon #5c1e28
-            doc.text("VELOURA", 14, 20);
+            doc.setFontSize(22);
+            doc.setTextColor(92, 30, 40);
+            doc.text("VELOURA", 14, 18);
 
-            // Subtitle
             doc.setFont("Inter", "normal");
-            doc.setFontSize(12);
+            doc.setFontSize(11);
             doc.setTextColor(100);
-            doc.text("Sales Report Overview & Transactions", 14, 27);
+            doc.text("Sales Report Overview & Transactions", 14, 25);
 
             // Report Meta Info
             doc.setFontSize(9);
             const period = document.getElementById("filterPeriod").value.toUpperCase();
-            doc.text(`REPORT TYPE: ${period}`, 14, 34);
-            doc.text(`DATE GENERATED: ${new Date().toLocaleDateString('en-GB')}`, 14, 39);
+            doc.text(`REPORT TYPE: ${period}`, 14, 32);
+            doc.text(`DATE GENERATED: ${new Date().toLocaleDateString('en-GB')}`, 14, 37);
 
-            // Stats summaries
+            // Summary metrics
             const totalRev = document.getElementById("revenue-val").innerText;
             const itemsSold = document.getElementById("sold-val").innerText;
             const bestSeller = document.getElementById("best-seller-name").innerText;
             
             doc.setFont("Inter", "bold");
-            doc.text(`Total Revenue: ${totalRev}   |   Units Sold: ${itemsSold}   |   Best Seller: ${bestSeller}`, 14, 46);
+            doc.text(`Total Revenue: ${totalRev}   |   Units Sold: ${itemsSold}   |   Best Seller: ${bestSeller}`, 14, 44);
 
-            // AutoTable generation
+            const dataToExport = currentFilteredData.length > 0 ? currentFilteredData : ordersList;
+
+            const head = [['Date & Time', 'Order ID', 'Customer', 'Product', 'Category', 'Qty', 'Price', 'Discount', 'Total', 'Payment', 'Status']];
+            const body = dataToExport.map(row => [
+                formatDate(row.date),
+                row.orderId,
+                row.buyer,
+                row.productName,
+                row.category,
+                row.qty,
+                `Rs. ${row.price.toFixed(2)}`,
+                `Rs. ${row.discount.toFixed(2)}`,
+                `Rs. ${row.total.toFixed(2)}`,
+                row.paymentMethod,
+                row.status
+            ]);
+
             doc.autoTable({
-                html: 'table',
-                startY: 52,
+                head: head,
+                body: body,
+                startY: 50,
                 theme: 'striped',
                 headStyles: { 
                     fillColor: [92, 30, 40],
@@ -741,24 +1027,37 @@
                     fontStyle: 'bold' 
                 },
                 styles: { 
-                    fontSize: 9,
+                    fontSize: 8,
                     font: 'Inter'
-                },
-                columnStyles: {
-                    1: { fontStyle: 'bold' }, // bold product names
-                    8: { fontStyle: 'bold' } // bold totals
                 }
             });
 
-            doc.save("Veloura_Sales_Report.pdf");
+            doc.save(`Veloura_Sales_Report_${period}.pdf`);
         }
 
-        // Bootstrapping
-        document.addEventListener("DOMContentLoaded", () => {
+        // Initialize page on load
+        (function initializePage() {
+            // Set header date
             setHeaderDate();
-            // Default to Daily report loading
-            filterData();
-        });
+
+            // Set filter dropdown to current period from server
+            const currentPeriod = '<%= period || "all" %>';
+            document.getElementById('filterPeriod').value = currentPeriod;
+
+            // Show custom date inputs if period is custom
+            if (currentPeriod === 'custom') {
+                document.getElementById('customDatesWrapper').classList.add('active');
+                const startDate = '<%= startDate || "" %>';
+                const endDate = '<%= endDate || "" %>';
+                if (startDate) document.getElementById('startDate').value = startDate;
+                if (endDate) document.getElementById('endDate').value = endDate;
+            }
+
+            // Render table with current page data
+            currentFilteredData = ordersList;
+            renderReportTable(ordersList);
+            recalculateCards(ordersList);
+        })();
     </script>
 </body>
 </html>

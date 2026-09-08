@@ -13,7 +13,6 @@ export const getCategoriesPage = async (req, res) => {
         };
 
         if (search) {
-            // Escape regex special characters so searching for '*' or other regex symbols doesn't cause a 500 error
             const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             searchFilter.name = { $regex: safeSearch, $options: 'i' };
         }
@@ -147,7 +146,6 @@ export const editCategory = async (req, res) => {
 
         const trimmedName = name.trim();
 
-        //check if another category with same name exists
         const existingCategory = await Category.findOne({
             _id: { $ne: categoryId },
             name: { $regex: new RegExp('^' + trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') },
