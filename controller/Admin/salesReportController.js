@@ -1,4 +1,5 @@
 import Order from '../../model/Order.js';
+import Product from '../../model/Product.js';
 
 export const getSalesReport = async (req, res) => {
     try {
@@ -46,6 +47,7 @@ export const getSalesReport = async (req, res) => {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
+        
 
         let queryParams = '';
         if (period && period !== 'all') queryParams += `period=${period}&`;
@@ -92,7 +94,8 @@ export const getSalesReport = async (req, res) => {
             queryParams: queryParams,
             period: period || 'all',
             startDate: startDate || '',
-            endDate: endDate || ''
+            endDate: endDate || '',
+            amountCount: amountCount
         });
 
     } catch (error) {
