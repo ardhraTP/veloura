@@ -72,6 +72,7 @@
                                     <h3 class="item-name">
                                         <%= item.product.productName %>
                                     </h3>
+                                    <h5>Stock: <%=item.variant ? item.variant.quantity : 0%></h5>
                                     <p class="item-shade">BRAND: <%= item.product.brand.toUpperCase() %>
                                     </p>
                                     <% if (item.variant && item.variant.color) { %>
