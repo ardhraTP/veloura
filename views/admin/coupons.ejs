@@ -600,12 +600,22 @@
                         <span class="field-error" id="addNameError"></span>
                     </div>
 
+                    <!-- Discount Type -->
+                    <div class="form-group">
+                        <label class="form-label">Discount Type</label>
+                        <select id="addDiscountType" name="discountType" class="form-input" onchange="toggleDiscountTypeUI('add')" style="cursor: pointer;" required>
+                            <option value="PERCENTAGE">Percentage (%)</option>
+                            <option value="FIXED">Fixed Amount (₹)</option>
+                        </select>
+                        <span class="field-error" id="addDiscountTypeError"></span>
+                    </div>
+
                     <!-- Discount Value -->
                     <div class="form-group">
-                        <label class="form-label">Coupon Amount / Discount (%)</label>
+                        <label class="form-label" id="addDiscountValueLabel">Discount Percentage (%)</label>
                         <div class="input-wrapper">
                             <input type="number" id="addDiscountValue" name="discountValue" class="form-input" placeholder="30" min="1" max="100" required>
-                            <span class="input-suffix">%</span>
+                            <span class="input-suffix" id="addDiscountSuffix">%</span>
                         </div>
                         <span class="field-error" id="addDiscountValueError"></span>
                     </div>
@@ -653,7 +663,7 @@
                     </div>
 
                     <!-- Maximum Discount Amount -->
-                    <div class="form-group">
+                    <div class="form-group" id="addMaxDiscountGroup">
                         <label class="form-label">Maximum Discount Amount</label>
                         <input type="number" id="addMaxDiscountAmount" name="maxDiscountAmount" class="form-input" placeholder="500" min="0">
                         <span class="field-error" id="addMaxDiscountAmountError"></span>
@@ -721,7 +731,13 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="discount-val-txt"><%= coupon.discountValue %>%</span>
+                                    <% if (coupon.discountType === 'FIXED') { %>
+                                        <span class="discount-val-txt">₹<%= coupon.discountValue.toFixed(2) %></span>
+                                        <span style="font-size: 10px; color: #888; display: block; margin-top: 2px;">FIXED AMOUNT</span>
+                                    <% } else { %>
+                                        <span class="discount-val-txt"><%= coupon.discountValue %>%</span>
+                                        <span style="font-size: 10px; color: #888; display: block; margin-top: 2px;">PERCENTAGE</span>
+                                    <% } %>
                                 </td>
                                 <td>
                                     ₹<%= coupon.minOrderAmount.toFixed(2) %>
@@ -748,6 +764,7 @@
                                                 data-id="<%= coupon._id %>"
                                                 data-name="<%= coupon.name %>"
                                                 data-code="<%= coupon.code %>"
+                                                data-discount-type="<%= coupon.discountType || 'PERCENTAGE' %>"
                                                 data-discount="<%= coupon.discountValue %>"
                                                 data-limit="<%= coupon.usageLimit || '' %>"
                                                 data-start="<%= new Date(coupon.startDate).toISOString().split('T')[0] %>"
@@ -823,12 +840,22 @@
                         <span class="field-error" id="editNameError"></span>
                     </div>
 
+                    <!-- Discount Type -->
+                    <div class="form-group">
+                        <label class="form-label">Discount Type</label>
+                        <select id="editDiscountType" name="discountType" class="form-input" onchange="toggleDiscountTypeUI('edit')" style="cursor: pointer;" required>
+                            <option value="PERCENTAGE">Percentage (%)</option>
+                            <option value="FIXED">Fixed Amount (₹)</option>
+                        </select>
+                        <span class="field-error" id="editDiscountTypeError"></span>
+                    </div>
+
                     <!-- Discount Value -->
                     <div class="form-group">
-                        <label class="form-label">Coupon Amount / Discount (%)</label>
+                        <label class="form-label" id="editDiscountValueLabel">Discount Percentage (%)</label>
                         <div class="input-wrapper">
                             <input type="number" id="editDiscountValue" name="discountValue" class="form-input" min="1" max="100" required>
-                            <span class="input-suffix">%</span>
+                            <span class="input-suffix" id="editDiscountSuffix">%</span>
                         </div>
                         <span class="field-error" id="editDiscountValueError"></span>
                     </div>
@@ -876,7 +903,7 @@
                     </div>
 
                     <!-- Maximum Discount Amount -->
-                    <div class="form-group">
+                    <div class="form-group" id="editMaxDiscountGroup">
                         <label class="form-label">Maximum Discount Amount</label>
                         <input type="number" id="editMaxDiscountAmount" name="maxDiscountAmount" class="form-input" min="0">
                         <span class="field-error" id="editMaxDiscountAmountError"></span>
@@ -912,7 +939,6 @@
             document.getElementById(inputId).value = prefix + randomPart;
         }
 
-        // Apply search and status filters
         function applyFilters() {
             const searchVal = document.getElementById('searchInput').value.trim();
             const statusVal = document.getElementById('statusFilter').value;
@@ -927,19 +953,16 @@
             window.location.href = url.endsWith('&') || url.endsWith('?') ? url.slice(0, -1) : url;
         }
 
-        // Search trigger on enter key
         function handleSearchKeyPress(event) {
             if (event.key === 'Enter') {
                 applyFilters();
             }
         }
 
-        // Toggle Active status via AJAX fetch
         async function toggleCouponStatus(couponId, checkbox) {
             const badge = document.getElementById('badge-' + couponId);
             const isActivating = checkbox.checked;
 
-            // Revert state visually first to ask confirmation
             checkbox.checked = !isActivating;
 
             const confirmRes = await Swal.fire({
@@ -959,7 +982,6 @@
                 return;
             }
 
-            // Restore the state visually if confirmed
             checkbox.checked = isActivating;
 
             try {
@@ -1023,7 +1045,6 @@
             }
         }
 
-        // Delete Coupon via AJAX fetch
         async function deleteCoupon(couponId) {
             const confirmRes = await Swal.fire({
                 title: 'Delete Coupon?',
@@ -1087,7 +1108,6 @@
             err.classList.toggle('visible', show);
         }
 
-        // Form Validations Helpers
         function clearAllErrors() {
             document.querySelectorAll('.form-input, .form-textarea').forEach(el => {
                 el.classList.remove('input-error');
@@ -1108,12 +1128,40 @@
             });
         });
 
+        // Toggle Discount Type UI (Percentage vs Fixed)
+        function toggleDiscountTypeUI(prefix) {
+            const typeSelect = document.getElementById(prefix + 'DiscountType');
+            const label = document.getElementById(prefix + 'DiscountValueLabel');
+            const input = document.getElementById(prefix + 'DiscountValue');
+            const suffix = document.getElementById(prefix + 'DiscountSuffix');
+            const maxDiscountGroup = document.getElementById(prefix + 'MaxDiscountGroup');
+
+            if (!typeSelect || !input || !suffix) return;
+
+            if (typeSelect.value === 'FIXED') {
+                if (label) label.textContent = 'Fixed Discount Amount (₹)';
+                suffix.textContent = '₹';
+                input.placeholder = '500';
+                input.removeAttribute('max');
+                input.min = '1';
+                if (maxDiscountGroup) maxDiscountGroup.style.display = 'none';
+            } else {
+                if (label) label.textContent = 'Discount Percentage (%)';
+                suffix.textContent = '%';
+                input.placeholder = '30';
+                input.setAttribute('max', '100');
+                input.min = '1';
+                if (maxDiscountGroup) maxDiscountGroup.style.display = 'flex';
+            }
+        }
+
         // Client validations for Add Form
         document.getElementById('addCouponForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             let isValid = true;
             
             const name = document.getElementById('addName').value.trim();
+            const discountType = document.getElementById('addDiscountType').value;
             const discountVal = document.getElementById('addDiscountValue').value.trim();
             const discount = parseFloat(discountVal);
             const code = document.getElementById('addCode').value.trim();
@@ -1132,10 +1180,14 @@
             }
 
             if (!discountVal) {
-                showErr('addDiscountValue', 'addDiscountValueError', true, 'Discount percentage is required.');
+                const msg = discountType === 'FIXED' ? 'Fixed discount amount is required.' : 'Discount percentage is required.';
+                showErr('addDiscountValue', 'addDiscountValueError', true, msg);
                 isValid = false;
-            } else if (isNaN(discount) || discount < 1 || discount > 100) {
+            } else if (discountType === 'PERCENTAGE' && (isNaN(discount) || discount < 1 || discount > 100)) {
                 showErr('addDiscountValue', 'addDiscountValueError', true, 'Discount percentage must be between 1 and 100.');
+                isValid = false;
+            } else if (discountType === 'FIXED' && (isNaN(discount) || discount <= 0)) {
+                showErr('addDiscountValue', 'addDiscountValueError', true, 'Fixed discount amount must be a positive number greater than 0.');
                 isValid = false;
             } else {
                 showErr('addDiscountValue', 'addDiscountValueError', false);
@@ -1203,7 +1255,7 @@
                 }
             }
 
-            if (maxDiscountVal !== '') {
+            if (discountType === 'PERCENTAGE' && maxDiscountVal !== '') {
                 const maxDiscount = parseFloat(maxDiscountVal);
                 if (isNaN(maxDiscount) || maxDiscount < 0) {
                     showErr('addMaxDiscountAmount', 'addMaxDiscountAmountError', true, 'Maximum discount amount cannot be negative.');
@@ -1247,6 +1299,7 @@
             let isValid = true;
             
             const name = document.getElementById('editName').value.trim();
+            const discountType = document.getElementById('editDiscountType').value;
             const discountVal = document.getElementById('editDiscountValue').value.trim();
             const discount = parseFloat(discountVal);
             const code = document.getElementById('editCode').value.trim();
@@ -1265,10 +1318,14 @@
             }
 
             if (!discountVal) {
-                showErr('editDiscountValue', 'editDiscountValueError', true, 'Discount percentage is required.');
+                const msg = discountType === 'FIXED' ? 'Fixed discount amount is required.' : 'Discount percentage is required.';
+                showErr('editDiscountValue', 'editDiscountValueError', true, msg);
                 isValid = false;
-            } else if (isNaN(discount) || discount < 1 || discount > 100) {
+            } else if (discountType === 'PERCENTAGE' && (isNaN(discount) || discount < 1 || discount > 100)) {
                 showErr('editDiscountValue', 'editDiscountValueError', true, 'Discount percentage must be between 1 and 100.');
+                isValid = false;
+            } else if (discountType === 'FIXED' && (isNaN(discount) || discount <= 0)) {
+                showErr('editDiscountValue', 'editDiscountValueError', true, 'Fixed discount amount must be a positive number greater than 0.');
                 isValid = false;
             } else {
                 showErr('editDiscountValue', 'editDiscountValueError', false);
@@ -1328,7 +1385,7 @@
                 }
             }
 
-            if (maxDiscountVal !== '') {
+            if (discountType === 'PERCENTAGE' && maxDiscountVal !== '') {
                 const maxDiscount = parseFloat(maxDiscountVal);
                 if (isNaN(maxDiscount) || maxDiscount < 0) {
                     showErr('editMaxDiscountAmount', 'editMaxDiscountAmountError', true, 'Maximum discount amount cannot be negative.');
@@ -1371,6 +1428,7 @@
             const id = button.getAttribute('data-id');
             const name = button.getAttribute('data-name');
             const code = button.getAttribute('data-code');
+            const discountType = button.getAttribute('data-discount-type') || 'PERCENTAGE';
             const discount = button.getAttribute('data-discount');
             const limit = button.getAttribute('data-limit');
             const start = button.getAttribute('data-start');
@@ -1382,6 +1440,8 @@
             document.getElementById('editForm').action = `/admin/coupons/edit/${id}`;
             document.getElementById('editName').value = name;
             document.getElementById('editCode').value = code;
+            document.getElementById('editDiscountType').value = discountType;
+            toggleDiscountTypeUI('edit');
             document.getElementById('editDiscountValue').value = discount;
             document.getElementById('editUsageLimit').value = limit;
             document.getElementById('editStartDate').value = start;
@@ -1391,7 +1451,7 @@
             document.getElementById('editMinOrderAmount').value = minOrder;
 
             // Reset error text/styles
-            const fields = ['editName', 'editCode', 'editDiscountValue', 'editUsageLimit', 'editStartDate', 'editEndDate', 'editDescription', 'editMaxDiscountAmount', 'editMinOrderAmount'];
+            const fields = ['editName', 'editCode', 'editDiscountType', 'editDiscountValue', 'editUsageLimit', 'editStartDate', 'editEndDate', 'editDescription', 'editMaxDiscountAmount', 'editMinOrderAmount'];
             fields.forEach(f => showErr(f, f + 'Error', false));
 
             document.getElementById('editModal').classList.add('open');

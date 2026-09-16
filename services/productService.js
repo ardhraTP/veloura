@@ -1,5 +1,6 @@
 import Product from '../model/Product.js';
 import Variant from '../model/Variant.js';
+import Category from '../model/Category.js';
 import mongoose from 'mongoose';
 import { calculateOfferPrice } from '../utils/priceHelper.js';
 
@@ -137,7 +138,7 @@ export const getProductById = async (productId) => {
         const variants = await Variant.find({
             productId: product._id,
             isDeleted: false
-        });
+        }).lean();
 
         return {
             ...product.toObject(),

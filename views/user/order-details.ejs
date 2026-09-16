@@ -941,7 +941,7 @@
             </div>
 
             <!-- Download Invoice Option (Last) -->
-            <% if (isDelivered || order.orderStatus === 'Delivered') { %>
+            <% if (order.paymentStatus !== 'Failed') { %>
                 <div class="invoice-download-container" style="margin-top: 25px;">
                     <a href="/profile/orders/<%= order._id %>/invoice" class="btn-download-invoice">
                         Download Invoice PDF <i class="fas fa-download"></i>

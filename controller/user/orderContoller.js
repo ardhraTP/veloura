@@ -4,6 +4,7 @@ import User from '../../model/User.js';
 import Variant from '../../model/Variant.js';
 import Review from '../../model/Review.js';
 import PDFDocument from 'pdfkit';
+import { calculateItemRefund } from '../../utils/priceHelper.js';
 
 
 
@@ -26,16 +27,14 @@ export const getUserOrders = async (req, res) => {
         if (searchQuery) {
             const lowerSearch = searchQuery.toLowerCase();
             orders = orders.filter(order => {
-                const matchesOrderId = order.orderId.toLowerCase().includes(lowerSearch);
-
-                const matchesOrderStatus = order.orderStatus.toLowerCase().includes(lowerSearch);
+                const matchesOrderId = (order.orderId || '').toLowerCase().includes(lowerSearch);
+                const matchesOrderStatus = (order.orderStatus || '').toLowerCase().includes(lowerSearch);
 
                 const matchesItems = order.items.some(item => {
                     const productName = item.product?.productName?.toLowerCase() || '';
-
                     const brand = item.product?.brand?.toLowerCase() || '';
                     const color = item.variant?.color?.toLowerCase() || '';
-                    const itemStatus = item.itemStatus?.toLocaleLowerCase() || '';
+                    const itemStatus = item.itemStatus?.toLowerCase() || '';
 
                     return productName.includes(lowerSearch) ||
                         brand.includes(lowerSearch) ||
@@ -183,24 +182,11 @@ export const cancelOrderProduct = async (req, res) => {
             order.paymentMethod === 'Wallet' ||
             order.paymentMethod === 'Online Payment';
 
-        // Do not refund if payment failed
         if (!isPaymentFailed && isOnlineOrWallet && (order.paymentStatus === 'Completed' || order.paymentStatus === 'Partially Refunded')) {
-            const itemSubtotal = item.price * item.quantity;
-            const totalDiscount = order.discount || 0;
-            const totalTax = order.tax || 0;
-            const totalShipping = order.shippingFee || 0;
-
-            let itemDiscountShare = 0;
-            let itemTaxShare = 0;
-            let itemShippingShare = 0;
-
-            if (order.subtotal > 0) {
-                itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
-                itemTaxShare = (itemSubtotal / order.subtotal) * totalTax;
-                itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
-            }
-
-            refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
+            const refundInfo = calculateItemRefund(order, item);
+            refundAmount = refundInfo.refundAmount;
+            item.refundTax = refundInfo.itemTaxShare;
+            item.refundAmount = refundAmount;
 
             const user = await User.findById(order.user);
             if (user && refundAmount > 0) {
@@ -240,7 +226,6 @@ export const cancelOrderProduct = async (req, res) => {
             });
         }
 
-        // Save order changes to MongoDB
         await order.save();
 
         res.json({ success: true, message: 'Item cancelled successfully!' });

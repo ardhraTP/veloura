@@ -749,11 +749,13 @@
                                                 title="View Order Details">
                                                 View
                                             </a>
-                                            <button type="button" class="action-link-btn"
-                                                onclick="enableStatusEdit('<%= order._id %>')" title="Edit Order Status"
-                                                style="margin: 0; cursor: pointer;">
-                                                <i class="far fa-edit"></i>
-                                            </button>
+                                            <% if (order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Returned' && order.orderStatus !== 'Delivered') { %>
+                                                <button type="button" class="action-link-btn"
+                                                    onclick="enableStatusEdit('<%= order._id %>')" title="Edit Order Status"
+                                                    style="margin: 0; cursor: pointer;">
+                                                    <i class="far fa-edit"></i>
+                                                </button>
+                                            <% } %>
                                         </div>
                                         <div id="actions-edit-<%= order._id %>"
                                             style="display: none; gap: 10px; justify-content: flex-end; align-items: center; width: 100%;">
@@ -928,8 +930,24 @@
                 const selectedStatus = selectEl.value;
                 const originalVal = selectEl.getAttribute('data-original-val');
 
-                if (selectedStatus === originalVal) {
+                if (originalVal === 'Delivered') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Order Already Delivered',
+                        text: 'This order has already been Delivered and its status cannot be changed.',
+                        confirmButtonColor: '#5c1e28'
+                    });
                     disableStatusEdit(orderId);
+                    return;
+                }
+
+                if (selectedStatus === originalVal) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Status Unchanged',
+                        text: `This order is already in ${originalVal} status. Select another status before submitting.`,
+                        confirmButtonColor: '#5c1e28'
+                    });
                     return;
                 }
 

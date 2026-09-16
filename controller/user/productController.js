@@ -60,7 +60,6 @@ export const getProductsPage = async (req,res)=>{
     }
 };
 
-//show single product detail page
 export const getProductDetail = async (req,res)=>{
     try{
         const productId = req.params.id;
@@ -74,15 +73,15 @@ export const getProductDetail = async (req,res)=>{
         
         if (product.variants && product.variants.length > 0) {
             product.variants = product.variants.map(variant => {
-                const { finalPrice, discountPercentage } = calculateOfferPrice(product, variant.regularPrice, variant.salePrice);
-                variant.salePrice = finalPrice;
-                variant.discountPercentage = discountPercentage;
-                variant.activeOfferDiscount = discountPercentage;
-                return variant;
+                const variantObj = typeof variant.toObject === 'function' ? variant.toObject() : { ...variant };
+                const { finalPrice, discountPercentage } = calculateOfferPrice(product, variantObj.regularPrice, variantObj.salePrice);
+                variantObj.salePrice = finalPrice;
+                variantObj.discountPercentage = discountPercentage;
+                variantObj.activeOfferDiscount = discountPercentage;
+                return variantObj;
             });
         }
 
-        //check if the soecific product is in the user's wishlist
 
         let isInWishlist = false;
         if(req.session && req.session.userId){
@@ -100,7 +99,6 @@ export const getProductDetail = async (req,res)=>{
             }
         }
 
-        // Fetch approved reviews for this product
         const reviews = await Review.find({ product: productId, status: 'Approved' })
             .populate('user')
             .sort({ createdAt: -1 });

@@ -662,7 +662,7 @@
                                             <label class="form-label">VARIANT IMAGES (<%= variant.images.length %>
                                                     images)</label>
                                             <input type="file" id="variantImageInput-<%= variant._id %>"
-                                                class="file-input" accept="image/*"
+                                                class="file-input" accept="image/jpeg,image/png,image/webp,image/avif,image/jpg"
                                                 onchange="addImageToVariant('<%= variant._id %>', this.files[0])">
 
                                             <div class="image-preview-container" id="imagePreview-<%= variant._id %>">
@@ -752,7 +752,7 @@
                                                         <label class="form-label">VARIANT IMAGES * (Min 3
                                                             images)</label>
                                                         <input type="file" id="newVariantImages" class="file-input"
-                                                            accept="image/*" multiple
+                                                            accept="image/jpeg,image/png,image/webp,image/avif,image/jpg" multiple
                                                             onchange="handleNewVariantImages(this.files)">
 
                                                         <div class="image-preview-container" id="newImagesPreview">
@@ -807,9 +807,6 @@
             }
             if (!/[a-zA-Z]/.test(trimmed)) {
                 return `${fieldName} must contain letters.`;
-            }
-            if (!/^[a-zA-Z0-9\s&\-.'()]+$/.test(trimmed)) {
-                return `${fieldName} contains invalid characters.`;
             }
             return null;
         }
@@ -1239,12 +1236,34 @@
             reader.readAsDataURL(file);
         }
 
+        function isValidImageFile(file) {
+            if (!file) return false;
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+            const allowedExtensions = /\.(jpe?g|png|webp|avif)$/i;
+
+            const isImageMime = file.type ? allowedTypes.includes(file.type.toLowerCase()) : false;
+            const isImageExt = allowedExtensions.test(file.name);
+
+            return isImageMime || isImageExt;
+        }
+
         // Add image to existing variant
             async function addImageToVariant(variantId, file) {
                 if (!file) return;
 
                 // Clear input value so same file can be selected again
-                document.getElementById(`variantImageInput-${variantId}`).value = '';
+                const inputEl = document.getElementById(`variantImageInput-${variantId}`);
+                if (inputEl) inputEl.value = '';
+
+                if (!isValidImageFile(file)) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid File Selected',
+                        text: 'Only image files (JPEG, PNG, WebP, AVIF) are allowed. Folders and documents cannot be uploaded.',
+                        confirmColor: '#5c1e28'
+                    });
+                    return;
+                }
 
                 cropImageHelper(file, async function(croppedFile) {
                     if (!croppedFile) return;
@@ -1646,17 +1665,51 @@
             let newVariantFiles = [];
 
             function handleNewVariantImages(files) {
-                if (files.length === 0) return;
-                const file = files[0];
+                if (!files || files.length === 0) return;
                 
+                const rawFiles = Array.from(files);
+                const validFiles = [];
+                let hasInvalidFiles = false;
+
+                for (let i = 0; i < rawFiles.length; i++) {
+                    const file = rawFiles[i];
+                    if (isValidImageFile(file)) {
+                        validFiles.push(file);
+                    } else {
+                        hasInvalidFiles = true;
+                    }
+                }
+
+                if (hasInvalidFiles) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid File Selected',
+                        text: 'Only image files (JPEG, PNG, WebP, AVIF) are allowed. Folders and documents cannot be uploaded.',
+                        confirmColor: '#5c1e28'
+                    });
+                }
+
                 // Clear input value
-                document.getElementById('newVariantImages').value = '';
-                
-                cropImageHelper(file, function(croppedFile) {
-                    if (!croppedFile) return;
-                    newVariantFiles.push(croppedFile);
-                    renderNewImagesPreview();
-                });
+                const inputEl = document.getElementById('newVariantImages');
+                if (inputEl) inputEl.value = '';
+
+                if (validFiles.length === 0) return;
+
+                let fileQueue = [...validFiles];
+                function processNextFile() {
+                    if (fileQueue.length === 0) return;
+                    const file = fileQueue.shift();
+                    cropImageHelper(file, function(croppedFile) {
+                        if (croppedFile) {
+                            newVariantFiles.push(croppedFile);
+                            renderNewImagesPreview();
+                        }
+                        if (fileQueue.length > 0) {
+                            processNextFile();
+                        }
+                    });
+                }
+                processNextFile();
             }
 
             function renderNewImagesPreview() {

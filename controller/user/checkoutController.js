@@ -19,7 +19,6 @@ export const getCheckoutPage = async (req, res) => {
             return res.redirect('/cart');
         }
 
-        // Validate stock availability for all items in the cart
         let hasStockError = false;
         for (const item of cart.items) {
             if (!item.product || item.product.status === 'INACTIVE' || item.product.isDeleted) {

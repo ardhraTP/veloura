@@ -7,6 +7,7 @@ import {
     validateLoginData,
     validateOTP,
     checkEmailExists,
+    checkPhoneExists,
     getUserByEmail,
     getUserByResetToken
 } from '../services/userService.js';
@@ -45,6 +46,12 @@ export const signup = async (req, res) => {
             return res.redirect('/register');
         }
 
+        const phoneExists = await checkPhoneExists(phone);
+        if (phoneExists) {
+            req.session.signupError = 'Phone number already registered';
+            return res.redirect('/register');
+        }
+
         if(referralCode && referralCode.trim() !== ''){
             const referrer = await User.findOne({
                 referralCode: referralCode.trim()
@@ -63,11 +70,16 @@ export const signup = async (req, res) => {
         const hashedPassword = await hashPassword(password);
         const otp = generate();
 
+        const cleanName = name.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const randomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+        const userReferralCode = `VELVET-${cleanName || 'USER'}-${randomCode}`;
+
         const newUser = new User({
             name: name.trim(),
             email: email.toLowerCase().trim(),
             phone: phone.trim(),
             password: hashedPassword,
+            referralCode: userReferralCode,
             isAdmin: false,
             otp: otp,
             otpExpiry: addMinutes(5)
@@ -81,7 +93,9 @@ export const signup = async (req, res) => {
             req.session.tempUserId = newUser._id;
             req.session.otpSuccess = 'OTP sent to your email';
 
-            res.redirect('/verify-otp');
+            req.session.save(() => {
+                res.redirect('/verify-otp');
+            });
         } catch (emailError) {
             console.error('Email sending failed:', emailError);
 
@@ -101,18 +115,24 @@ export const signup = async (req, res) => {
                     profileImage: newUser.profileImage
                 };
 
-                res.redirect('/home');
+                req.session.save(() => {
+                    res.redirect('/home');
+                });
             } else {
                 await User.findByIdAndDelete(newUser._id);
                 req.session.signupError = 'Failed to send verification email. Please check your email address and try again.';
-                return res.redirect('/register');
+                req.session.save(() => {
+                    res.redirect('/register');
+                });
             }
         }
 
     } catch (error) {
         console.error('Signup error:', error);
         req.session.signupError = 'Something went wrong. Please try again.';
-        return res.redirect('/register');
+        req.session.save(() => {
+            res.redirect('/register');
+        });
     }
 };
 
@@ -158,8 +178,13 @@ export const login = async (req, res) => {
             return res.redirect('/login');
         }
 
-        if (user.authProvider === 'google') {
+        if (user.authProvider === 'google' && !user.password) {
             req.session.loginError = 'This account uses Google Sign-In. Please use the "Sign in with Google" button or set a password from your profile page first.';
+            return res.redirect('/login');
+        }
+
+        if (!user.password) {
+            req.session.loginError = 'Invalid email or password';
             return res.redirect('/login');
         }
 
@@ -177,12 +202,21 @@ export const login = async (req, res) => {
             profileImage: user.profileImage
         };
 
-        res.redirect('/home');
+        req.session.save((err) => {
+            if (err) {
+                console.error('Login session save error:', err);
+                req.session.loginError = 'Something went wrong. Please try again.';
+                return res.redirect('/login');
+            }
+            res.redirect('/home');
+        });
 
     } catch (error) {
         console.error('Login error:', error);
         req.session.loginError = 'Something went wrong. Please try again.';
-        return res.redirect('/login');
+        req.session.save(() => {
+            res.redirect('/login');
+        });
     }
 };
 

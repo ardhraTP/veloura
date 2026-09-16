@@ -1,4 +1,3 @@
-// model/Order.js
 import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
@@ -43,7 +42,7 @@ const orderSchema = new mongoose.Schema({
         },
         itemStatus: {
             type: String,
-            enum: ['Ordered', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Returned', 'Return Requested', 'Return Rejected'],
+            enum: ['Ordered', 'Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Returned', 'Return Requested', 'Return Rejected'],
             default: 'Ordered'
         },
         cancellationReason: {
@@ -57,6 +56,14 @@ const orderSchema = new mongoose.Schema({
         },
         cancelledAt:{
             type:Date 
+        },
+        refundTax: {
+            type: Number,
+            default: 0
+        },
+        refundAmount: {
+            type: Number,
+            default: 0
         }
     }],
     subtotal: {

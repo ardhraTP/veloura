@@ -568,7 +568,7 @@
                 <!-- Right Column -->
                 <div class="form-row">
                     <span class="form-label">Change status :</span>
-                    <select id="adminStatusSelector" class="status-select" <%= (order.orderStatus === 'Cancelled' || order.orderStatus === 'Returned') ? 'disabled' : '' %>>
+                    <select id="adminStatusSelector" class="status-select" <%= (order.orderStatus === 'Cancelled' || order.orderStatus === 'Returned' || order.orderStatus === 'Delivered') ? 'disabled' : '' %>>
                         <option value="Pending" <%= order.orderStatus === 'Pending' ? 'selected' : '' %>>pending</option>
                         <option value="Processing" <%= order.orderStatus === 'Processing' ? 'selected' : '' %>>processing</option>
                         <option value="Shipped" <%= order.orderStatus === 'Shipped' ? 'selected' : '' %>>shipped</option>
@@ -585,8 +585,8 @@
             <div class="items-section-header">Ordered Items</div>
             <div class="ordered-items-list">
                 <% order.items.forEach((item) => { %>
-                    <div class="ordered-item-row">
-                        <div class="item-details-left">
+                    <div class="ordered-item-row" style="display: flex; justify-content: space-between; align-items: center; gap: 15px; padding: 16px; border-bottom: 1px solid var(--border-color);">
+                        <div class="item-details-left" style="display: flex; gap: 15px; align-items: center; flex: 1;">
                             <img src="<%= (item.variant && item.variant.images && item.variant.images.length > 0) ? item.variant.images[0] : '/images/placeholder.png' %>" alt="item" class="item-thumbnail">
                             <div class="item-text-info">
                                 <span class="item-title-name"><%= item.product ? item.product.productName : 'Product Name' %></span>
@@ -604,12 +604,12 @@
                                 %>
                                 <span class="item-status-badge <%= itemStatusClass %>"><%= itemStatusText %></span>
                                 <% if (itemStatusText === 'Cancelled' && item.cancellationReason) { %>
-                                    <span style="font-size: 10px; color: #c5221f; margin-top: 2px; font-weight: 500;">Reason: <%= item.cancellationReason %></span>
+                                    <span style="font-size: 10px; color: #c5221f; margin-top: 2px; font-weight: 500; display: block;">Reason: <%= item.cancellationReason %></span>
                                 <% } else if ((itemStatusText === 'Returned' || itemStatusText === 'Return Requested' || itemStatusText === 'Return Rejected') && item.returnReason) { %>
-                                    <span style="font-size: 10px; color: #4b5563; margin-top: 2px; font-weight: 500;">Return Reason: <%= item.returnReason %></span>
+                                    <span style="font-size: 10px; color: #4b5563; margin-top: 2px; font-weight: 500; display: block;">Return Reason: <%= item.returnReason %></span>
                                 <% } %>
                                 <% if (itemStatusText === 'Return Rejected' && item.returnRejectionReason) { %>
-                                    <span style="font-size: 10px; color: #c5221f; margin-top: 2px; font-weight: 500;">Rejection Reason: <%= item.returnRejectionReason %></span>
+                                    <span style="font-size: 10px; color: #c5221f; margin-top: 2px; font-weight: 500; display: block;">Rejection Reason: <%= item.returnRejectionReason %></span>
                                 <% } %>
                                 <% if (itemStatusText === 'Return Requested') { %>
                                     <div style="display: flex; gap: 10px; margin-top: 8px;">
@@ -619,8 +619,23 @@
                                 <% } %>
                             </div>
                         </div>
-                        <div class="item-details-right">
-                            ₹<%= (item.price * item.quantity).toFixed(2) %>
+                        <div class="item-details-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                            <div style="font-weight: 700; font-size: 15px; color: var(--text-dark);">
+                                ₹<%= (item.price * item.quantity).toFixed(2) %>
+                            </div>
+                            <% if (itemStatusText !== 'Cancelled' && itemStatusText !== 'Returned' && itemStatusText !== 'Delivered' && order.orderStatus !== 'Delivered') { %>
+                                <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                                    <select id="itemStatusSelector-<%= item._id %>" class="status-select-item" style="padding: 5px 8px; font-size: 11px; border-radius: 4px; border: 1px solid var(--border-color); outline: none; background: #ffffff; color: var(--text-dark); font-family: inherit;">
+                                        <option value="Ordered" <%= (itemStatusText === 'Ordered' || itemStatusText === 'Pending') ? 'selected' : '' %>>Ordered</option>
+                                        <option value="Processing" <%= itemStatusText === 'Processing' ? 'selected' : '' %>>Processing</option>
+                                        <option value="Shipped" <%= itemStatusText === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                                        <option value="Out for Delivery" <%= itemStatusText === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
+                                        <option value="Delivered" <%= itemStatusText === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                                        <option value="Cancelled" <%= itemStatusText === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                    </select>
+                                    <button type="button" class="btn-action btn-update-status" style="padding: 5px 10px; font-size: 10px; border-radius: 4px; border: none; cursor: pointer; text-transform: uppercase;" onclick="updateIndividualItemStatus('<%= order.orderId %>', '<%= item._id %>')">Update</button>
+                                </div>
+                            <% } %>
                         </div>
                     </div>
                 <% }) %>
@@ -628,9 +643,11 @@
 
             <!-- Buttons Group -->
             <div class="button-group">
-                <% if (order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Returned') { %>
+                <% if (order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Returned' && order.orderStatus !== 'Delivered') { %>
                     <button class="btn-action btn-cancel-order" onclick="triggerCancelOrder('<%= order._id %>')">Cancel Order</button>
                     <button class="btn-action btn-update-status" onclick="updateOrderStatus('<%= order._id %>')">Update Status</button>
+                <% } else if (order.orderStatus === 'Delivered') { %>
+                    <p style="font-size: 12px; color: #137333; font-style: italic; font-weight: 600;"><i class="fas fa-check-circle"></i> This order has been delivered and its status cannot be changed.</p>
                 <% } else { %>
                     <p style="font-size: 12px; color: var(--text-gray); font-style: italic;">This order is closed and cannot be updated.</p>
                 <% } %>
@@ -821,6 +838,94 @@
             } catch (error) {
                 Swal.close();
                 console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'An error occurred. Please try again.',
+                    confirmButtonColor: '#5c1e28'
+                });
+            }
+        }
+
+        async function updateIndividualItemStatus(orderId, itemId) {
+            const selectEl = document.getElementById(`itemStatusSelector-${itemId}`);
+            if (!selectEl) return;
+            const selectedStatus = selectEl.value;
+
+            const confirmation = await Swal.fire({
+                title: 'Update Item Status?',
+                text: `Are you sure you want to change this item's status to ${selectedStatus}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#5c1e28',
+                cancelButtonColor: '#888380',
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Cancel'
+            });
+
+            if (!confirmation.isConfirmed) {
+                return;
+            }
+
+            let cancellationReason = '';
+            if (selectedStatus === 'Cancelled') {
+                const reasonPrompt = await Swal.fire({
+                    title: 'Cancellation Reason',
+                    input: 'textarea',
+                    inputPlaceholder: 'Type reason here... (e.g. Stock out for product)',
+                    showCancelButton: true,
+                    confirmButtonColor: '#5c1e28',
+                    confirmButtonText: 'OK',
+                    cancelButtonText: 'Back'
+                });
+
+                if (reasonPrompt.isDismissed) {
+                    return;
+                }
+                cancellationReason = reasonPrompt.value ? reasonPrompt.value.trim() : 'Stock out for product';
+            }
+
+            try {
+                Swal.fire({
+                    title: 'Processing...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                const response = await fetch('/admin/orders/update-item-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orderId: orderId,
+                        itemId: itemId,
+                        status: selectedStatus,
+                        cancellationReason: cancellationReason
+                    })
+                });
+
+                const data = await response.json();
+                Swal.close();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Item Status Updated',
+                        text: data.message || 'Item status updated successfully!',
+                        confirmButtonColor: '#5c1e28'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to update item status',
+                        confirmButtonColor: '#5c1e28'
+                    });
+                }
+            } catch (error) {
+                Swal.close();
+                console.error('Error updating item status:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Network Error',

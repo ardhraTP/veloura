@@ -2,6 +2,7 @@ import Order from '../model/Order.js';
 import Cart from '../model/Cart.js';
 import Variant from '../model/Variant.js';
 import User from '../model/User.js';
+import { calculateItemRefund } from '../utils/priceHelper.js';
 
 
 //generate unique orderId
@@ -97,7 +98,6 @@ export const cancelOrder = async (orderId,userId,reason)=>{
             }
         }
 
-        // refund to wallet if order was paid using online or wallet payment method and payment was completed
         const isPaidPayment = order.paymentMethod === 'Online' || 
                              order.paymentMethod === 'Wallet' || 
                              order.paymentMethod === 'Online Payment';
@@ -287,22 +287,10 @@ export const approveReturn = async (orderId,itemId)=>{
             throw new Error('Item is not marked as returned');
         }
 
-        const itemSubtotal = item.price * item.quantity;
-        const totalDiscount = order.discount || 0;
-        const totalTax = order.tax || 0;
-        const totalShipping = order.shippingFee || 0;
-
-        let itemDiscountShare = 0;
-        let itemTaxShare = 0;
-        let itemShippingShare = 0;
-
-        if (order.subtotal > 0) {
-            itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
-            itemTaxShare = (itemSubtotal / order.subtotal) * totalTax;
-            itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
-        }
-
-        const refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
+        const refundInfo = calculateItemRefund(order, item);
+        const refundAmount = refundInfo.refundAmount;
+        item.refundTax = refundInfo.itemTaxShare;
+        item.refundAmount = refundAmount;
 
         const user = await User.findById(order.user);
         if (user) {

@@ -50,9 +50,11 @@ export const getAdminProductsPage = async (req, res) => {
 
         const products = await Product.find(searchFilter)
             .populate('categoryId', 'name')
-            .sort({updatedAt: -1 })
+            .sort({ updatedAt: -1 })
             .skip(skip)
             .limit(limit);
+
+
 
         const productsWithVariants = await Promise.all(
             products.map(async (product) => {
@@ -119,13 +121,11 @@ const validateProductDetailsBackend = async (data) => {
     if (trimmedName.length < 2 || trimmedName.length > 100) return 'Product name must be between 2 and 100 characters.';
     if (/^[0-9]+$/.test(trimmedName)) return 'Product name cannot contain only numbers.';
     if (!/[a-zA-Z]/.test(trimmedName)) return 'Product name must contain letters.';
-    if (!/^[a-zA-Z0-9\s&\-.'()]+$/.test(trimmedName)) return 'Product name contains invalid characters.';
 
     if (!trimmedBrand) return 'Brand is required.';
     if (trimmedBrand.length < 2 || trimmedBrand.length > 100) return 'Brand must be between 2 and 100 characters.';
     if (/^[0-9]+$/.test(trimmedBrand)) return 'Brand cannot contain only numbers.';
     if (!/[a-zA-Z]/.test(trimmedBrand)) return 'Brand must contain letters.';
-    if (!/^[a-zA-Z0-9\s&\-.'()]+$/.test(trimmedBrand)) return 'Brand contains invalid characters.';
 
     if (!trimmedDesc) return 'Description is required.';
 
@@ -141,6 +141,29 @@ const validateProductDetailsBackend = async (data) => {
     }
 
     return null;
+};
+
+// Helper function to extract variants from req.body (handles nested objects and Multer flat bracket keys)
+const parseVariantsFromReqBody = (body) => {
+    if (body && body.variants && typeof body.variants === 'object') {
+        return body.variants;
+    }
+
+    const variants = {};
+    if (body) {
+        for (const key in body) {
+            const match = key.match(/^variants\[(\d+)\]\[(\w+)\]$/);
+            if (match) {
+                const index = match[1];
+                const field = match[2];
+                if (!variants[index]) {
+                    variants[index] = {};
+                }
+                variants[index][field] = body[key];
+            }
+        }
+    }
+    return variants;
 };
 
 export const addProduct = async (req, res) => {
@@ -162,7 +185,7 @@ export const addProduct = async (req, res) => {
             return res.redirect('/admin/products/add');
         }
 
-        const variantsRaw = req.body.variants || {};
+        const variantsRaw = parseVariantsFromReqBody(req.body);
         const variantsData = [];
 
         const variantIndices = Object.keys(variantsRaw).map(Number).sort((a, b) => a - b);
@@ -183,7 +206,7 @@ export const addProduct = async (req, res) => {
 
         if (variantsData.length === 0) {
             cleanupUploadedFiles(req.files);
-            req.session.error = 'Please add at least one variant';
+            req.session.error = 'Please add at least one variant with color, prices, and quantity.';
             return res.redirect('/admin/products/add');
         }
 

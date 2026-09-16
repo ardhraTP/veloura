@@ -26,7 +26,6 @@ export const getCategoriesPage = async (req, res) => {
             .skip(skip)
             .limit(limit);
 
-        const successMessage = req.session.success || null;
         const errorMessage = req.session.error || null;
         delete req.session.success;
         delete req.session.error;

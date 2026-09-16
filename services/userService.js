@@ -18,6 +18,12 @@ export const validateSignupData = (data) => {
     }
 
     const trimmedPhone = phone.trim();
+    
+    // Check if phone contains any non-numeric characters
+    if (/[^0-9]/.test(trimmedPhone)) {
+        return { isValid: false, error: 'Phone number can only contain numbers. Characters, hyphens, and underscores are not allowed' };
+    }
+    
     if (!/^[0-9]{10}$/.test(trimmedPhone)) {
         return { isValid: false, error: 'Phone number must be 10 digits' };
     }

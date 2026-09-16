@@ -706,6 +706,9 @@
             if (!phone) {
                 showError('phone', 'Please enter your phone number');
                 hasError = true;
+            } else if (/[^0-9]/.test(phone)) {
+                showError('phone', 'Phone number can only contain numbers. Characters, hyphens, and underscores are not allowed');
+                hasError = true;
             } else if (!/^[0-9]{10}$/.test(phone)) {
                 showError('phone', 'Phone number must be exactly 10 digits');
                 hasError = true;

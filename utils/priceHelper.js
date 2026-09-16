@@ -16,7 +16,7 @@ export const calculateOfferPrice = (product, regularPrice, baseSalePrice = null)
     if (category && typeof category === 'object') {
         const hasNotExpired = !category.categoryOfferExpiry || new Date(category.categoryOfferExpiry) > now;
         let catDiscountVal = 0;
-        if (typeof category.categoryDiscount === 'number' && category.categoryDiscount >= 0) {
+        if (typeof category.categoryDiscount === 'number' && category.categoryDiscount > 0) {
             catDiscountVal = category.categoryDiscount;
         } else if (category.offer && String(category.offer).trim() !== '') {
             catDiscountVal = parseFloat(String(category.offer).replace(/[^0-9.]/g, '')) || 0;
@@ -67,5 +67,69 @@ export const calculateOfferPrice = (product, regularPrice, baseSalePrice = null)
         offerType: offerType,
         productDiscount: productDiscount,
         categoryDiscount: categoryDiscount
+    };
+};
+
+/**
+ * Helper function to calculate item refund amount and tax share.
+ * Tracks tax already refunded for previous items in an order, so that the final
+ * cancelled/returned item gets the exact remaining tax, preventing 1-rupee rounding errors.
+ */
+export const calculateItemRefund = (order, itemToRefund) => {
+    const itemSubtotal = itemToRefund.price * itemToRefund.quantity;
+    const totalDiscount = order.discount || 0;
+    const totalTax = order.tax || 0;
+    const totalShipping = order.shippingFee || 0;
+
+    let itemDiscountShare = 0;
+    let itemShippingShare = 0;
+
+    if (order.subtotal > 0) {
+        itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
+        itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
+    }
+
+    const itemToRefundIdStr = itemToRefund._id ? itemToRefund._id.toString() : String(itemToRefund);
+
+    // Check if there are any other active items remaining in this order
+    const remainingActiveItems = order.items.filter(i => {
+        const idStr = i._id ? i._id.toString() : String(i);
+        return idStr !== itemToRefundIdStr && i.itemStatus !== 'Cancelled' && i.itemStatus !== 'Returned';
+    });
+
+    const isFinalItem = remainingActiveItems.length === 0;
+
+    // Calculate tax already refunded for previously cancelled or returned items
+    let alreadyRefundedTax = 0;
+    order.items.forEach(i => {
+        const idStr = i._id ? i._id.toString() : String(i);
+        if (idStr !== itemToRefundIdStr && (i.itemStatus === 'Cancelled' || i.itemStatus === 'Returned')) {
+            if (typeof i.refundTax === 'number' && i.refundTax > 0) {
+                alreadyRefundedTax += i.refundTax;
+            } else {
+                // Fallback for older order items: calculate standard rounded tax share
+                const prevSubtotal = i.price * i.quantity;
+                if (order.subtotal > 0) {
+                    alreadyRefundedTax += Math.round((prevSubtotal / order.subtotal) * totalTax);
+                }
+            }
+        }
+    });
+
+    let itemTaxShare = 0;
+    if (isFinalItem) {
+        // Assign the exact remaining tax to the final item
+        itemTaxShare = Math.max(0, totalTax - alreadyRefundedTax);
+    } else {
+        if (order.subtotal > 0) {
+            itemTaxShare = Math.round((itemSubtotal / order.subtotal) * totalTax);
+        }
+    }
+
+    const refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
+
+    return {
+        refundAmount: Math.max(0, refundAmount),
+        itemTaxShare: itemTaxShare
     };
 };

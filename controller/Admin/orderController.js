@@ -2,6 +2,7 @@ import { response } from 'express';
 import Order from '../../model/Order.js';
 import User from '../../model/User.js';
 import Variant from '../../model/Variant.js';
+import { calculateItemRefund } from '../../utils/priceHelper.js';
 
 
 export const getAdminOrdersPage = async (req, res) => {
@@ -128,11 +129,26 @@ export const updateAdminOrderStatus = async (req, res) => {
 
         const order = await Order.findById(orderId);
         if (!order) {
-            return res.json({ sucess: false, message: 'Order not found' });
+            return res.json({ success: false, message: 'Order not found' });
+        }
+
+        // Check if the order is already in the selected status
+        if (order.orderStatus === status) {
+            return res.json({
+                success: false,
+                message: `This order is already in ${order.orderStatus} status. Select another status before submitting.`
+            });
+        }
+
+        if (order.orderStatus === 'Delivered') {
+            return res.json({
+                success: false,
+                message: 'This order is already Delivered and its status cannot be changed.'
+            });
         }
 
         if (order.orderStatus === 'Cancelled' || order.orderStatus === 'Returned') {
-            return res.json({ sucess: false, message: 'Cannot modify status of a closed order' });
+            return res.json({ success: false, message: 'Cannot modify status of a closed order' });
         }
 
         if (status === 'Cancelled') {
@@ -149,22 +165,10 @@ export const updateAdminOrderStatus = async (req, res) => {
                     }
 
                     if (isPaid) {
-                        const itemSubtotal = item.price * item.quantity;
-                        const totalDiscount = order.discount || 0;
-                        const totalTax = order.tax || 0;
-                        const totalShipping = order.shippingFee || 0;
-
-                        let itemDiscountShare = 0;
-                        let itemTaxShare = 0;
-                        let itemShippingShare = 0;
-
-                        if (order.subtotal > 0) {
-                            itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
-                            itemTaxShare = (itemSubtotal / order.subtotal) * totalTax;
-                            itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
-                        }
-
-                        const itemRefund = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
+                        const refundInfo = calculateItemRefund(order, item);
+                        const itemRefund = refundInfo.refundAmount;
+                        item.refundTax = refundInfo.itemTaxShare;
+                        item.refundAmount = itemRefund;
                         refundAmount += itemRefund;
                     }
 
@@ -207,22 +211,10 @@ export const updateAdminOrderStatus = async (req, res) => {
                     }
 
                     if (isPaid) {
-                        const itemSubtotal = item.price * item.quantity;
-                        const totalDiscount = order.discount || 0;
-                        const totalTax = order.tax || 0;
-                        const totalShipping = order.shippingFee || 0;
-
-                        let itemDiscountShare = 0;
-                        let itemTaxShare = 0;
-                        let itemShippingShare = 0;
-
-                        if (order.subtotal > 0) {
-                            itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
-                            itemTaxShare = (itemSubtotal / order.subtotal) * totalTax;
-                            itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
-                        }
-
-                        const itemRefund = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
+                        const refundInfo = calculateItemRefund(order, item);
+                        const itemRefund = refundInfo.refundAmount;
+                        item.refundTax = refundInfo.itemTaxShare;
+                        item.refundAmount = itemRefund;
                         refundAmount += itemRefund;
                     }
 
@@ -292,7 +284,10 @@ export const updateItemStatus = async (req, res) => {
             });
         }
 
-        const order = await Order.findOne({ orderId: orderId });
+        let order = await Order.findOne({ orderId: orderId });
+        if (!order) {
+            order = await Order.findById(orderId);
+        }
 
         if (!order) {
             return res.json({
@@ -307,6 +302,20 @@ export const updateItemStatus = async (req, res) => {
             return res.json({
                 success: false,
                 message: 'Item not found in order'
+            });
+        }
+
+        if (order.orderStatus === 'Delivered' || item.itemStatus === 'Delivered') {
+            return res.json({
+                success: false,
+                message: 'This order/item is already Delivered and its status cannot be changed.'
+            });
+        }
+
+        if (item.itemStatus === status) {
+            return res.json({
+                success: false,
+                message: `This item is already in ${status} status.`
             });
         }
 
@@ -326,22 +335,10 @@ export const updateItemStatus = async (req, res) => {
 
             // Only refund if payment was actually completed or partially refunded and NOT failed
             if (!isPaymentFailed && isPaid) {
-                const itemSubtotal = item.price * item.quantity;
-                const totalDiscount = order.discount || 0;
-                const totalTax = order.tax || 0;
-                const totalShipping = order.shippingFee || 0;
-
-                let itemDiscountShare = 0;
-                let itemTaxShare = 0;
-                let itemShippingShare = 0;
-
-                if (order.subtotal > 0) {
-                    itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
-                    itemTaxShare = (itemSubtotal / order.subtotal) * totalTax;
-                    itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
-                }
-
-                const refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
+                const refundInfo = calculateItemRefund(order, item);
+                const refundAmount = refundInfo.refundAmount;
+                item.refundTax = refundInfo.itemTaxShare;
+                item.refundAmount = refundAmount;
 
                 const user = await User.findById(order.user);
                 if (user && refundAmount > 0) {
@@ -373,6 +370,19 @@ export const updateItemStatus = async (req, res) => {
             }
         } else {
             item.itemStatus = status;
+
+            // Auto-sync orderStatus if all active items have reached the same status
+            const activeItems = order.items.filter(i => i.itemStatus !== 'Cancelled' && i.itemStatus !== 'Returned');
+            if (activeItems.length > 0) {
+                const firstStatus = activeItems[0].itemStatus;
+                const allSameStatus = activeItems.every(i => i.itemStatus === firstStatus);
+                if (allSameStatus && firstStatus !== 'Ordered') {
+                    order.orderStatus = firstStatus;
+                    if (firstStatus === 'Delivered') {
+                        order.paymentStatus = 'Completed';
+                    }
+                }
+            }
         }
 
         await order.save();
@@ -434,22 +444,10 @@ export const approveReturn = async (req,res)=>{
             });
         }
 
-        const itemSubtotal = item.price * item.quantity;
-        const totalDiscount = order.discount || 0;
-        const totalTax = order.tax || 0;
-        const totalShipping = order.shippingFee || 0;
-
-        let itemDiscountShare = 0;
-        let itemTaxShare = 0;
-        let itemShippingShare = 0;
-
-        if (order.subtotal > 0) {
-            itemDiscountShare = (itemSubtotal / order.subtotal) * totalDiscount;
-            itemTaxShare = (itemSubtotal / order.subtotal) * totalTax;
-            itemShippingShare = (itemSubtotal / order.subtotal) * totalShipping;
-        }
-
-        const refundAmount = Math.round(itemSubtotal + itemTaxShare + itemShippingShare - itemDiscountShare);
+        const refundInfo = calculateItemRefund(order, item);
+        const refundAmount = refundInfo.refundAmount;
+        item.refundTax = refundInfo.itemTaxShare;
+        item.refundAmount = refundAmount;
 
         // Check return reason to avoid restocking damaged or defective products
         const returnReasonText = (item.returnReason || order.returnReason || '').toLowerCase();

@@ -74,7 +74,13 @@ const userSchema = new mongoose.Schema({
     }],
     referralCode: {
         type: String,
-        default: null
+        unique: true,
+        sparse: true,
+        default: function() {
+            const cleanName = (this.name || 'USER').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const randomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+            return `VELVET-${cleanName || 'USER'}-${randomCode}`;
+        }
     },
     referralEarnings: {
         type: Number,

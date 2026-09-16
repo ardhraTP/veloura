@@ -29,4 +29,21 @@ const upload = multer({
     }
 });
 
-export const uploadVariantImages = upload.any();
+const uploadAny = upload.any();
+
+export const uploadVariantImages = (req, res, next) => {
+    uploadAny(req, res, function (err) {
+        if (err) {
+            console.error('Multer file upload error:', err.message);
+            if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+                return res.status(400).json({
+                    success: false,
+                    message: err.message || 'Only image files (JPEG, PNG, WebP, AVIF) are allowed!'
+                });
+            }
+            req.session.error = err.message || 'Only image files (JPEG, PNG, WebP, AVIF) are allowed!';
+            return res.redirect(req.get('referer') || '/admin/products/add');
+        }
+        next();
+    });
+};

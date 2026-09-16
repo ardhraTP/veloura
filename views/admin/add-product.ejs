@@ -508,7 +508,7 @@
 
                     <div class="form-row">
                         <div class="form-group" style="grid-column: 1 / -1;">
-                            <label class="form-label">SHADE COLOUR (HEX CODE) *</label>
+                            <label class="form-label">SHADE COLOUR (COLOR PICKER & HEX CODE) *</label>
                             <div class="shade-row">
                                 <div class="shade-preview" id="shadePreview-${variantIndex}"></div>
                                 <div class="hex-input-wrap">
@@ -549,170 +549,202 @@
                                    min="0" 
                                    step="0.01">
                         </div>
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label class="form-label">VARIANT IMAGES * (Min 3 images)</label>
-                        <input type="file" 
-                               id="variantImages-${variantIndex}" 
-                               name="variants[${variantIndex}][images]" 
-                               class="file-input" 
-                               accept="image/*" 
-                               multiple
-                               onchange="handleVariantImages(${variantIndex}, this.files)">
-                        
-                        <div class="image-preview-container" id="imagePreview-${variantIndex}">
-                            ${createImagePlaceholders(variantIndex, 5)}
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('variantsContainer').insertAdjacentHTML('beforeend', variantHTML);
-
-            // Immediately initialise text input + preview circle with the default picker colour
-            syncHex(variantIndex, '#5c1e28');
-        }
-
-        function createImagePlaceholders(variantIndex, count) {
-            let html = '';
-            for (let i = 0; i < count; i++) {
-                html += `
-                    <div class="image-preview-box" onclick="document.getElementById('variantImages-${variantIndex}').click()">
-                        <div class="image-preview-placeholder">
-                            <i class="fas fa-camera"></i>
-                            <p>Click to upload</p>
+                    </div>                        <div class="form-group full-width">
+                            <label class="form-label">VARIANT IMAGES * (Min 3 images)</label>
+                            <input type="file" 
+                                   id="variantImages-${variantIndex}" 
+                                   name="variants[${variantIndex}][images]" 
+                                   class="file-input" 
+                                   accept="image/jpeg,image/png,image/webp,image/avif,image/jpg" 
+                                   multiple
+                                   onchange="handleVariantImages(${variantIndex}, this.files)">
+                            
+                            <div class="image-preview-container" id="imagePreview-${variantIndex}">
+                                ${createImagePlaceholders(variantIndex, 5)}
+                            </div>
                         </div>
                     </div>
                 `;
+
+                document.getElementById('variantsContainer').insertAdjacentHTML('beforeend', variantHTML);
+
+                // Immediately initialise text input + preview circle with the default picker colour
+                syncHex(variantIndex, '#5c1e28');
             }
-            return html;
-        }
 
-        function removeVariant(index) {
-            const variantElement = document.getElementById(`variant-${index}`);
-            if (variantElement) {
-                variantElement.remove();
-                delete variantsData[index];
-            }
-        }
-
-        let currentCropper = null;
-
-        function cropImageHelper(file, callback) {
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const modal = document.getElementById('cropperModal');
-                const img = document.getElementById('cropperImage');
-                img.src = e.target.result;
-                modal.style.display = 'flex';
-
-                if (currentCropper) {
-                    currentCropper.destroy();
+            function createImagePlaceholders(variantIndex, count) {
+                let html = '';
+                for (let i = 0; i < count; i++) {
+                    html += `
+                        <div class="image-preview-box" onclick="document.getElementById('variantImages-${variantIndex}').click()">
+                            <div class="image-preview-placeholder">
+                                <i class="fas fa-camera"></i>
+                                <p>Click to upload</p>
+                            </div>
+                        </div>
+                    `;
                 }
+                return html;
+            }
 
-                currentCropper = new Cropper(img, {
-                    aspectRatio: 1, // 1:1 square crop
-                    viewMode: 1,
-                    autoCropArea: 1,
-                    responsive: true,
-                    restore: false,
-                    guides: true,
-                    center: true,
-                    highlight: false,
-                    cropBoxMovable: true,
-                    cropBoxResizable: true,
-                    toggleDragModeOnDblclick: false
-                });
+            function removeVariant(index) {
+                const variantElement = document.getElementById(`variant-${index}`);
+                if (variantElement) {
+                    variantElement.remove();
+                    delete variantsData[index];
+                }
+            }
 
-                const cropBtn = document.getElementById('cropperCropBtn');
-                const cancelBtn = document.getElementById('cropperCancelBtn');
+            function isValidImageFile(file) {
+                if (!file) return false;
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+                const allowedExtensions = /\.(jpe?g|png|webp|avif)$/i;
 
-                const newCropBtn = cropBtn.cloneNode(true);
-                const newCancelBtn = cancelBtn.cloneNode(true);
+                // Check file mimetype or extension for image verification
+                const isImageMime = file.type ? allowedTypes.includes(file.type.toLowerCase()) : false;
+                const isImageExt = allowedExtensions.test(file.name);
 
-                cropBtn.parentNode.replaceChild(newCropBtn, cropBtn);
-                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+                return isImageMime || isImageExt;
+            }
 
-                newCropBtn.addEventListener('click', function() {
-                    const canvas = currentCropper.getCroppedCanvas({
-                        width: 800,
-                        height: 800
+            let currentCropper = null;
+
+            function cropImageHelper(file, callback) {
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const modal = document.getElementById('cropperModal');
+                    const img = document.getElementById('cropperImage');
+                    img.src = e.target.result;
+                    modal.style.display = 'flex';
+
+                    if (currentCropper) {
+                        currentCropper.destroy();
+                    }
+
+                    currentCropper = new Cropper(img, {
+                        aspectRatio: 1, // 1:1 square crop
+                        viewMode: 1,
+                        autoCropArea: 1,
+                        responsive: true,
+                        restore: false,
+                        guides: true,
+                        center: true,
+                        highlight: false,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        toggleDragModeOnDblclick: false
                     });
 
-                    canvas.toBlob(function(blob) {
-                        const croppedFile = new File([blob], file.name, {
-                            type: 'image/jpeg',
-                            lastModified: Date.now()
+                    const cropBtn = document.getElementById('cropperCropBtn');
+                    const cancelBtn = document.getElementById('cropperCancelBtn');
+
+                    const newCropBtn = cropBtn.cloneNode(true);
+                    const newCancelBtn = cancelBtn.cloneNode(true);
+
+                    cropBtn.parentNode.replaceChild(newCropBtn, cropBtn);
+                    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+                    newCropBtn.addEventListener('click', function() {
+                        const canvas = currentCropper.getCroppedCanvas({
+                            width: 800,
+                            height: 800
                         });
 
+                        canvas.toBlob(function(blob) {
+                            const croppedFile = new File([blob], file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            });
+
+                            modal.style.display = 'none';
+                            currentCropper.destroy();
+                            currentCropper = null;
+
+                            callback(croppedFile);
+                        }, 'image/jpeg', 0.9);
+                    });
+
+                    newCancelBtn.addEventListener('click', function() {
                         modal.style.display = 'none';
                         currentCropper.destroy();
                         currentCropper = null;
-
-                        callback(croppedFile);
-                    }, 'image/jpeg', 0.9);
-                });
-
-                newCancelBtn.addEventListener('click', function() {
-                    modal.style.display = 'none';
-                    currentCropper.destroy();
-                    currentCropper = null;
-                    callback(null);
-                });
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function handleVariantImages(variantIndex, files) {
-            if (!files || files.length === 0) return;
-            
-            const fileList = Array.from(files);
-            
-            // Clear input value so same file can be selected again
-            const inputEl = document.getElementById(`variantImages-${variantIndex}`);
-            if (inputEl) inputEl.value = '';
-            
-            let fileQueue = [...fileList];
-
-            function processNextFile() {
-                if (fileQueue.length === 0) return;
-
-                const file = fileQueue.shift();
-                cropImageHelper(file, function(croppedFile) {
-                    const finalFile = croppedFile || file;
-                    
-                    if (finalFile) {
-                        if (!variantsData[variantIndex]) {
-                            variantsData[variantIndex] = { files: [] };
-                        }
-                        if (!variantsData[variantIndex].files) {
-                            variantsData[variantIndex].files = [];
-                        }
-                        
-                        variantsData[variantIndex].files.push(finalFile);
-                        
-                        const dt = new DataTransfer();
-                        variantsData[variantIndex].files.forEach(f => dt.items.add(f));
-                        
-                        const fileInput = document.getElementById(`variantImages-${variantIndex}`);
-                        if (fileInput) {
-                            fileInput.files = dt.files;
-                        }
-                        
-                        renderVariantImagesPreview(variantIndex);
-                    }
-                    
-                    if (fileQueue.length > 0) {
-                        processNextFile();
-                    }
-                });
+                        callback(null);
+                    });
+                };
+                reader.readAsDataURL(file);
             }
 
-            processNextFile();
-        }
+            function handleVariantImages(variantIndex, files) {
+                if (!files || files.length === 0) return;
+                
+                const rawFiles = Array.from(files);
+                const validFiles = [];
+                let hasInvalidFiles = false;
+
+                for (let i = 0; i < rawFiles.length; i++) {
+                    const file = rawFiles[i];
+                    if (isValidImageFile(file)) {
+                        validFiles.push(file);
+                    } else {
+                        hasInvalidFiles = true;
+                    }
+                }
+
+                if (hasInvalidFiles) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid File Selected',
+                        text: 'Only image files (JPEG, PNG, WebP, AVIF) are allowed. Folders and documents cannot be uploaded.',
+                        confirmColor: '#5c1e28'
+                    });
+                }
+
+                // Clear input value so same file can be selected again
+                const inputEl = document.getElementById(`variantImages-${variantIndex}`);
+                if (inputEl) inputEl.value = '';
+
+                if (validFiles.length === 0) return;
+                
+                let fileQueue = [...validFiles];
+
+                function processNextFile() {
+                    if (fileQueue.length === 0) return;
+
+                    const file = fileQueue.shift();
+                    cropImageHelper(file, function(croppedFile) {
+                        const finalFile = croppedFile || file;
+                        
+                        if (finalFile) {
+                            if (!variantsData[variantIndex]) {
+                                variantsData[variantIndex] = { files: [] };
+                            }
+                            if (!variantsData[variantIndex].files) {
+                                variantsData[variantIndex].files = [];
+                            }
+                            
+                            variantsData[variantIndex].files.push(finalFile);
+                            
+                            const dt = new DataTransfer();
+                            variantsData[variantIndex].files.forEach(f => dt.items.add(f));
+                            
+                            const fileInput = document.getElementById(`variantImages-${variantIndex}`);
+                            if (fileInput) {
+                                fileInput.files = dt.files;
+                            }
+                            
+                            renderVariantImagesPreview(variantIndex);
+                        }
+                        
+                        if (fileQueue.length > 0) {
+                            processNextFile();
+                        }
+                    });
+                }
+
+                processNextFile();
+            }
 
         function renderVariantImagesPreview(variantIndex) {
             const previewContainer = document.getElementById(`imagePreview-${variantIndex}`);
@@ -781,7 +813,7 @@
         // Called when the colour-picker wheel changes → push value to text input + preview
         function syncHex(variantIndex, hexValue) {
             const textInput = document.getElementById(`hexInput-${variantIndex}`);
-            textInput.value = hexValue.toUpperCase();
+            if (textInput) textInput.value = hexValue.toUpperCase();
             updateShadePreview(variantIndex, hexValue);
         }
 
@@ -789,7 +821,8 @@
         function syncPicker(variantIndex, rawValue) {
             const hex = rawValue.startsWith('#') ? rawValue : '#' + rawValue;
             if (isValidHex(hex)) {
-                document.getElementById(`colorPicker-${variantIndex}`).value = hex;
+                const picker = document.getElementById(`colorPicker-${variantIndex}`);
+                if (picker) picker.value = hex;
                 updateShadePreview(variantIndex, hex);
             }
         }
@@ -821,9 +854,6 @@
             if (!/[a-zA-Z]/.test(trimmed)) {
                 return `${fieldName} must contain letters.`;
             }
-            if (!/^[a-zA-Z0-9\s&\-.'()]+$/.test(trimmed)) {
-                return `${fieldName} contains invalid characters.`;
-            }
             return null;
         }
 
@@ -842,6 +872,17 @@
                 return 'Product offer discount cannot exceed 100%.';
             }
             return null;
+        }
+
+        function showErr(inputId, errorId, show) {
+            const inputEl = document.getElementById(inputId);
+            const errorEl = document.getElementById(errorId);
+            if (inputEl) {
+                inputEl.classList.toggle('input-error', show);
+            }
+            if (errorEl) {
+                errorEl.classList.toggle('visible', show);
+            }
         }
 
         // ── Real-time inline field validation ────────────────────────
@@ -949,6 +990,23 @@
                 return;
             }
 
+            // Inline error helper for variant fields
+            function vErr(input, errId, show, msg = '') {
+                if (!input) return;
+                input.classList.toggle('input-error', show);
+                let span = document.getElementById(errId);
+                if (!span && show) {
+                    span = document.createElement('span');
+                    span.id = errId;
+                    span.className = 'field-error visible';
+                    span.textContent = msg;
+                    input.parentNode.insertBefore(span, input.nextSibling);
+                } else if (span) {
+                    span.classList.toggle('visible', show);
+                    if (show && msg) span.textContent = msg;
+                }
+            }
+
             for (let card of variantCards) {
                 const idx = parseInt(card.id.split('-')[1]);
 
@@ -958,38 +1016,31 @@
                 const regPriceInput = card.querySelector(`input[name="variants[${idx}][regularPrice]"]`);
                 const salePriceInput= card.querySelector(`input[name="variants[${idx}][salePrice]"]`);
 
-                const color        = colorInput.value.trim();
-                const quantity     = qtyInput.value.trim();
-                const hexCode      = hexInput.value.trim();
-                const regularPrice = regPriceInput.value.trim();
-                const salePrice    = salePriceInput.value.trim();
+                let color        = colorInput ? colorInput.value.trim() : '';
+                let quantity     = qtyInput ? qtyInput.value.trim() : '';
+                let hexCode      = hexInput ? hexInput.value.trim() : '';
+                let regularPrice = regPriceInput ? regPriceInput.value.trim() : '';
+                let salePrice    = salePriceInput ? salePriceInput.value.trim() : '';
 
-                // Write trimmed values back to inputs so submitted data is clean
-                colorInput.value    = color;
-                hexInput.value      = hexCode;
-
-                // Inline error helpers for variant fields
-                function vErr(input, msg, show) {
-                    input.classList.toggle('input-error', show);
-                    let span = input.nextElementSibling;
-                    if (!span || !span.classList.contains('field-error')) {
-                        if (show) {
-                            span = document.createElement('span');
-                            span.className = 'field-error visible';
-                            span.textContent = msg;
-                            input.parentNode.insertBefore(span, input.nextSibling);
-                        }
-                    } else {
-                        span.textContent = msg;
-                        span.classList.toggle('visible', show);
-                    }
+                if (hexCode && !hexCode.startsWith('#')) {
+                    hexCode = '#' + hexCode;
                 }
 
-                vErr(colorInput,     'Color name is required.',                !color);
-                vErr(qtyInput,       'Quantity is required.',                  quantity === '');
-                vErr(hexInput,       'Hex code is required.',                  !hexCode);
-                vErr(regPriceInput,  'Regular price is required.',             regularPrice === '');
-                vErr(salePriceInput, 'Sale price is required.',                salePrice === '');
+                // Write trimmed values back to inputs so submitted data is clean
+                if (colorInput) colorInput.value = color;
+                if (hexInput) hexInput.value = hexCode;
+
+                const colorErrId = `vColorErr-${idx}`;
+                const qtyErrId   = `vQtyErr-${idx}`;
+                const hexErrId   = `vHexErr-${idx}`;
+                const regErrId   = `vRegErr-${idx}`;
+                const saleErrId  = `vSaleErr-${idx}`;
+
+                vErr(colorInput,    colorErrId, !color,                 'Color name is required.');
+                vErr(qtyInput,      qtyErrId,   quantity === '',        'Quantity is required.');
+                vErr(hexInput,      hexErrId,   !hexCode,               'Hex code is required.');
+                vErr(regPriceInput, regErrId,   regularPrice === '',    'Regular price is required.');
+                vErr(salePriceInput,saleErrId,  salePrice === '',       'Sale price is required.');
 
                 if (!color || quantity === '' || !hexCode || regularPrice === '' || salePrice === '') {
                     hasError = true; continue;
@@ -999,16 +1050,29 @@
                 const regP = parseFloat(regularPrice);
                 const salP = parseFloat(salePrice);
 
-                vErr(qtyInput,       'Quantity cannot be negative.',             qty < 0);
-                vErr(regPriceInput,  'Regular price cannot be negative.',        regP < 0);
-                vErr(salePriceInput, 'Sale price cannot be negative.',           salP < 0);
-                if (qty < 0 || regP < 0 || salP < 0) { hasError = true; continue; }
+                if (qty < 0) {
+                    vErr(qtyInput, qtyErrId, true, 'Quantity cannot be negative.');
+                    hasError = true;
+                }
+                if (regP < 0) {
+                    vErr(regPriceInput, regErrId, true, 'Regular price cannot be negative.');
+                    hasError = true;
+                }
+                if (salP < 0) {
+                    vErr(salePriceInput, saleErrId, true, 'Sale price cannot be negative.');
+                    hasError = true;
+                }
+                if (salP > regP) {
+                    vErr(salePriceInput, saleErrId, true, 'Sale price cannot exceed regular price.');
+                    hasError = true;
+                }
 
-                vErr(salePriceInput, 'Sale price cannot exceed regular price.',  salP > regP);
-                if (salP > regP) { hasError = true; continue; }
+                if (!isValidHex(hexCode)) {
+                    vErr(hexInput, hexErrId, true, 'Invalid hex code (e.g. #FF5733).');
+                    hasError = true;
+                }
 
-                vErr(hexInput, 'Invalid hex code (e.g. #FF5733).', !isValidHex(hexCode));
-                if (!isValidHex(hexCode)) { hasError = true; continue; }
+                if (hasError) continue;
 
                 const fileInput = card.querySelector(`input[name="variants[${idx}][images]"]`);
                 let files = (variantsData[idx] && variantsData[idx].files && variantsData[idx].files.length > 0) 
@@ -1028,7 +1092,15 @@
                 }
             }
 
-            if (hasError) return;
+            if (hasError) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Validation Error',
+                    text: 'Please check the variant details and fix the highlighted errors.',
+                    confirmButtonColor: '#5c1e28'
+                });
+                return;
+            }
 
             // Confirmation before submit
             const result = await Swal.fire({
@@ -1043,11 +1115,7 @@
             });
 
             if (result.isConfirmed) {
-                try {
-                    form.submit();
-                } catch (err) {
-                    HTMLFormElement.prototype.submit.call(form);
-                }
+                HTMLFormElement.prototype.submit.call(form);
             }
         });
 

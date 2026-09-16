@@ -62,6 +62,7 @@ export const addCoupon = async (req, res) => {
         const {
             name,
             code,
+            discountType,
             discountValue,
             minOrderAmount,
             maxDiscountAmount,
@@ -70,8 +71,6 @@ export const addCoupon = async (req, res) => {
             usageLimit,
             description
         } = req.body;
-
-
 
         if(!name || !name.trim()){
             req.session.error = 'Coupon Name is required.';
@@ -84,14 +83,22 @@ export const addCoupon = async (req, res) => {
         }
 
         const cleanCode = code.trim().toUpperCase();
-
+        const validDiscountType = discountType === 'FIXED' ? 'FIXED' : 'PERCENTAGE';
         const parsedDiscount = parseFloat(discountValue);
-        if(isNaN(parsedDiscount) || parsedDiscount < 1 || parsedDiscount > 100 ){
-            req.session.error = 'Discount percentage must be between 1 and 100.';
-            return res.redirect('/admin/coupons');
+
+        if (validDiscountType === 'PERCENTAGE') {
+            if (isNaN(parsedDiscount) || parsedDiscount < 1 || parsedDiscount > 100) {
+                req.session.error = 'Discount percentage must be between 1 and 100.';
+                return res.redirect('/admin/coupons');
+            }
+        } else {
+            if (isNaN(parsedDiscount) || parsedDiscount <= 0) {
+                req.session.error = 'Fixed discount amount must be a positive number greater than 0.';
+                return res.redirect('/admin/coupons');
+            }
         }
 
-        const start =  new Date(startDate);
+        const start = new Date(startDate);
         const end = new Date(endDate);
 
         if(isNaN(start.getTime()) || isNaN(end.getTime())){
@@ -110,7 +117,7 @@ export const addCoupon = async (req, res) => {
             return res.redirect('/admin/coupons');
         }
 
-        const parsedMaxDiscount  = maxDiscountAmount ? parseFloat(maxDiscountAmount) : null;
+        const parsedMaxDiscount = maxDiscountAmount ? parseFloat(maxDiscountAmount) : null;
         if(parsedMaxDiscount !== null && parsedMaxDiscount < 0){
             req.session.error = 'Maximum discount amount cannot be negative.';
             return res.redirect('/admin/coupons');
@@ -131,15 +138,13 @@ export const addCoupon = async (req, res) => {
             return res.redirect('/admin/coupons');
         }
 
-
-
         const newCoupon = new Coupon({
             name: name.trim(),
             code: cleanCode,
-            discountType: 'PERCENTAGE',
-            discountValue: parseFloat(discountValue),
+            discountType: validDiscountType,
+            discountValue: parsedDiscount,
             minOrderAmount: parseFloat(minOrderAmount) || 0,
-            maxDiscountAmount: maxDiscountAmount ? parseFloat(maxDiscountAmount) : null,
+            maxDiscountAmount: validDiscountType === 'PERCENTAGE' && maxDiscountAmount ? parseFloat(maxDiscountAmount) : null,
             startDate: new Date(startDate),
             endDate: new Date(endDate),
             usageLimit: usageLimit ? parseInt(usageLimit) : null,
@@ -165,6 +170,7 @@ export const editCoupon = async (req, res) => {
         const {
             name,
             code,
+            discountType,
             discountValue,
             minOrderAmount,
             maxDiscountAmount,
@@ -175,8 +181,21 @@ export const editCoupon = async (req, res) => {
         } = req.body;
 
         const cleanCode = code.trim().toUpperCase();
+        const validDiscountType = discountType === 'FIXED' ? 'FIXED' : 'PERCENTAGE';
+        const parsedDiscount = parseFloat(discountValue);
 
-     
+        if (validDiscountType === 'PERCENTAGE') {
+            if (isNaN(parsedDiscount) || parsedDiscount < 1 || parsedDiscount > 100) {
+                req.session.error = 'Discount percentage must be between 1 and 100.';
+                return res.redirect('/admin/coupons');
+            }
+        } else {
+            if (isNaN(parsedDiscount) || parsedDiscount <= 0) {
+                req.session.error = 'Fixed discount amount must be a positive number greater than 0.';
+                return res.redirect('/admin/coupons');
+            }
+        }
+
         const existingCoupon = await Coupon.findOne({
             _id: { $ne: couponId },
             code: cleanCode
@@ -190,9 +209,10 @@ export const editCoupon = async (req, res) => {
         await Coupon.findByIdAndUpdate(couponId, {
             name: name.trim(),
             code: cleanCode,
-            discountValue: parseFloat(discountValue),
+            discountType: validDiscountType,
+            discountValue: parsedDiscount,
             minOrderAmount: parseFloat(minOrderAmount) || 0,
-            maxDiscountAmount: maxDiscountAmount ? parseFloat(maxDiscountAmount) : null,
+            maxDiscountAmount: validDiscountType === 'PERCENTAGE' && maxDiscountAmount ? parseFloat(maxDiscountAmount) : null,
             startDate: new Date(startDate),
             endDate: new Date(endDate),
             usageLimit: usageLimit ? parseInt(usageLimit) : null,

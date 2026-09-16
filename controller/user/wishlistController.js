@@ -58,7 +58,6 @@ export const removeFromWishlist = async (req, res) => {
     }
 };
 
-// Get wishlist count for navbar badge
 export const getWishlistCount = async (req, res) => {
     try {
         if (!req.session.userId) {
