@@ -26,7 +26,6 @@ export const getProfile = async (req, res) => {
             return res.redirect('/login');
         }
 
-
         const emailUpdateSuccess = req.session.emailUpdateSuccess;
         delete req.session.emailUpdateSuccess;
 
@@ -89,8 +88,9 @@ export const updateProfile = async (req, res) => {
         if (!validation.isValid) {
 
             if (req.file) fs.unlinkSync(req.file.path);
+            const userWithInputs = { ...currentUser.toObject(), name: name || currentUser.name, phone: phone || currentUser.phone };
             return res.render('user/edit-profile', {
-                user: currentUser,
+                user: userWithInputs,
                 error: validation.error,
                 success: null,
                 activeTab: 'profile'
@@ -100,8 +100,9 @@ export const updateProfile = async (req, res) => {
         const phoneExists = await checkPhoneExists(phone, userId);
         if (phoneExists) {
             if (req.file) fs.unlinkSync(req.file.path);
+            const userWithInputs = { ...currentUser.toObject(), name: name || currentUser.name, phone: phone || currentUser.phone };
             return res.render('user/edit-profile', {
-                user: currentUser,
+                user: userWithInputs,
                 error: 'Phone number already exists',
                 success: null,
                 activeTab: 'profile'
@@ -196,7 +197,7 @@ export const uploadProfileImage = async (req, res) => {
         }
 
 
-        
+
         await updateUserProfileImage(userId, result.secure_url);
 
         if (req.session.user) {
@@ -240,7 +241,7 @@ export const changePassword = async (req, res) => {
         const isGoogleUser = user.authProvider === 'google';
 
         if (isGoogleUser) {
-           
+
             if (!passwordData.newPassword || !passwordData.confirmPassword) {
                 return sendResponse(res, false, 'Please enter new password and confirmation');
             }
@@ -264,7 +265,7 @@ export const changePassword = async (req, res) => {
 
             const hashedNewPassword = await hashPassword(passwordData.newPassword);
             user.password = hashedNewPassword;
-            user.authProvider = 'local'; 
+            user.authProvider = 'local';
             await saveUser(user);
 
             return sendResponse(res, true, 'Password set successfully! You can now login with email and password.');
@@ -328,24 +329,29 @@ export const processChangeEmailForm = async (req, res) => {
         const cleanedNewEmail = (newEmail || '').toLowerCase().trim();
         const cleanedConfirmEmail = (confirmEmail || '').toLowerCase().trim();
 
+        const formData = { newEmail: cleanedNewEmail, confirmEmail: cleanedConfirmEmail };
+
         if (!cleanedNewEmail || !cleanedConfirmEmail) {
             return res.render('user/change-email-form', {
                 user,
-                error: 'Please enter and confirm your new email address'
+                error: 'Please enter and confirm your new email address',
+                formData
             });
         }
 
         if (cleanedNewEmail !== cleanedConfirmEmail) {
             return res.render('user/change-email-form', {
                 user,
-                error: 'New email and confirm email do not match'
+                error: 'New email and confirm email do not match',
+                formData
             });
         }
 
         if (cleanedNewEmail === user.email.toLowerCase()) {
             return res.render('user/change-email-form', {
                 user,
-                error: 'New email address must be different from your current email'
+                error: 'New email address must be different from your current email',
+                formData
             });
         }
 
@@ -353,7 +359,8 @@ export const processChangeEmailForm = async (req, res) => {
         if (!validation.isValid) {
             return res.render('user/change-email-form', {
                 user,
-                error: validation.error
+                error: validation.error,
+                formData
             });
         }
 
@@ -361,7 +368,8 @@ export const processChangeEmailForm = async (req, res) => {
         if (emailExists) {
             return res.render('user/change-email-form', {
                 user,
-                error: 'This email address is already registered with another account'
+                error: 'This email address is already registered with another account',
+                formData
             });
         }
 
@@ -579,4 +587,3 @@ export const addMoneyToWallet = async (req, res) => {
 };
 
 
- 

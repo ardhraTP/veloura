@@ -96,13 +96,16 @@ export const getAddProductPage = async (req, res) => {
 
         const successMessage = req.session.success || null;
         const errorMessage = req.session.error || null;
+        const formData = req.session.productFormData || null;
         delete req.session.success;
         delete req.session.error;
+        delete req.session.productFormData;
 
         res.render('admin/add-product', {
             categories: categories,
             successMessage: successMessage,
-            errorMessage: errorMessage
+            errorMessage: errorMessage,
+            formData: formData
         });
     } catch (error) {
         console.log('Error in getAddProductPage:', error);
@@ -143,7 +146,6 @@ const validateProductDetailsBackend = async (data) => {
     return null;
 };
 
-// Helper function to extract variants from req.body (handles nested objects and Multer flat bracket keys)
 const parseVariantsFromReqBody = (body) => {
     if (body && body.variants && typeof body.variants === 'object') {
         return body.variants;
@@ -182,6 +184,7 @@ export const addProduct = async (req, res) => {
         if (valError) {
             cleanupUploadedFiles(req.files);
             req.session.error = valError;
+            req.session.productFormData = req.body;
             return res.redirect('/admin/products/add');
         }
 
@@ -207,7 +210,36 @@ export const addProduct = async (req, res) => {
         if (variantsData.length === 0) {
             cleanupUploadedFiles(req.files);
             req.session.error = 'Please add at least one variant with color, prices, and quantity.';
+            req.session.productFormData = req.body;
             return res.redirect('/admin/products/add');
+        }
+
+        const seenColors = new Set();
+        const seenHexCodes = new Set();
+
+        for (const variant of variantsData) {
+            const colorLower = variant.color.trim().toLowerCase();
+            if (seenColors.has(colorLower)) {
+                cleanupUploadedFiles(req.files);
+                req.session.error = `Variant color "${variant.color.trim()}" is duplicated. Each variant must have a unique color name.`;
+                req.session.productFormData = req.body;
+                return res.redirect('/admin/products/add');
+            }
+            seenColors.add(colorLower);
+
+            let hexCode = (variant.hexCode || '').trim().toUpperCase();
+            if (hexCode) {
+                if (!hexCode.startsWith('#')) {
+                    hexCode = '#' + hexCode;
+                }
+                if (seenHexCodes.has(hexCode)) {
+                    cleanupUploadedFiles(req.files);
+                    req.session.error = `Shade color "${hexCode}" is duplicated. Each variant must have a unique shade color.`;
+                    req.session.productFormData = req.body;
+                    return res.redirect('/admin/products/add');
+                }
+                seenHexCodes.add(hexCode);
+            }
         }
 
         const parsedOffer = parseFloat(offerInputVal) || 0;
@@ -283,7 +315,7 @@ export const addProduct = async (req, res) => {
 export const getEditProductPage = async (req, res) => {
     try {
         const productId = req.params.id;
-        const product = await Product.findOne({ _id: productId, isDeleted: false })
+        let product = await Product.findOne({ _id: productId, isDeleted: false })
             .populate('categoryId');
 
         if (!product) {
@@ -291,13 +323,29 @@ export const getEditProductPage = async (req, res) => {
         }
 
         const variants = await Variant.find({ productId: productId, isDeleted: false });
-
         const categories = await Category.find({ isDeleted: false, isListed: true }).sort({ name: 1 });
 
         const successMessage = req.session.success || null;
         const errorMessage = req.session.error || null;
+        const editFormData = req.session.editProductFormData || null;
         delete req.session.success;
         delete req.session.error;
+        delete req.session.editProductFormData;
+
+        if (editFormData) {
+            const productObj = product.toObject();
+            if (editFormData.productName) productObj.productName = editFormData.productName;
+            if (editFormData.brand) productObj.brand = editFormData.brand;
+            if (editFormData.description) productObj.description = editFormData.description;
+            if (editFormData.categoryId) productObj.categoryId = editFormData.categoryId;
+            if (editFormData.status) productObj.status = editFormData.status;
+            const offerVal = editFormData.productOffer || editFormData.offer;
+            if (offerVal !== undefined) {
+                const parsed = parseFloat(offerVal) || 0;
+                productObj.offer = { discount: parsed, isActive: parsed > 0 };
+            }
+            product = productObj;
+        }
 
         res.render('admin/edit-product', {
             product: product,
@@ -378,6 +426,7 @@ export const updateProduct = async (req, res) => {
 
         if (valError) {
             req.session.error = valError;
+            req.session.editProductFormData = req.body;
             return res.redirect(`/admin/products/edit/${productId}`);
         }
 
@@ -408,6 +457,37 @@ export const updateProduct = async (req, res) => {
         }
 
         const variantsRaw = req.body.variants || {};
+        const seenColors = new Set();
+        const seenHexCodes = new Set();
+
+        for (const key of Object.keys(variantsRaw)) {
+            const v = variantsRaw[key];
+            if (v && v._id) {
+                if (v.color) {
+                    const colorLower = v.color.trim().toLowerCase();
+                    if (seenColors.has(colorLower)) {
+                        req.session.error = `Variant color "${v.color.trim()}" is duplicated. Each variant must have a unique color name.`;
+                        req.session.editProductFormData = req.body;
+                        return res.redirect(`/admin/products/edit/${productId}`);
+                    }
+                    seenColors.add(colorLower);
+                }
+
+                if (v.hexCode) {
+                    let normalizedHex = v.hexCode.trim().toUpperCase();
+                    if (normalizedHex && !normalizedHex.startsWith('#')) normalizedHex = '#' + normalizedHex;
+                    if (normalizedHex) {
+                        if (seenHexCodes.has(normalizedHex)) {
+                            req.session.error = `Shade color "${normalizedHex}" is duplicated. Each variant must have a unique shade color.`;
+                            req.session.editProductFormData = req.body;
+                            return res.redirect(`/admin/products/edit/${productId}`);
+                        }
+                        seenHexCodes.add(normalizedHex);
+                    }
+                }
+            }
+        }
+
         for (const key of Object.keys(variantsRaw)) {
             const v = variantsRaw[key];
             if (v && v._id) {
@@ -569,6 +649,39 @@ export const addVariant = async (req, res) => {
             });
         }
 
+        const existingVariant = await Variant.findOne({
+            productId: productId,
+            color: { $regex: new RegExp('^' + color.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') },
+            isDeleted: false
+        });
+
+        if (existingVariant) {
+            cleanupUploadedFiles(req.files);
+            return res.status(400).json({
+                success: false,
+                message: `Variant with color "${color.trim()}" already exists for this product.`
+            });
+        }
+
+        let normalizedHex = (hexCode || '').trim().toUpperCase();
+        if (normalizedHex && !normalizedHex.startsWith('#')) normalizedHex = '#' + normalizedHex;
+
+        if (normalizedHex) {
+            const existingHexVariant = await Variant.findOne({
+                productId: productId,
+                hexCode: normalizedHex,
+                isDeleted: false
+            });
+
+            if (existingHexVariant) {
+                cleanupUploadedFiles(req.files);
+                return res.status(400).json({
+                    success: false,
+                    message: `Variant with shade color "${normalizedHex}" already exists for this product.`
+                });
+            }
+        }
+
         if (!req.files || req.files.length < 3) {
             cleanupUploadedFiles(req.files);
             return res.status(400).json({
@@ -578,9 +691,6 @@ export const addVariant = async (req, res) => {
         }
 
         const processedImages = await processProductImages(req.files);
-
-        let normalizedHex = (hexCode || '').trim().toUpperCase();
-        if (normalizedHex && !normalizedHex.startsWith('#')) normalizedHex = '#' + normalizedHex;
 
         const newVariant = new Variant({
             productId: productId,
@@ -706,7 +816,23 @@ export const updateVariantDetails = async (req, res) => {
             });
         }
 
-        if (color !== undefined) variant.color = color.trim();
+        if (color !== undefined && color.trim()) {
+            const existingColorVariant = await Variant.findOne({
+                productId: variant.productId,
+                _id: { $ne: variantId },
+                color: { $regex: new RegExp('^' + color.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') },
+                isDeleted: false
+            });
+
+            if (existingColorVariant) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Variant with color "${color.trim()}" already exists for this product.`
+                });
+            }
+            variant.color = color.trim();
+        }
+
         if (quantity !== undefined) variant.quantity = parseInt(quantity) || 0;
         if (regularPrice !== undefined) variant.regularPrice = parseFloat(regularPrice) || 0;
         if (salePrice !== undefined) variant.salePrice = parseFloat(salePrice) || 0;
@@ -714,6 +840,22 @@ export const updateVariantDetails = async (req, res) => {
         if (hexCode !== undefined) {
             let normalizedHex = hexCode.trim().toUpperCase();
             if (normalizedHex && !normalizedHex.startsWith('#')) normalizedHex = '#' + normalizedHex;
+
+            if (normalizedHex) {
+                const existingHexVariant = await Variant.findOne({
+                    productId: variant.productId,
+                    _id: { $ne: variantId },
+                    hexCode: normalizedHex,
+                    isDeleted: false
+                });
+
+                if (existingHexVariant) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Variant with shade color "${normalizedHex}" already exists for this product.`
+                    });
+                }
+            }
             variant.hexCode = normalizedHex;
         }
 

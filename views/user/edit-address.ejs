@@ -644,7 +644,6 @@
 
         document.getElementById('address').addEventListener('input', function(e) {
             clearAllErrors(); 
-            // Avoid numbers in address field - only characters allowed (no max length limit)
             this.value = this.value.replace(/[0-9]/g, '');
         });
 

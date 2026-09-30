@@ -15,21 +15,23 @@ import {
 
 export const getSignup = (req, res) => {
     const error = req.session.signupError || null;
+    const formData = req.session.signupFormData || {};
     delete req.session.signupError;
+    delete req.session.signupFormData;
 
-
-    const referralCode = req.query.ref || '';
-    res.render('user/register', { error,referralCode });
+    const referralCode = req.query.ref || formData.referralCode || '';
+    res.render('user/register', { error, referralCode, formData });
 };
 
 
 export const signup = async (req, res) => {
     try {
         const { name, email, phone, password, confirmPassword, referralCode } = req.body;
-
+        const formData = { name, email, phone, referralCode };
 
         if (password !== confirmPassword) {
             req.session.signupError = 'Passwords do not match';
+            req.session.signupFormData = formData;
             return res.redirect('/register');
         }
 
@@ -37,18 +39,21 @@ export const signup = async (req, res) => {
         const validation = validateSignupData({ name, phone, email, password });
         if (!validation.isValid) {
             req.session.signupError = validation.error;
+            req.session.signupFormData = formData;
             return res.redirect('/register');
         }
 
         const emailExists = await checkEmailExists(email);
         if (emailExists) {
             req.session.signupError = 'Email already registered';
+            req.session.signupFormData = formData;
             return res.redirect('/register');
         }
 
         const phoneExists = await checkPhoneExists(phone);
         if (phoneExists) {
             req.session.signupError = 'Phone number already registered';
+            req.session.signupFormData = formData;
             return res.redirect('/register');
         }
 
@@ -59,6 +64,7 @@ export const signup = async (req, res) => {
 
             if(!referrer){
                 req.session.signupError = 'Invalid referral code';
+                req.session.signupFormData = formData;
                 return res.redirect('/register'); 
             }
 
@@ -121,6 +127,7 @@ export const signup = async (req, res) => {
             } else {
                 await User.findByIdAndDelete(newUser._id);
                 req.session.signupError = 'Failed to send verification email. Please check your email address and try again.';
+                req.session.signupFormData = formData;
                 req.session.save(() => {
                     res.redirect('/register');
                 });
@@ -130,6 +137,7 @@ export const signup = async (req, res) => {
     } catch (error) {
         console.error('Signup error:', error);
         req.session.signupError = 'Something went wrong. Please try again.';
+        req.session.signupFormData = req.body;
         req.session.save(() => {
             res.redirect('/register');
         });
@@ -142,55 +150,65 @@ export const getLogin = (req, res) => {
     const success = req.session.loginSuccess || null;
     const errorType = req.session.errorType || null;
     const sessionStatus = req.session.sessionStatus || null;
+    const formData = req.session.loginFormData || {};
 
     delete req.session.loginError;
     delete req.session.loginSuccess;
     delete req.session.errorType;
     delete req.session.sessionStatus;
+    delete req.session.loginFormData;
 
-    res.render('user/login', { error, success, errorType, sessionStatus });
+    res.render('user/login', { error, success, errorType, sessionStatus, formData });
 };
 
 
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
+        const formData = { email };
 
         const validation = validateLoginData({ email, password });
         if (!validation.isValid) {
             req.session.loginError = validation.error;
+            req.session.loginFormData = formData;
             return res.redirect('/login');
         }
 
         const user = await getUserByEmail(email);
         if (!user) {
             req.session.loginError = 'Invalid email or password';
+            req.session.loginFormData = formData;
             return res.redirect('/login');
         }
 
         if (user.isBlocked) {
             req.session.loginError = 'Your account has been blocked';
+            req.session.loginFormData = formData;
             return res.redirect('/login');
         }
 
         if (!user.isVerified) {
             req.session.loginError = 'Please verify your email first';
+            req.session.loginFormData = formData;
             return res.redirect('/login');
         }
 
         if (user.authProvider === 'google' && !user.password) {
             req.session.loginError = 'This account uses Google Sign-In. Please use the "Sign in with Google" button or set a password from your profile page first.';
+            req.session.loginFormData = formData;
             return res.redirect('/login');
         }
 
         if (!user.password) {
             req.session.loginError = 'Invalid email or password';
+            req.session.loginFormData = formData;
             return res.redirect('/login');
         }
 
         const passwordMatch = await comparePassword(password, user.password);
         if (!passwordMatch) {
             req.session.loginError = 'Invalid email or password';
+            req.session.loginFormData = formData;
             return res.redirect('/login');
         }
 
@@ -206,6 +224,7 @@ export const login = async (req, res) => {
             if (err) {
                 console.error('Login session save error:', err);
                 req.session.loginError = 'Something went wrong. Please try again.';
+                req.session.loginFormData = formData;
                 return res.redirect('/login');
             }
             res.redirect('/home');
@@ -214,6 +233,7 @@ export const login = async (req, res) => {
     } catch (error) {
         console.error('Login error:', error);
         req.session.loginError = 'Something went wrong. Please try again.';
+        req.session.loginFormData = { email: req.body ? req.body.email : '' };
         req.session.save(() => {
             res.redirect('/login');
         });
@@ -362,7 +382,8 @@ export const forgotPassword = async (req, res) => {
         if (!email) {
             return res.render('user/forgot-password', {
                 error: 'Please enter your email',
-                success: null
+                success: null,
+                email: ''
             });
         }
 
@@ -370,14 +391,16 @@ export const forgotPassword = async (req, res) => {
         if (!user) {
             return res.render('user/forgot-password', {
                 error: 'No account found with this email',
-                success: null
+                success: null,
+                email: email
             });
         }
 
         if (user.authProvider === 'google') {
             return res.render('user/forgot-password', {
                 error: 'This account uses Google Sign-In. Please login with Google or set a password from your profile page.',
-                success: null
+                success: null,
+                email: email
             });
         }
 
@@ -391,7 +414,8 @@ export const forgotPassword = async (req, res) => {
 
             res.render('user/forgot-password', {
                 error: null,
-                success: 'Password reset link sent to your email'
+                success: 'Password reset link sent to your email',
+                email: email
             });
         } catch (emailError) {
             console.error('Failed to send reset email:', emailError);
@@ -399,12 +423,14 @@ export const forgotPassword = async (req, res) => {
             if (process.env.NODE_ENV === 'development') {
                 res.render('user/forgot-password', {
                     error: null,
-                    success: `Password reset link: ${process.env.BASE_URL}/reset-password?token=${resetToken}`
+                    success: `Password reset link: ${process.env.BASE_URL}/reset-password?token=${resetToken}`,
+                    email: email
                 });
             } else {
                 res.render('user/forgot-password', {
                     error: 'Failed to send reset email. Please try again.',
-                    success: null
+                    success: null,
+                    email: email
                 });
             }
         }
@@ -413,7 +439,8 @@ export const forgotPassword = async (req, res) => {
         console.error('Forgot password error:', error);
         res.render('user/forgot-password', {
             error: 'Something went wrong. Please try again.',
-            success: null
+            success: null,
+            email: req.body ? req.body.email : ''
         });
     }
 };

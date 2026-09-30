@@ -922,6 +922,52 @@
 
             // ── Existing variant fields ───────────────────────────────
             const variantCards = form.querySelectorAll('.variant-card[data-variant-id]');
+
+            // Check for duplicate variant colors and shade colors (hex codes)
+            const usedVariantColors = new Set();
+            const usedShadeColors = new Set();
+
+            for (let card of variantCards) {
+                const variantId = card.getAttribute('data-variant-id');
+                const colorInput = document.getElementById(`colorInput-${variantId}`);
+                const hexInput = document.getElementById(`hexInput-${variantId}`);
+                const colorPicker = document.getElementById(`colorPicker-${variantId}`);
+
+                const colorVal = colorInput ? colorInput.value.trim().toLowerCase() : '';
+                let hexVal = hexInput && hexInput.value.trim() ? hexInput.value.trim().toUpperCase() : (colorPicker ? colorPicker.value.trim().toUpperCase() : '');
+
+                if (hexVal && !hexVal.startsWith('#')) {
+                    hexVal = '#' + hexVal;
+                }
+
+                const colorErrId = `colorErr-${variantId}`;
+                const hexErrId = `hexErr-${variantId}`;
+
+                if (colorVal) {
+                    if (usedVariantColors.has(colorVal)) {
+                        colorInput.classList.add('input-error');
+                        const span = getOrCreateSpan(colorErrId);
+                        span.textContent = 'Variant color must be unique. Duplicate color found.';
+                        span.classList.add('visible');
+                        hasError = true;
+                    } else {
+                        usedVariantColors.add(colorVal);
+                    }
+                }
+
+                if (hexVal) {
+                    if (usedShadeColors.has(hexVal)) {
+                        hexInput.classList.add('input-error');
+                        const span = getOrCreateSpan(hexErrId);
+                        span.textContent = 'Shade color must be unique. This shade color is already used by another variant.';
+                        span.classList.add('visible');
+                        hasError = true;
+                    } else {
+                        usedShadeColors.add(hexVal);
+                    }
+                }
+            }
+
             for (let card of variantCards) {
                 const variantId = card.getAttribute('data-variant-id');
 
@@ -963,17 +1009,20 @@
                 const saleErrId     = `saleErr-${variantId}`;
                 const hexErrId      = `hexErr-${variantId}`;
 
-                vErr(colorInput,     colorErrId, !color);
+                if (!colorInput.classList.contains('input-error')) {
+                    vErr(colorInput, colorErrId, !color);
+                    if (!color) { getOrCreateSpan(colorErrId).textContent = 'Color name is required.'; }
+                }
                 vErr(qtyInput,       qtyErrId,   quantity === '');
-                vErr(regPriceInput,  regErrId,   regularPrice === '');
-                vErr(salePriceInput, saleErrId,  salePrice === '');
-                vErr(hexInput,       hexErrId,   !hexCode);
-
-                if (!color) { getOrCreateSpan(colorErrId).textContent = 'Color name is required.'; }
                 if (quantity === '') { getOrCreateSpan(qtyErrId).textContent = 'Quantity is required.'; }
+                vErr(regPriceInput,  regErrId,   regularPrice === '');
                 if (regularPrice === '') { getOrCreateSpan(regErrId).textContent = 'Regular price is required.'; }
+                vErr(salePriceInput, saleErrId,  salePrice === '');
                 if (salePrice === '') { getOrCreateSpan(saleErrId).textContent = 'Sale price is required.'; }
-                if (!hexCode) { getOrCreateSpan(hexErrId).textContent = 'Hex code is required.'; }
+                if (!hexInput.classList.contains('input-error')) {
+                    vErr(hexInput,   hexErrId,   !hexCode);
+                    if (!hexCode) { getOrCreateSpan(hexErrId).textContent = 'Hex code is required.'; }
+                }
 
                 if (!color || quantity === '' || regularPrice === '' || salePrice === '' || !hexCode) {
                     hasError = true; continue;
@@ -1575,6 +1624,30 @@
                     vErr(hexInput, hexErrId, false);
                 }
 
+                // Check duplicate color or shade hex code against other existing variants on page
+                let normalizedHex = hexCode.startsWith('#') ? hexCode.toUpperCase() : '#' + hexCode.toUpperCase();
+                const otherVariantCards = document.querySelectorAll(`.variant-card[data-variant-id]:not([data-variant-id="${variantId}"])`);
+                
+                for (let otherCard of otherVariantCards) {
+                    const otherId = otherCard.getAttribute('data-variant-id');
+                    const otherColorInput = document.getElementById(`colorInput-${otherId}`);
+                    const otherHexInput = document.getElementById(`hexInput-${otherId}`);
+
+                    const otherColor = otherColorInput ? otherColorInput.value.trim().toLowerCase() : '';
+                    let otherHex = otherHexInput ? otherHexInput.value.trim().toUpperCase() : '';
+                    if (otherHex && !otherHex.startsWith('#')) otherHex = '#' + otherHex;
+
+                    if (color && otherColor === color.toLowerCase()) {
+                        vErr(colorInput, colorErrId, true, 'Variant color must be unique. Another variant uses this color.');
+                        hasError = true;
+                    }
+
+                    if (normalizedHex && otherHex === normalizedHex) {
+                        vErr(hexInput, hexErrId, true, 'Shade color must be unique. Another variant uses this shade color.');
+                        hasError = true;
+                    }
+                }
+
                 if (hasError) return;
 
                 try {
@@ -1839,6 +1912,29 @@
                     hasError = true;
                 } else {
                     vErr(hexInput, hexErrId, false);
+                }
+
+                // Check duplicate color or shade hex code against existing variants on page
+                let newNormalizedHex = hexCode.startsWith('#') ? hexCode.toUpperCase() : '#' + hexCode.toUpperCase();
+                const existingVariantCards = document.querySelectorAll('.variant-card[data-variant-id]');
+                for (let existingCard of existingVariantCards) {
+                    const existingId = existingCard.getAttribute('data-variant-id');
+                    const existingColorInput = document.getElementById(`colorInput-${existingId}`);
+                    const existingHexInput = document.getElementById(`hexInput-${existingId}`);
+
+                    const existingColor = existingColorInput ? existingColorInput.value.trim().toLowerCase() : '';
+                    let existingHex = existingHexInput ? existingHexInput.value.trim().toUpperCase() : '';
+                    if (existingHex && !existingHex.startsWith('#')) existingHex = '#' + existingHex;
+
+                    if (color && existingColor === color.toLowerCase()) {
+                        vErr(colorInput, colorErrId, true, 'Variant color must be unique. An existing variant already uses this color.');
+                        hasError = true;
+                    }
+
+                    if (newNormalizedHex && existingHex === newNormalizedHex) {
+                        vErr(hexInput, hexErrId, true, 'Shade color must be unique. An existing variant already uses this shade color.');
+                        hasError = true;
+                    }
                 }
 
                 // Validate images (show error below the preview container)

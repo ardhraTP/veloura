@@ -43,58 +43,68 @@ export const validateCoupon = async (couponCode,userId,cartTotal,cartItems)=>{
             return {valid:false, message:'Coupon usage limit reached'};
         }
 
-        const userUsageCount = await Order.countDocuments({
-            user:userId,
-            'coupon.code' : couponCode.toUpperCase(),
+        const userOrderCount = await Order.countDocuments({
+            user: userId,
+            'coupon.code': couponCode.toUpperCase(),
             orderStatus: { $ne: 'Cancelled' },
             paymentStatus: { $ne: 'Failed' }
         });
 
-        if(userUsageCount >= coupon.userUsageLimit){
-            return {valid:false,message:'You have already used this coupon'};
+        const userCouponCount = (coupon.usedUsers || []).filter(
+            id => id && id.toString() === userId.toString()
+        ).length;
+
+        const totalUserUsage = Math.max(userOrderCount, userCouponCount);
+        const limit = coupon.userUsageLimit || 1;
+
+        if (totalUserUsage >= limit) {
+            return { valid: false, message: 'You have already used this coupon' };
         }
 
-        if(cartTotal < coupon.minOrderAmount){
-            return{
-                valid:false,
-                message:`'Minimum order amount of ₹${coupon.minOrderAmount} required`
+        if (cartTotal < coupon.minOrderAmount) {
+            return {
+                valid: false,
+                message: `Minimum order amount of ₹${coupon.minOrderAmount} required`
             };
         }
 
         let discountAmount = 0;
-        if(coupon.discountType === 'PERCENTAGE'){
+        if (coupon.discountType === 'PERCENTAGE') {
             discountAmount = (cartTotal * coupon.discountValue) / 100;
 
-
-            if(coupon.maxDiscountAmount !== null && discountAmount > coupon.maxDiscountAmount){
+            if (coupon.maxDiscountAmount !== null && discountAmount > coupon.maxDiscountAmount) {
                 discountAmount = coupon.maxDiscountAmount;
             }
-        }else if(coupon.discountType === 'FIXED'){
+        } else if (coupon.discountType === 'FIXED') {
             discountAmount = coupon.discountValue;
         }
 
         return {
-            valid:true,
-            coupon:coupon,
-            discountAmount:Math.round(discountAmount)
+            valid: true,
+            coupon: coupon,
+            discountAmount: Math.round(discountAmount)
         };
-    }catch(error){
-        console.error('Error validating coupon:',error);
+    } catch (error) {
+        console.error('Error validating coupon:', error);
         throw error;
     }
 };
 
 
-export const applyCoupon = async (couponCode)=>{
-    try{
+export const applyCoupon = async (couponCode, userId = null) => {
+    try {
+        const update = { $inc: { usedCount: 1 } };
+        if (userId) {
+            update.$push = { usedUsers: userId };
+        }
         const coupon = await Coupon.findOneAndUpdate(
-           { code: couponCode.toUpperCase() },
-           {$inc: {usedCount: 1}},
-           {new: true}
+            { code: couponCode.toUpperCase() },
+            update,
+            { new: true }
         );
         return coupon;
-    }catch(error){
-        console.error('Error applying coupon:',error);
+    } catch (error) {
+        console.error('Error applying coupon:', error);
         throw error;
     }
 };

@@ -15,6 +15,7 @@ export const getLogin = (req, res) => {
     let error = req.session.adminLoginError || null;
     const errorType = req.session.errorType || null;
     const sessionStatus = req.session.sessionStatus || null;
+    const formData = req.session.adminFormData || {};
 
     if (!error) {
         if (errorType === 'blocked') {
@@ -33,8 +34,9 @@ export const getLogin = (req, res) => {
     delete req.session.adminLoginError;
     delete req.session.errorType;
     delete req.session.sessionStatus;
+    delete req.session.adminFormData;
 
-    res.render('admin/login', { error });
+    res.render('admin/login', { error, formData });
 };
 
 
@@ -54,11 +56,13 @@ export const login = async (req, res) => {
         }
 
         req.session.adminLoginError = 'Invalid admin credentials';
+        req.session.adminFormData = { email };
         return res.redirect('/admin/login');
 
     } catch (error) {
         console.error('Admin login error:', error);
         req.session.adminLoginError = 'Something went wrong. Please try again.';
+        req.session.adminFormData = { email: req.body ? req.body.email : '' };
         res.redirect('/admin/login');
     }
 };

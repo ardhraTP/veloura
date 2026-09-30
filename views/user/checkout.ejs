@@ -840,40 +840,44 @@
                                         let categoryOfferDiscount = 0;
 
                                         // Check product offer
-                                        if (item.product && item.product.offer && item.product.offer.isActive) {
-                                            const isNotExpired = !item.product.offer.expiryDate || new Date(item.product.offer.expiryDate) > now;
-                                            if (isNotExpired) {
-                                                productOfferDiscount = Number(item.product.offer.discount) || 0;
+                                        if (item.product && item.product.offer) {
+                                            if (typeof item.product.offer === 'number' && item.product.offer > 0) {
+                                                productOfferDiscount = item.product.offer;
+                                            } else if (typeof item.product.offer === 'object') {
+                                                const disc = Number(item.product.offer.discount) || 0;
+                                                const isActive = item.product.offer.isActive !== false && disc > 0;
+                                                const isNotExpired = !item.product.offer.expiryDate || new Date(item.product.offer.expiryDate) > now;
+                                                if (isActive && isNotExpired) {
+                                                    productOfferDiscount = disc;
+                                                }
                                             }
                                         }
 
                                         // Check category offer
-                                        const categoryData = item.product ? item.product.categoryId : null;
+                                        const categoryData = item.product ? (item.product.categoryId || item.product.category) : null;
                                         if (categoryData && typeof categoryData === 'object') {
                                             const isNotExpired = !categoryData.categoryOfferExpiry || new Date(categoryData.categoryOfferExpiry) > now;
                                             let catDiscount = Number(categoryData.categoryDiscount) || 0;
-                                            if (!catDiscount && categoryData.offer && String(categoryData.offer).trim() !== '') {
-                                                catDiscount = parseFloat(String(categoryData.offer).replace(/[^0-9.]/g, '')) || 0;
+                                            if (categoryData.offer) {
+                                                let parsed = 0;
+                                                if (typeof categoryData.offer === 'number') {
+                                                    parsed = categoryData.offer;
+                                                } else if (typeof categoryData.offer === 'string' && categoryData.offer.trim() !== '') {
+                                                    parsed = parseFloat(categoryData.offer.replace(/[^0-9.]/g, '')) || 0;
+                                                }
+                                                if (parsed > catDiscount) catDiscount = parsed;
                                             }
                                             if (isNotExpired && catDiscount > 0) {
                                                 categoryOfferDiscount = catDiscount;
                                             }
                                         }
 
-                                        // Determine label to show to the user
+                                        // Determine label to show to the user (greatest offer applied)
                                         let appliedOfferLabel = '';
-                                        if (productOfferDiscount > 0 && categoryOfferDiscount > 0) {
-                                            if (productOfferDiscount > categoryOfferDiscount) {
-                                                appliedOfferLabel = 'Product Offer Applied';
-                                            } else if (categoryOfferDiscount > productOfferDiscount) {
-                                                appliedOfferLabel = 'Category Offer Applied';
-                                            } else {
-                                                appliedOfferLabel = 'Product & Category Offer Applied';
-                                            }
-                                        } else if (categoryOfferDiscount > 0) {
-                                            appliedOfferLabel = 'Category Offer Applied';
+                                        if (categoryOfferDiscount > productOfferDiscount && categoryOfferDiscount > 0) {
+                                            appliedOfferLabel = `Category Offer Applied (${categoryOfferDiscount}% OFF)`;
                                         } else if (productOfferDiscount > 0) {
-                                            appliedOfferLabel = 'Product Offer Applied';
+                                            appliedOfferLabel = `Product Offer Applied (${productOfferDiscount}% OFF)`;
                                         }
                                         %>
                                         <div class="product-card" id="card_<%= item.variant._id %>" data-price="<%= itemPrice %>">

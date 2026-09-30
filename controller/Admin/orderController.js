@@ -10,7 +10,6 @@ export const getAdminOrdersPage = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 5;
         const skip = (page - 1) * limit;
-
         const search = req.query.search ? req.query.search.trim() : '';
         const date = req.query.date || '';
         const payment = req.query.payment || 'all';
@@ -24,6 +23,15 @@ export const getAdminOrdersPage = async (req, res) => {
                     { orderStatus: 'Return Requested' },
                     { 'items.itemStatus': 'Return Requested' }
                 ];
+            } else if (status === 'Partially Delivered') {
+                query.$or = [
+                    { orderStatus: 'Partially Delivered' },
+                    { orderStatus: 'Partially Returned' },
+                    { 'items.itemStatus': 'Delivered' },
+                    { 'items.itemStatus': 'Returned' }
+                ];
+                query.orderStatus = { $nin: ['Delivered', 'Returned', 'Cancelled', 'Return Requested'] };
+                query['items.itemStatus'] = { $ne: 'Return Requested' };
             } else {
                 query.orderStatus = status;
             }
@@ -84,6 +92,23 @@ export const getAdminOrdersPage = async (req, res) => {
             .skip(skip)
             .limit(limit);
 
+        orders.forEach(order => {
+            if (order.items && order.items.length > 0) {
+                const hasReturnRequested = order.orderStatus === 'Return Requested' || order.items.some(i => i.itemStatus === 'Return Requested');
+
+                if (!hasReturnRequested) {
+                    const activeItems = order.items.filter(i => i.itemStatus !== 'Cancelled' && i.itemStatus !== 'Returned');
+                    const deliveredCount = activeItems.filter(i => i.itemStatus === 'Delivered').length;
+
+                    if (deliveredCount > 0 && deliveredCount < activeItems.length) {
+                        order.orderStatus = 'Partially Delivered';
+                    } else if (order.orderStatus === 'Partially Returned') {
+                        order.orderStatus = 'Partially Delivered';
+                    }
+                }
+            }
+        });
+
         res.render('admin/orders', {
             orders: orders,
             currentPage: page,
@@ -132,7 +157,6 @@ export const updateAdminOrderStatus = async (req, res) => {
             return res.json({ success: false, message: 'Order not found' });
         }
 
-        // Check if the order is already in the selected status
         if (order.orderStatus === status) {
             return res.json({
                 success: false,
@@ -180,7 +204,6 @@ export const updateAdminOrderStatus = async (req, res) => {
             order.orderStatus = 'Cancelled';
             order.cancellationReason = adminReason;
 
-            // Only refund into wallet if payment was completed and not failed
             if (!isPaymentFailed && isPaid && refundAmount > 0) {
                 const user = await User.findById(order.user);
                 if (user) {
@@ -230,7 +253,7 @@ export const updateAdminOrderStatus = async (req, res) => {
             if (allItemsReturnedOrCancelled && hasReturnedItems) {
                 order.orderStatus = 'Returned';
             } else if (hasReturnedItems) {
-                order.orderStatus = 'Partially Returned';
+                order.orderStatus = 'Partially Delivered';
             } else {
                 order.orderStatus = 'Returned';
             }
@@ -254,6 +277,9 @@ export const updateAdminOrderStatus = async (req, res) => {
             order.items.forEach(item => {
                 if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
                     item.itemStatus = status;
+                    if (status === 'Delivered' && !item.deliveredAt) {
+                        item.deliveredAt = new Date();
+                    }
                 }
             });
             order.orderStatus = status;
@@ -333,7 +359,6 @@ export const updateItemStatus = async (req, res) => {
                 await Variant.findByIdAndUpdate(item.variant, { $inc: { quantity: item.quantity } });
             }
 
-            // Only refund if payment was actually completed or partially refunded and NOT failed
             if (!isPaymentFailed && isPaid) {
                 const refundInfo = calculateItemRefund(order, item);
                 const refundAmount = refundInfo.refundAmount;
@@ -370,16 +395,41 @@ export const updateItemStatus = async (req, res) => {
             }
         } else {
             item.itemStatus = status;
+            
+            // Set deliveredAt timestamp when status changes to Delivered
+            if (status === 'Delivered') {
+                item.deliveredAt = new Date();
+            }
 
-            // Auto-sync orderStatus if all active items have reached the same status
             const activeItems = order.items.filter(i => i.itemStatus !== 'Cancelled' && i.itemStatus !== 'Returned');
             if (activeItems.length > 0) {
-                const firstStatus = activeItems[0].itemStatus;
-                const allSameStatus = activeItems.every(i => i.itemStatus === firstStatus);
-                if (allSameStatus && firstStatus !== 'Ordered') {
-                    order.orderStatus = firstStatus;
-                    if (firstStatus === 'Delivered') {
-                        order.paymentStatus = 'Completed';
+                let deliveredCount = 0;
+                let totalActive = activeItems.length;
+
+                for (let i = 0; i < activeItems.length; i++) {
+                    if (activeItems[i].itemStatus === 'Delivered') {
+                        deliveredCount++;
+                    }
+                }
+
+                if (deliveredCount === totalActive) {
+                    order.orderStatus = 'Delivered';
+                    order.paymentStatus = 'Completed';
+                } else if (deliveredCount > 0 && deliveredCount < totalActive) {
+                    order.orderStatus = 'Partially Delivered';
+                } else {
+                    const firstStatus = activeItems[0].itemStatus;
+                    let allSameStatus = true;
+
+                    for (let i = 0; i < activeItems.length; i++) {
+                        if (activeItems[i].itemStatus !== firstStatus) {
+                            allSameStatus = false;
+                            break;
+                        }
+                    }
+
+                    if (allSameStatus && firstStatus !== 'Ordered') {
+                        order.orderStatus = firstStatus;
                     }
                 }
             }
@@ -449,7 +499,6 @@ export const approveReturn = async (req,res)=>{
         item.refundTax = refundInfo.itemTaxShare;
         item.refundAmount = refundAmount;
 
-        // Check return reason to avoid restocking damaged or defective products
         const returnReasonText = (item.returnReason || order.returnReason || '').toLowerCase();
         const isDamagedOrDefective = returnReasonText.includes('damage') || returnReasonText.includes('defect');
 
@@ -491,7 +540,7 @@ export const approveReturn = async (req,res)=>{
             order.orderStatus = 'Returned';
             order.paymentStatus = 'Refunded';
         } else if (hasReturnedItems) {
-            order.orderStatus = 'Partially Returned';
+            order.orderStatus = 'Partially Delivered';
             order.paymentStatus = 'Partially Refunded';
         } else if (allItemsReturnedOrCancelled) {
             order.orderStatus = 'Cancelled';

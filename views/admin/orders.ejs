@@ -381,6 +381,11 @@
             color: #5C1E28;
         }
 
+        .status-partially-delivered {
+            background-color: #E6F4EA;
+            color: #137333;
+        }
+
         .status-return-requested {
             background-color: #FFF3CD;
             color: #856404;
@@ -622,6 +627,8 @@
                                 ? 'selected' : '' %>>COD</option>
                             <option value="Online" <%=(typeof currentPayment !=='undefined' && currentPayment==='Online'
                                 ) ? 'selected' : '' %>>Online</option>
+                            <option value="Wallet" <%=(typeof currentPayment !=='undefined' && currentPayment==='Wallet'
+                                ) ? 'selected' : '' %>>Wallet</option>
                         </select>
                     </div>
 
@@ -644,6 +651,8 @@
                                 currentStatus==='Cancelled' ) ? 'selected' : '' %>>Cancelled</option>
                             <option value="Returned" <%=(typeof currentStatus !=='undefined' &&
                                 currentStatus==='Returned' ) ? 'selected' : '' %>>Returned</option>
+                            <option value="Partially Delivered" <%=(typeof currentStatus !=='undefined' &&
+                                currentStatus==='Partially Delivered' ) ? 'selected' : '' %>>Partially Delivered</option>
                             <option value="Return Requested" <%=(typeof currentStatus !=='undefined' &&
                                 currentStatus==='Return Requested' ) ? 'selected' : '' %>>Return Requested</option>
                         </select>
@@ -709,8 +718,9 @@
                                             statusClass = 'status-cancelled';
                                             } else if (order.orderStatus === 'Returned') {
                                             statusClass = 'status-returned';
-                                            } else if (order.orderStatus === 'Partially Returned') {
-                                            statusClass = 'status-partially-returned';
+                                            } else if (order.orderStatus === 'Partially Returned' || order.orderStatus === 'Partially Delivered') {
+                                            statusClass = 'status-partially-delivered';
+                                            displayStatusText = 'Partially Delivered';
                                             }
                                             %>
                                             <div id="status-display-<%= order._id %>">
@@ -732,6 +742,8 @@
                                                         >Out for Delivery</option>
                                                     <option value="Delivered" <%=order.orderStatus==='Delivered'
                                                         ? 'selected' : '' %>>Delivered</option>
+                                                    <option value="Partially Delivered" <%=order.orderStatus==='Partially Delivered'
+                                                        ? 'selected' : '' %>>Partially Delivered</option>
                                                     <option value="Cancelled" <%=order.orderStatus==='Cancelled'
                                                         ? 'selected' : '' %>>Cancelled</option>
                                                     <option value="Returned" <%=order.orderStatus==='Returned'
@@ -868,7 +880,6 @@
                 });
             });
 
-            // Collect all filter and search parameters and reload page
             function applyOrdersFilters() {
                 const searchVal = document.getElementById('orderSearchInput').value.trim();
                 const dateVal = document.getElementById('dateFilter').value;
@@ -882,18 +893,15 @@
                 if (paymentVal !== 'all') urlParams.append('payment', paymentVal);
                 if (statusVal !== 'all') urlParams.append('status', statusVal);
 
-                urlParams.append('page', '1'); // always reset to page 1 on filter trigger
-
+                urlParams.append('page', '1'); 
                 window.location.href = `/admin/orders?${urlParams.toString()}`;
             }
 
-            // Clear search input filter
             function clearOrderSearch() {
                 document.getElementById('orderSearchInput').value = '';
                 applyOrdersFilters();
             }
 
-            // Reset all filter controls to defaults
             function resetOrdersFilters() {
                 document.getElementById('orderSearchInput').value = '';
                 document.getElementById('dateFilter').value = '';

@@ -45,6 +45,9 @@ const orderSchema = new mongoose.Schema({
             enum: ['Ordered', 'Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Returned', 'Return Requested', 'Return Rejected'],
             default: 'Ordered'
         },
+        deliveredAt: {
+            type: Date
+        },
         cancellationReason: {
             type: String
         },
@@ -115,7 +118,7 @@ const orderSchema = new mongoose.Schema({
     },
     orderStatus: {
         type: String,
-        enum: ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Returned', 'Return Requested', 'Return Rejected', 'Partially Returned'],
+        enum: ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Returned', 'Return Requested', 'Return Rejected', 'Partially Returned', 'Partially Delivered'],
         default: 'Pending'
     },
     cancellationReason: {
@@ -123,6 +126,17 @@ const orderSchema = new mongoose.Schema({
     },
     returnReason: {
         type: String
+    },
+    coupon: {
+        code: {
+            type: String,
+            uppercase: true,
+            trim: true
+        },
+        discountAmount: {
+            type: Number,
+            default: 0
+        }
     }
 }, {
     timestamps: true

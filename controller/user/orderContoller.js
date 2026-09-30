@@ -3,10 +3,8 @@ import Order from '../../model/Order.js';
 import User from '../../model/User.js';
 import Variant from '../../model/Variant.js';
 import Review from '../../model/Review.js';
-import PDFDocument from 'pdfkit';
+import PDFDocument from 'pdfkit';   
 import { calculateItemRefund } from '../../utils/priceHelper.js';
-
-
 
 
 export const getUserOrders = async (req, res) => {
@@ -46,9 +44,11 @@ export const getUserOrders = async (req, res) => {
             });
         }
 
-        // Update orderStatus based on item statuses
-        orders.forEach(order => {
+            orders.forEach(order => {
             if (order.items && order.items.length > 0) {
+                const activeItems = order.items.filter(i => i.itemStatus !== 'Cancelled' && i.itemStatus !== 'Returned');
+                const deliveredCount = activeItems.filter(i => i.itemStatus === 'Delivered').length;
+
                 const returnedCount = order.items.filter(i => i.itemStatus === 'Returned').length;
                 const totalNonCancelled = order.items.filter(i => i.itemStatus !== 'Cancelled').length;
 
@@ -56,8 +56,10 @@ export const getUserOrders = async (req, res) => {
                     if (totalNonCancelled > 0 && returnedCount >= totalNonCancelled) {
                         order.orderStatus = 'Returned';
                     } else {
-                        order.orderStatus = 'Partially Returned';
+                        order.orderStatus = 'Partially Delivered';
                     }
+                } else if (deliveredCount > 0 && deliveredCount < activeItems.length) {
+                    order.orderStatus = 'Partially Delivered';
                 }
             }
         });
@@ -112,6 +114,9 @@ export const getOrderDetails = async (req, res) => {
         }
 
         if (order && order.items && order.items.length > 0) {
+            const activeItems = order.items.filter(i => i.itemStatus !== 'Cancelled' && i.itemStatus !== 'Returned');
+            const deliveredCount = activeItems.filter(i => i.itemStatus === 'Delivered').length;
+
             const returnedCount = order.items.filter(i => i.itemStatus === 'Returned').length;
             const totalNonCancelled = order.items.filter(i => i.itemStatus !== 'Cancelled').length;
 
@@ -119,8 +124,10 @@ export const getOrderDetails = async (req, res) => {
                 if (totalNonCancelled > 0 && returnedCount >= totalNonCancelled) {
                     order.orderStatus = 'Returned';
                 } else {
-                    order.orderStatus = 'Partially Returned';
+                    order.orderStatus = 'Partially Delivered';
                 }
+            } else if (deliveredCount > 0 && deliveredCount < activeItems.length) {
+                order.orderStatus = 'Partially Delivered';
             }
         }
 
@@ -254,6 +261,22 @@ export const returnOrderProduct = async (req, res) => {
             return res.json({ success: false, message: 'Only delivered items can be returned' });
         }
 
+        if (!item.deliveredAt) {
+            item.deliveredAt = order.updatedAt || order.createdAt || new Date();
+        }
+
+        const currentDate = new Date();
+        const deliveredDate = new Date(item.deliveredAt);
+        const timeDifference = currentDate.getTime() - deliveredDate.getTime();
+        const daysSinceDelivery = timeDifference / (1000 * 60 * 60 * 24);
+
+        if (daysSinceDelivery > 7) {
+            return res.json({ 
+                success: false, 
+                message: 'Return window expired. Products can only be returned within 7 days of delivery' 
+            });
+        }
+
         item.itemStatus = 'Return Requested';
         item.returnReason = reason;
 
@@ -288,12 +311,13 @@ export const downloadInvoice = async (req, res) => {
 
         let invoiceSubtotal = 0;
         order.items.forEach(item => {
-            if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
-                invoiceSubtotal += item.price * item.quantity;
-            }
+            invoiceSubtotal += item.price * item.quantity;
         });
-        const invoiceTax = Math.round(invoiceSubtotal * 0.05);
-        const invoiceTotalAmount = Math.max(0, invoiceSubtotal + (order.shippingFee || 0) + invoiceTax - (order.discount || 0));
+
+        const invoiceTax = order.tax > 0 ? order.tax : Math.round(invoiceSubtotal * 0.05);
+        const invoiceShippingFee = order.shippingFee || 0;
+        const invoiceDiscount = order.discount || 0;
+        const invoiceGrandTotal = order.totalAmount > 0 ? order.totalAmount : Math.max(0, invoiceSubtotal + invoiceShippingFee + invoiceTax - invoiceDiscount);
 
         const doc = new PDFDocument({ margin: 50 });
 
@@ -361,28 +385,67 @@ export const downloadInvoice = async (req, res) => {
         // Table Divider
         doc.moveTo(50, 250).lineTo(550, 250).strokeColor('#E6DED4').stroke();
         y = 265;
-        doc.fillColor('#2C2C2C')
-            .font('Helvetica')
-            .fontSize(9);
+
+        let totalRefundAmount = 0;
+        const returnedOrCancelledItems = [];
+
         order.items.forEach(item => {
-            if (item.itemStatus === 'Cancelled' || item.itemStatus === 'Returned') {
-                return;
-            }
             const prodName = item.product?.productName || 'Unknown Product';
             const colorName = item.variant?.color || 'N/A';
             const priceVal = item.price;
             const quantity = item.quantity;
             const itemTotal = priceVal * quantity;
+
+            doc.fillColor('#2C2C2C')
+                .font('Helvetica')
+                .fontSize(9);
             doc.text(prodName, 50, y, { width: 160 });
+
+            const isReturned = item.itemStatus === 'Returned';
+            const isCancelled = item.itemStatus === 'Cancelled';
+
+            if (isReturned) {
+                doc.fillColor('#C5221F')
+                    .font('Helvetica-Bold')
+                    .fontSize(8)
+                    .text('[Returned]', 50, y + 12);
+                doc.fillColor('#2C2C2C').font('Helvetica').fontSize(9);
+            } else if (isCancelled) {
+                doc.fillColor('#C5221F')
+                    .font('Helvetica-Bold')
+                    .fontSize(8)
+                    .text('[Cancelled]', 50, y + 12);
+                doc.fillColor('#2C2C2C').font('Helvetica').fontSize(9);
+            }
+
             doc.text(colorName, 220, y, { width: 90 });
             doc.text(`Rs.${priceVal.toFixed(2)}`, 320, y, { width: 60, align: 'right' });
             doc.text(quantity.toString(), 400, y, { width: 40, align: 'center' });
             doc.text(`Rs.${itemTotal.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
-            y += 20;
+
+            if (isReturned || isCancelled) {
+                let itemRefund = item.refundAmount || 0;
+                if (!itemRefund || itemRefund === 0) {
+                    const refundCalc = calculateItemRefund(order, item);
+                    itemRefund = refundCalc.refundAmount;
+                }
+                totalRefundAmount += itemRefund;
+                returnedOrCancelledItems.push({
+                    productName: prodName,
+                    status: isReturned ? 'Returned' : 'Cancelled',
+                    refundAmount: itemRefund
+                });
+                y += 28;
+            } else {
+                y += 20;
+            }
         });
+
         doc.moveTo(50, y + 5).lineTo(550, y + 5).strokeColor('#E6DED4').stroke();
         y += 20;
         doc.font('Helvetica')
+            .fontSize(9)
+            .fillColor('#2C2C2C')
             .text('Subtotal:', 350, y, { width: 110, align: 'right' });
         doc.font('Helvetica-Bold')
             .text(`Rs.${invoiceSubtotal.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
@@ -395,14 +458,14 @@ export const downloadInvoice = async (req, res) => {
         doc.font('Helvetica')
             .text('Shipping:', 350, y, { width: 110, align: 'right' });
         doc.font('Helvetica-Bold')
-            .text(order.shippingFee === 0 ? 'FREE' : `Rs.${order.shippingFee.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
-        if (order.discount > 0) {
+            .text(invoiceShippingFee === 0 ? 'FREE' : `Rs.${invoiceShippingFee.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+        if (invoiceDiscount > 0) {
             y += 15;
             doc.font('Helvetica')
                 .text('Discount:', 350, y, { width: 110, align: 'right' });
             doc.font('Helvetica-Bold')
                 .fillColor('#D92525')
-                .text(`Rs.${order.discount.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+                .text(`Rs.${invoiceDiscount.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
         }
         y += 20;
         doc.moveTo(350, y - 5).lineTo(550, y - 5).strokeColor('#5C1E28').stroke();
@@ -410,7 +473,62 @@ export const downloadInvoice = async (req, res) => {
             .font('Helvetica-Bold')
             .fontSize(11)
             .text('Grand Total:', 350, y, { width: 110, align: 'right' });
-        doc.text(`Rs.${invoiceTotalAmount.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+        doc.text(`Rs.${invoiceGrandTotal.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
+        y += 30;
+
+        if (returnedOrCancelledItems.length > 0) {
+            doc.moveTo(50, y).lineTo(550, y).strokeColor('#E6DED4').stroke();
+            y += 15;
+
+            const hasReturned = returnedOrCancelledItems.some(i => i.status === 'Returned');
+            const hasCancelled = returnedOrCancelledItems.some(i => i.status === 'Cancelled');
+
+            let sectionTitle = 'RETURN DETAILS';
+            if (hasReturned && hasCancelled) {
+                sectionTitle = 'RETURN & CANCELLATION DETAILS';
+            } else if (hasCancelled) {
+                sectionTitle = 'CANCELLATION DETAILS';
+            } else if (hasReturned) {
+                sectionTitle = 'RETURN DETAILS';
+            }
+
+            doc.fillColor('#5C1E28')
+                .font('Helvetica-Bold')
+                .fontSize(11)
+                .text(sectionTitle, 50, y);
+            y += 20;
+
+            returnedOrCancelledItems.forEach(item => {
+                doc.fillColor('#2C2C2C')
+                    .font('Helvetica-Bold')
+                    .fontSize(9)
+                    .text(`Product Name: ${item.productName}`, 50, y);
+                y += 14;
+
+                doc.font('Helvetica')
+                    .fontSize(9)
+                    .text(`Refund Amount: Rs.${item.refundAmount.toFixed(2)}`, 50, y);
+                y += 14;
+
+                doc.text(`Refund Method: Wallet`, 50, y);
+                y += 14;
+
+                doc.text(`Refund Status: Completed`, 50, y);
+                y += 20;
+            });
+
+            const amountRetained = Math.max(0, invoiceGrandTotal - totalRefundAmount);
+
+            doc.moveTo(50, y).lineTo(550, y).strokeColor('#E6DED4').stroke();
+            y += 12;
+
+            doc.fillColor('#5C1E28')
+                .font('Helvetica-Bold')
+                .fontSize(10)
+                .text(`Amount Retained After Refund: Rs.${amountRetained.toFixed(2)}`, 50, y);
+            y += 25;
+        }
+
         doc.fillColor('#999999')
             .font('Helvetica-Oblique')
             .fontSize(8)
@@ -586,7 +704,6 @@ export const submitProductReview = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Product not found in this order' });
         }
 
-        // Check if review already exists for this product by this user
         const existingReview = await Review.findOne({ user: userId, product: productId });
         if (existingReview) {
             existingReview.rating = parseInt(rating) || 5;

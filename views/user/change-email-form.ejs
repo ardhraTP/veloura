@@ -195,13 +195,13 @@
 
                 <div class="form-group">
                     <label for="newEmail">New Email Address *</label>
-                    <input type="email" id="newEmail" name="newEmail" placeholder="Enter new email address" required>
+                    <input type="email" id="newEmail" name="newEmail" placeholder="Enter new email address" value="<%= typeof formData !== 'undefined' && formData.newEmail ? formData.newEmail : '' %>" required>
                     <span class="field-error" id="newEmailError"></span>
                 </div>
 
                 <div class="form-group">
                     <label for="confirmEmail">Confirm New Email Address *</label>
-                    <input type="email" id="confirmEmail" name="confirmEmail" placeholder="Re-enter new email address" required>
+                    <input type="email" id="confirmEmail" name="confirmEmail" placeholder="Re-enter new email address" value="<%= typeof formData !== 'undefined' && formData.confirmEmail ? formData.confirmEmail : '' %>" required>
                     <span class="field-error" id="confirmEmailError"></span>
                 </div>
 

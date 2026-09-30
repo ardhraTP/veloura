@@ -596,7 +596,7 @@
                     <!-- Coupon Name -->
                     <div class="form-group">
                         <label class="form-label">Coupon Name</label>
-                        <input type="text" id="addName" name="name" class="form-input" placeholder="e.g. Summer Radiance 2024" required>
+                        <input type="text" id="addName" name="name" class="form-input" placeholder="e.g. Summer Radiance 2024" value="<%= typeof formData !== 'undefined' && formData.name ? formData.name : '' %>" required>
                         <span class="field-error" id="addNameError"></span>
                     </div>
 
@@ -604,8 +604,8 @@
                     <div class="form-group">
                         <label class="form-label">Discount Type</label>
                         <select id="addDiscountType" name="discountType" class="form-input" onchange="toggleDiscountTypeUI('add')" style="cursor: pointer;" required>
-                            <option value="PERCENTAGE">Percentage (%)</option>
-                            <option value="FIXED">Fixed Amount (₹)</option>
+                            <option value="PERCENTAGE" <%= typeof formData !== 'undefined' && formData.discountType === 'PERCENTAGE' ? 'selected' : '' %>>Percentage (%)</option>
+                            <option value="FIXED" <%= typeof formData !== 'undefined' && formData.discountType === 'FIXED' ? 'selected' : '' %>>Fixed Amount (₹)</option>
                         </select>
                         <span class="field-error" id="addDiscountTypeError"></span>
                     </div>
@@ -614,7 +614,7 @@
                     <div class="form-group">
                         <label class="form-label" id="addDiscountValueLabel">Discount Percentage (%)</label>
                         <div class="input-wrapper">
-                            <input type="number" id="addDiscountValue" name="discountValue" class="form-input" placeholder="30" min="1" max="100" required>
+                            <input type="number" id="addDiscountValue" name="discountValue" class="form-input" placeholder="30" min="1" max="100" value="<%= typeof formData !== 'undefined' && formData.discountValue ? formData.discountValue : '' %>" required>
                             <span class="input-suffix" id="addDiscountSuffix">%</span>
                         </div>
                         <span class="field-error" id="addDiscountValueError"></span>
@@ -624,7 +624,7 @@
                     <div class="form-group">
                         <label class="form-label">Coupon Code</label>
                         <div class="input-wrapper">
-                            <input type="text" id="addCode" name="code" class="form-input" placeholder="VELVET30" style="text-transform: uppercase;" required>
+                            <input type="text" id="addCode" name="code" class="form-input" placeholder="VELVET30" style="text-transform: uppercase;" value="<%= typeof formData !== 'undefined' && formData.code ? formData.code : '' %>" required>
                             <button type="button" class="input-icon-btn" onclick="generateRandomCode('addCode')" title="Generate Code">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
@@ -635,7 +635,7 @@
                     <!-- Usage Limit -->
                     <div class="form-group">
                         <label class="form-label">Usage Limit</label>
-                        <input type="number" id="addUsageLimit" name="usageLimit" class="form-input" placeholder="500" min="1">
+                        <input type="number" id="addUsageLimit" name="usageLimit" class="form-input" placeholder="500" min="1" value="<%= typeof formData !== 'undefined' && formData.usageLimit ? formData.usageLimit : '' %>">
                         <span class="field-error" id="addUsageLimitError"></span>
                     </div>
 
@@ -644,12 +644,12 @@
                         <div class="form-row-inner">
                             <div>
                                 <label class="form-label">Start Date</label>
-                                <input type="date" id="addStartDate" name="startDate" class="form-input" required>
+                                <input type="date" id="addStartDate" name="startDate" class="form-input" value="<%= typeof formData !== 'undefined' && formData.startDate ? formData.startDate : '' %>" required>
                                 <span class="field-error" id="addStartDateError"></span>
                             </div>
                             <div>
                                 <label class="form-label">Expiry Date</label>
-                                <input type="date" id="addEndDate" name="endDate" class="form-input" required>
+                                <input type="date" id="addEndDate" name="endDate" class="form-input" value="<%= typeof formData !== 'undefined' && formData.endDate ? formData.endDate : '' %>" required>
                                 <span class="field-error" id="addEndDateError"></span>
                             </div>
                         </div>
@@ -658,21 +658,21 @@
                     <!-- Description -->
                     <div class="form-group">
                         <label class="form-label">Description</label>
-                        <textarea id="addDescription" name="description" class="form-textarea" placeholder="Describe the terms of this luxury offer..." required></textarea>
+                        <textarea id="addDescription" name="description" class="form-textarea" placeholder="Describe the terms of this luxury offer..." required><%= typeof formData !== 'undefined' && formData.description ? formData.description : '' %></textarea>
                         <span class="field-error" id="addDescriptionError"></span>
                     </div>
 
                     <!-- Maximum Discount Amount -->
                     <div class="form-group" id="addMaxDiscountGroup">
                         <label class="form-label">Maximum Discount Amount</label>
-                        <input type="number" id="addMaxDiscountAmount" name="maxDiscountAmount" class="form-input" placeholder="500" min="0">
+                        <input type="number" id="addMaxDiscountAmount" name="maxDiscountAmount" class="form-input" placeholder="500" min="0" value="<%= typeof formData !== 'undefined' && formData.maxDiscountAmount ? formData.maxDiscountAmount : '' %>">
                         <span class="field-error" id="addMaxDiscountAmountError"></span>
                     </div>
 
                     <!-- Min Order Amount -->
                     <div class="form-group">
                         <label class="form-label">minOrder Amount</label>
-                        <input type="number" id="addMinOrderAmount" name="minOrderAmount" class="form-input" placeholder="500" min="0">
+                        <input type="number" id="addMinOrderAmount" name="minOrderAmount" class="form-input" placeholder="500" min="0" value="<%= typeof formData !== 'undefined' && formData.minOrderAmount ? formData.minOrderAmount : '' %>">
                         <span class="field-error" id="addMinOrderAmountError"></span>
                     </div>
 

@@ -26,9 +26,13 @@ export const getCategoriesPage = async (req, res) => {
             .skip(skip)
             .limit(limit);
 
+
+        const successMessage = req.session.success || null;
         const errorMessage = req.session.error || null;
+        const formData = req.session.categoryFormData || {};
         delete req.session.success;
         delete req.session.error;
+        delete req.session.categoryFormData;
 
         res.render('admin/categories', {
             categories: categories,
@@ -36,7 +40,8 @@ export const getCategoriesPage = async (req, res) => {
             totalPages: totalPages,
             search: search,
             successMessage: successMessage,
-            errorMessage: errorMessage
+            errorMessage: errorMessage,
+            formData: formData
         });
     } catch (error) {
         console.log('Error in getCategoriesPage:', error);
@@ -75,16 +80,19 @@ const validateCategoryOfferBackend = (offer) => {
 export const addCategory = async (req, res) => {
     try {
         const { name, offer, description } = req.body;
+        const formData = { name, offer, description };
 
         const nameError = validateCategoryNameBackend(name);
         if (nameError) {
             req.session.error = nameError;
+            req.session.categoryFormData = formData;
             return res.redirect('/admin/categories');
         }
 
         const offerError = validateCategoryOfferBackend(offer);
         if (offerError) {
             req.session.error = offerError;
+            req.session.categoryFormData = formData;
             return res.redirect('/admin/categories');
         }
 
@@ -98,6 +106,7 @@ export const addCategory = async (req, res) => {
 
         if (existingCategory) {
             req.session.error = 'Category already exists';
+            req.session.categoryFormData = formData;
             return res.redirect('/admin/categories');
         }
 
@@ -121,6 +130,7 @@ export const addCategory = async (req, res) => {
     } catch (error) {
         console.log('Error in addCategory:', error);
         req.session.error = 'Error adding category';
+        req.session.categoryFormData = req.body;
         res.redirect('/admin/categories');
     }
 };

@@ -38,8 +38,10 @@ export const getCouponsPage = async (req, res) => {
 
         const successMessage = req.session.success || null;
         const errorMessage = req.session.error || null;
+        const formData = req.session.couponFormData || {};
         delete req.session.success;
         delete req.session.error;
+        delete req.session.couponFormData;
 
         res.render('admin/coupons', {
             coupons: coupons,
@@ -48,7 +50,8 @@ export const getCouponsPage = async (req, res) => {
             search: search,
             status: status,
             successMessage: successMessage,
-            errorMessage: errorMessage
+            errorMessage: errorMessage,
+            formData: formData
         });
     } catch (error) {
         console.error('Error in getCouponsPage:', error);
@@ -72,13 +75,17 @@ export const addCoupon = async (req, res) => {
             description
         } = req.body;
 
+        const formData = req.body;
+
         if(!name || !name.trim()){
             req.session.error = 'Coupon Name is required.';
+            req.session.couponFormData = formData;
             return res.redirect('/admin/coupons');
         }
 
         if(!code || !code.trim()){
             req.session.error = 'Coupon Code is required.';
+            req.session.couponFormData = formData;
             return res.redirect('/admin/coupons');
         }
 
@@ -89,11 +96,13 @@ export const addCoupon = async (req, res) => {
         if (validDiscountType === 'PERCENTAGE') {
             if (isNaN(parsedDiscount) || parsedDiscount < 1 || parsedDiscount > 100) {
                 req.session.error = 'Discount percentage must be between 1 and 100.';
+                req.session.couponFormData = formData;
                 return res.redirect('/admin/coupons');
             }
         } else {
             if (isNaN(parsedDiscount) || parsedDiscount <= 0) {
                 req.session.error = 'Fixed discount amount must be a positive number greater than 0.';
+                req.session.couponFormData = formData;
                 return res.redirect('/admin/coupons');
             }
         }
@@ -103,29 +112,34 @@ export const addCoupon = async (req, res) => {
 
         if(isNaN(start.getTime()) || isNaN(end.getTime())){
             req.session.error = 'Please select valid dates.';
+            req.session.couponFormData = formData;
             return res.redirect('/admin/coupons');
         }
 
         if(end < start){
             req.session.error = 'Expiry date cannot be earlier than start date.';
+            req.session.couponFormData = formData;
             return res.redirect('/admin/coupons');
         }
 
         const parsedMinOrder = parseFloat(minOrderAmount) || 0;
         if(parsedMinOrder < 0){
             req.session.error = 'Minimum purchase amount cannot be negative.';
+            req.session.couponFormData = formData;
             return res.redirect('/admin/coupons');
         }
 
         const parsedMaxDiscount = maxDiscountAmount ? parseFloat(maxDiscountAmount) : null;
         if(parsedMaxDiscount !== null && parsedMaxDiscount < 0){
             req.session.error = 'Maximum discount amount cannot be negative.';
+            req.session.couponFormData = formData;
             return res.redirect('/admin/coupons');
         }
 
         const parsedUsageLimit = usageLimit ? parseInt(usageLimit) : null;
         if(parsedUsageLimit !== null && parsedUsageLimit <= 0){
             req.session.error = 'Usage limit must be a positive number.';
+            req.session.couponFormData = formData;
             return res.redirect('/admin/coupons');
         }
 
@@ -135,6 +149,7 @@ export const addCoupon = async (req, res) => {
 
         if(existingCoupon){
             req.session.error = 'Coupon code already exists. Please choose a unique code.';
+            req.session.couponFormData = formData;
             return res.redirect('/admin/coupons');
         }
 
@@ -159,6 +174,7 @@ export const addCoupon = async (req, res) => {
     } catch (error) {
         console.error('Error in addCoupon:', error);
         req.session.error = 'Error adding coupon';
+        req.session.couponFormData = req.body;
         res.redirect('/admin/coupons');
     }
 };

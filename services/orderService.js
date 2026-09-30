@@ -191,7 +191,23 @@ export const getAllOrdersAdmin = async (filters = {})=>{
         let query = {};
 
         if(filters.status){
-            query.orderStatus = filters.status;
+            if(filters.status === 'Return Requested'){
+                query.$or = [
+                    { orderStatus: 'Return Requested' },
+                    { 'items.itemStatus': 'Return Requested' }
+                ];
+            } else if(filters.status === 'Partially Delivered'){
+                query.$or = [
+                    { orderStatus: 'Partially Delivered' },
+                    { orderStatus: 'Partially Returned' },
+                    { 'items.itemStatus': 'Delivered' },
+                    { 'items.itemStatus': 'Returned' }
+                ];
+                query.orderStatus = { $nin: ['Delivered', 'Returned', 'Cancelled', 'Return Requested'] };
+                query['items.itemStatus'] = { $ne: 'Return Requested' };
+            } else {
+                query.orderStatus = filters.status;
+            }
         }
 
         if(filters.paymentStatus){
@@ -210,6 +226,23 @@ export const getAllOrdersAdmin = async (filters = {})=>{
         .populate('items.product')
         .populate('items.variant')
         .sort({createdAt: -1});
+
+        orders.forEach(order => {
+            if (order.items && order.items.length > 0) {
+                const hasReturnRequested = order.orderStatus === 'Return Requested' || order.items.some(i => i.itemStatus === 'Return Requested');
+
+                if (!hasReturnRequested) {
+                    const activeItems = order.items.filter(i => i.itemStatus !== 'Cancelled' && i.itemStatus !== 'Returned');
+                    const deliveredCount = activeItems.filter(i => i.itemStatus === 'Delivered').length;
+
+                    if (deliveredCount > 0 && deliveredCount < activeItems.length) {
+                        order.orderStatus = 'Partially Delivered';
+                    } else if (order.orderStatus === 'Partially Returned') {
+                        order.orderStatus = 'Partially Delivered';
+                    }
+                }
+            }
+        });
 
         return orders;
     }catch(error){
@@ -232,6 +265,9 @@ export const updateOrderStatus = async (orderId,newStatus)=>{
         order.items.forEach(item =>{
             if(item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned'){
                 item.itemStatus = newStatus;
+                if(newStatus === 'Delivered' && !item.deliveredAt){
+                    item.deliveredAt = new Date();
+                }
             }
         });
 
@@ -259,6 +295,43 @@ export const updateItemStatus = async (orderId,itemId,newStatus)=>{
         }
 
         item.itemStatus = newStatus;
+        if (newStatus === 'Delivered') {
+            item.deliveredAt = new Date();
+        }
+
+        const activeItems = order.items.filter(i => i.itemStatus !== 'Cancelled' && i.itemStatus !== 'Returned');
+        if (activeItems.length > 0) {
+            let deliveredCount = 0;
+            let totalActive = activeItems.length;
+
+            for (let i = 0; i < activeItems.length; i++) {
+                if (activeItems[i].itemStatus === 'Delivered') {
+                    deliveredCount++;
+                }
+            }
+
+            if (deliveredCount === totalActive) {
+                order.orderStatus = 'Delivered';
+                order.paymentStatus = 'Completed';
+            } else if (deliveredCount > 0 && deliveredCount < totalActive) {
+                order.orderStatus = 'Partially Delivered';
+            } else {
+                const firstStatus = activeItems[0].itemStatus;
+                let allSameStatus = true;
+
+                for (let i = 0; i < activeItems.length; i++) {
+                    if (activeItems[i].itemStatus !== firstStatus) {
+                        allSameStatus = false;
+                        break;
+                    }
+                }
+
+                if (allSameStatus && firstStatus !== 'Ordered') {
+                    order.orderStatus = firstStatus;
+                }
+            }
+        }
+
         await order.save();
 
         return order;
@@ -315,7 +388,7 @@ export const approveReturn = async (orderId,itemId)=>{
             order.orderStatus = 'Returned';
             order.paymentStatus = 'Refunded';
         } else if (hasReturnedItems) {
-            order.orderStatus = 'Partially Returned';
+            order.orderStatus = 'Partially Delivered';
             order.paymentStatus = 'Partially Refunded';
         }
 

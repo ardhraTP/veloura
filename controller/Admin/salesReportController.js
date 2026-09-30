@@ -95,7 +95,7 @@ export const getSalesReport = async (req, res) => {
             period: period || 'all',
             startDate: startDate || '',
             endDate: endDate || '',
-            amountCount: amountCount
+            // amountCount: amountCount
         });
 
     } catch (error) {

@@ -382,7 +382,8 @@
                                id="productName"
                                name="productName" 
                                class="form-input" 
-                               placeholder="Enter product name...">
+                               placeholder="Enter product name..."
+                               value="<%= typeof formData !== 'undefined' && formData && formData.productName ? formData.productName : '' %>">
                         <span class="field-error" id="productNameError">Product name is required.</span>
                     </div>
                     
@@ -392,7 +393,7 @@
                             <option value="">Select Category</option>
                             <% if (categories && categories.length > 0) { %>
                                 <% categories.forEach(category => { %>
-                                    <option value="<%= category._id %>"><%= category.name %></option>
+                                    <option value="<%= category._id %>" <%= typeof formData !== 'undefined' && formData && String(formData.categoryId) === String(category._id) ? 'selected' : '' %>><%= category.name %></option>
                                 <% }) %>
                             <% } %>
                         </select>
@@ -407,7 +408,8 @@
                                id="brand"
                                name="brand" 
                                class="form-input" 
-                               placeholder="Enter brand name...">
+                               placeholder="Enter brand name..."
+                               value="<%= typeof formData !== 'undefined' && formData && formData.brand ? formData.brand : '' %>">
                         <span class="field-error" id="brandError">Brand is required.</span>
                     </div>
                     
@@ -420,15 +422,16 @@
                                placeholder="e.g. 15" 
                                min="0" 
                                max="100" 
-                               step="1">
+                               step="1"
+                               value="<%= typeof formData !== 'undefined' && formData && formData.productOffer ? formData.productOffer : '' %>">
                         <span class="field-error" id="productOfferError"></span>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">STATUS</label>
                         <select name="status" class="form-select">
-                            <option value="ACTIVE">Active</option>
-                            <option value="INACTIVE">Inactive</option>
+                            <option value="ACTIVE" <%= typeof formData !== 'undefined' && formData && formData.status === 'ACTIVE' ? 'selected' : '' %>>Active</option>
+                            <option value="INACTIVE" <%= typeof formData !== 'undefined' && formData && formData.status === 'INACTIVE' ? 'selected' : '' %>>Inactive</option>
                         </select>
                     </div>
                 </div>
@@ -437,7 +440,7 @@
                     <label class="form-label">DESCRIPTION *</label>
                     <textarea id="description" name="description" 
                               class="form-textarea" 
-                              placeholder="Enter product description..."></textarea>
+                              placeholder="Enter product description..."><%= typeof formData !== 'undefined' && formData && formData.description ? formData.description : '' %></textarea>
                     <span class="field-error" id="descriptionError">Description is required.</span>
                 </div>
             </div>
@@ -480,6 +483,9 @@
                 files: []
             };
 
+            const defaultPalette = ['#5c1e28', '#8b0000', '#c71585', '#4b0082', '#1e90ff', '#008080', '#d2691e', '#808000'];
+            const initialColor = defaultPalette[variantIndex % defaultPalette.length];
+
             const variantHTML = `
                 <div class="variant-card" id="variant-${variantIndex}">
                     <div class="variant-header">
@@ -514,7 +520,7 @@
                                 <div class="hex-input-wrap">
                                     <input type="color"
                                            id="colorPicker-${variantIndex}"
-                                           value="#5c1e28"
+                                           value="${initialColor}"
                                            oninput="syncHex(${variantIndex}, this.value)"
                                            onchange="syncHex(${variantIndex}, this.value)">
                                     <input type="text"
@@ -569,7 +575,7 @@
                 document.getElementById('variantsContainer').insertAdjacentHTML('beforeend', variantHTML);
 
                 // Immediately initialise text input + preview circle with the default picker colour
-                syncHex(variantIndex, '#5c1e28');
+                syncHex(variantIndex, initialColor);
             }
 
             function createImagePlaceholders(variantIndex, count) {
@@ -813,12 +819,23 @@
         // Called when the colour-picker wheel changes → push value to text input + preview
         function syncHex(variantIndex, hexValue) {
             const textInput = document.getElementById(`hexInput-${variantIndex}`);
-            if (textInput) textInput.value = hexValue.toUpperCase();
+            if (textInput) {
+                textInput.value = hexValue.toUpperCase();
+                textInput.classList.remove('input-error');
+                const errSpan = document.getElementById(`vHexErr-${variantIndex}`);
+                if (errSpan) errSpan.classList.remove('visible');
+            }
             updateShadePreview(variantIndex, hexValue);
         }
 
         // Called when the text input changes → validate hex → push to colour picker + preview
         function syncPicker(variantIndex, rawValue) {
+            const textInput = document.getElementById(`hexInput-${variantIndex}`);
+            if (textInput) {
+                textInput.classList.remove('input-error');
+                const errSpan = document.getElementById(`vHexErr-${variantIndex}`);
+                if (errSpan) errSpan.classList.remove('visible');
+            }
             const hex = rawValue.startsWith('#') ? rawValue : '#' + rawValue;
             if (isValidHex(hex)) {
                 const picker = document.getElementById(`colorPicker-${variantIndex}`);
@@ -1007,6 +1024,45 @@
                 }
             }
 
+            // Check for duplicate variant colors and shade colors (hex codes)
+            const usedVariantColors = new Set();
+            const usedShadeColors = new Set();
+
+            for (let card of variantCards) {
+                const idx = parseInt(card.id.split('-')[1]);
+                const colorInput = card.querySelector(`input[name="variants[${idx}][color]"]`);
+                const hexInput = card.querySelector(`input[name="variants[${idx}][hexCode]"]`);
+                const colorPicker = card.querySelector(`#colorPicker-${idx}`);
+
+                const colorVal = colorInput ? colorInput.value.trim().toLowerCase() : '';
+                let hexVal = hexInput && hexInput.value.trim() ? hexInput.value.trim().toUpperCase() : (colorPicker ? colorPicker.value.trim().toUpperCase() : '');
+
+                if (hexVal && !hexVal.startsWith('#')) {
+                    hexVal = '#' + hexVal;
+                }
+
+                const colorErrId = `vColorErr-${idx}`;
+                const hexErrId = `vHexErr-${idx}`;
+
+                if (colorVal) {
+                    if (usedVariantColors.has(colorVal)) {
+                        vErr(colorInput, colorErrId, true, 'Variant color must be unique. Duplicate color found.');
+                        hasError = true;
+                    } else {
+                        usedVariantColors.add(colorVal);
+                    }
+                }
+
+                if (hexVal) {
+                    if (usedShadeColors.has(hexVal)) {
+                        vErr(hexInput, hexErrId, true, 'Shade color must be unique. This shade color is already used by another variant.');
+                        hasError = true;
+                    } else {
+                        usedShadeColors.add(hexVal);
+                    }
+                }
+            }
+
             for (let card of variantCards) {
                 const idx = parseInt(card.id.split('-')[1]);
 
@@ -1036,9 +1092,13 @@
                 const regErrId   = `vRegErr-${idx}`;
                 const saleErrId  = `vSaleErr-${idx}`;
 
-                vErr(colorInput,    colorErrId, !color,                 'Color name is required.');
+                if (!colorInput.classList.contains('input-error')) {
+                    vErr(colorInput, colorErrId, !color, 'Color name is required.');
+                }
                 vErr(qtyInput,      qtyErrId,   quantity === '',        'Quantity is required.');
-                vErr(hexInput,      hexErrId,   !hexCode,               'Hex code is required.');
+                if (!hexInput.classList.contains('input-error')) {
+                    vErr(hexInput,  hexErrId,   !hexCode,               'Hex code is required.');
+                }
                 vErr(regPriceInput, regErrId,   regularPrice === '',    'Regular price is required.');
                 vErr(salePriceInput,saleErrId,  salePrice === '',       'Sale price is required.');
 

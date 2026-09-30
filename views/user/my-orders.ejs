@@ -416,6 +416,9 @@
                                         } else if (order.orderStatus === 'Partially Returned') {
                                             dotColor = 'plum';
                                             statusText = 'PARTIALLY RETURNED';
+                                        } else if (order.orderStatus === 'Partially Delivered') {
+                                            dotColor = 'green';
+                                            statusText = 'PARTIALLY DELIVERED';
                                         } else if (isPaymentFailed) {
                                             dotColor = 'red';
                                             statusText = 'PAYMENT FAILED';

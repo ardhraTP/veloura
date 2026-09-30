@@ -13,13 +13,11 @@ export const getProducts = async (options) => {
         const page = options.page || 1;
         const limit = 6;
 
-        // Filter products that are not soft deleted (retrieve both ACTIVE and INACTIVE unlisted products)
         let matchFilter = {
             isDeleted: false
         };
 
-        // Function to escape special regex characters in search input
-        const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');  
 
         if (search) {
             const safeSearch = escapeRegex(search);
@@ -99,7 +97,6 @@ export const getProducts = async (options) => {
 
         const products = await Product.aggregate(pipeline).collation({ locale: 'en', strength: 2 });
 
-        // Calculate offer prices for all product variants
         products.forEach(product => {
             if (product.variants && product.variants.length > 0) {
                 product.variants.forEach(variant => {
@@ -140,9 +137,19 @@ export const getProductById = async (productId) => {
             isDeleted: false
         }).lean();
 
+        const updatedVariants = variants.map(variant => {
+            const { finalPrice, discountPercentage } = calculateOfferPrice(product, variant.regularPrice, variant.salePrice);
+            return {
+                ...variant,
+                salePrice: finalPrice,
+                discountPercentage: discountPercentage,
+                activeOfferDiscount: discountPercentage
+            };
+        });
+
         return {
             ...product.toObject(),
-            variants: variants
+            variants: updatedVariants
         };
     } catch (error) {
         console.log('Error getting product:', error);
@@ -161,7 +168,6 @@ export const checkProductAvailability = async (productId, quantity) => {
             return { available: false, message: 'Product not found' };
         }
 
-        // Check if product has been unlisted by admin
         if (product.status === 'INACTIVE') {
             return { available: false, message: 'Product is currently unavailable' };
         }

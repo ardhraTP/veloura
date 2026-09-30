@@ -506,6 +506,7 @@
                             id="name" 
                             name="name" 
                             placeholder="Enter your full name"
+                            value="<%= typeof formData !== 'undefined' && formData.name ? formData.name : '' %>"
                         >
                         <div class="error-text" id="nameError"></div>
                     </div>
@@ -517,6 +518,7 @@
                             id="email" 
                             name="email" 
                             placeholder="Enter your email address"
+                            value="<%= typeof formData !== 'undefined' && formData.email ? formData.email : '' %>"
                         >
                         <div class="error-text" id="emailError"></div>
                     </div>
@@ -528,6 +530,7 @@
                             id="phone" 
                             name="phone" 
                             placeholder="Enter your 10-digit phone number"
+                            value="<%= typeof formData !== 'undefined' && formData.phone ? formData.phone : '' %>"
                        required
                         >
                         <div class="error-text" id="phoneError"></div>
@@ -570,7 +573,7 @@
                             id="referralCode" 
                             name="referralCode" 
                             placeholder="VELVET-XXXX-XXXX" 
-                            value="<%= typeof referralCode !== 'undefined' ? referralCode : '' %>"
+                            value="<%= typeof formData !== 'undefined' && formData.referralCode ? formData.referralCode : (typeof referralCode !== 'undefined' ? referralCode : '') %>"
                         >
                     </div>
 

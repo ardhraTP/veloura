@@ -574,6 +574,7 @@
                         <option value="Shipped" <%= order.orderStatus === 'Shipped' ? 'selected' : '' %>>shipped</option>
                         <option value="Out for Delivery" <%= order.orderStatus === 'Out for Delivery' ? 'selected' : '' %>>out for delivery</option>
                         <option value="Delivered" <%= order.orderStatus === 'Delivered' ? 'selected' : '' %>>delivered</option>
+                        <option value="Partially Delivered" <%= order.orderStatus === 'Partially Delivered' ? 'selected' : '' %>>partially delivered</option>
                         <option value="Cancelled" <%= order.orderStatus === 'Cancelled' ? 'selected' : '' %>>cancelled</option>
                         <option value="Returned" <%= order.orderStatus === 'Returned' ? 'selected' : '' %>>returned</option>
                     </select>

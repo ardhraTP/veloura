@@ -596,6 +596,7 @@
                                             </button>
                                         </div>
                                     </td>
+
                                    
                                 </tr>
                                 <% }) %>
@@ -608,6 +609,7 @@
                                             </td>
                                         </tr>
                                         <% } %>
+                                       
                     </tbody>
                 </table>
             </div>
@@ -654,14 +656,14 @@
                                     <div class="form-group">
                                         <label class="form-label">CATEGORY NAME</label>
                                         <input type="text" id="addName" name="name" class="form-input"
-                                            placeholder="Enter category name...">
+                                            placeholder="Enter category name..." value="<%= typeof formData !== 'undefined' && formData.name ? formData.name : '' %>">
                                         <span class="field-error" id="addNameError"></span>
                                     </div>
 
                                     <div class="form-group">
                                         <label class="form-label">OFFER</label>
                                         <input type="text" id="addOffer" name="offer" class="form-input"
-                                            placeholder="e.g. 20% Seasonal Discount">
+                                            placeholder="e.g. 20% Seasonal Discount" value="<%= typeof formData !== 'undefined' && formData.offer ? formData.offer : '' %>">
                                         <span class="field-error" id="addOfferError"></span>
                                     </div>
                                 </div>
@@ -669,7 +671,7 @@
                                 <div class="form-group full-width">
                                     <label class="form-label">COLLECTION DESCRIPTION</label>
                                     <textarea id="addDescription" name="description" class="form-textarea"
-                                        placeholder="Describe the collection's essence and target aesthetic..."></textarea>
+                                        placeholder="Describe the collection's essence and target aesthetic..."><%= typeof formData !== 'undefined' && formData.description ? formData.description : '' %></textarea>
                                     <span class="field-error" id="addDescriptionError"></span>
                                 </div>
 

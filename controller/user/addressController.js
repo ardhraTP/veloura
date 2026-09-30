@@ -46,13 +46,13 @@ export const addAddress = async (req, res) => {
         const addressData = req.body;
         const userId = req.session.userId;
 
-
         const validation = validateAddressData(addressData);
         if (!validation.isValid) {
             return res.render('user/add-address', {
                 error: validation.error,
                 success: null,
-                activeTab: 'addresses'
+                activeTab: 'addresses',
+                formData: addressData
             });
         }
 
@@ -63,7 +63,8 @@ export const addAddress = async (req, res) => {
         res.render('user/add-address', {
             error: 'Something went wrong.Please try again.',
             success: null,
-            activeTab: 'addresses'
+            activeTab: 'addresses',
+            formData: req.body
         });
     }
 };
@@ -100,8 +101,9 @@ export const updateAddress = async (req, res) => {
 
         const validation = validateAddressData(addressData);
         if (!validation.isValid) {
+            const mergedAddress = { ...existingAddresses.toObject(), ...addressData };
             return res.render('user/edit-address', {
-                address: existingAddresses,
+                address: mergedAddress,
                 error: validation.error,
                 success: null,
                 activeTab: 'addresses'
@@ -113,8 +115,9 @@ export const updateAddress = async (req, res) => {
     } catch (error) {
         console.error('Update address error:', error);
         const address = await getAddressById(req.params.id, req.session.userId);
+        const mergedAddress = address ? { ...address.toObject(), ...req.body } : req.body;
         res.render('user/edit-address', {
-            address,
+            address: mergedAddress,
             error: 'Something went wrong.Please try again.',
             success: null,
             activeTab: 'addresses'
@@ -135,7 +138,6 @@ export const deleteAddress = async (req, res) => {
 
         const wasDefault = address.isDefault;
 
-        // Delete the address
         await deleteAddressService(id);
 
 

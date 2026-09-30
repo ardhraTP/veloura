@@ -72,6 +72,7 @@ export const getCheckoutPage = async (req, res) => {
             walletBalance: user.walletBalance || 0,
             activeCoupons,
             isLoggedIn: true
+   
         });
     } catch (error) {
         console.error('Error in getCheckoutPage:', error);
@@ -85,6 +86,19 @@ export const applyCoupon = async (req, res) => {
         const { couponCode } = req.body;
         const userId = req.session.userId;
 
+        const userUsageCount = await Order.countDocuments({
+            user: userId,
+            'coupon.code': couponCode.toUpperCase(),
+            orderStatus: { $ne: 'Cancelled' },
+            paymentStatus: { $ne: 'Failed' }
+        });
+
+        if (userUsageCount > 0) {
+            return res.json({
+                success: false,
+                message: 'You have already used this coupon'
+            });
+        }
 
         const cart = await cartService.getUserCart(userId);
         const cartTotal = cart.totalAmount;
@@ -172,7 +186,6 @@ export const createOrder = async (req, res) => {
             return res.json({ success: false, message: 'Address not found' });
         }
 
-        // Check stock quantity and availability for each cart item
         for (const item of cart.items) {
             const product = item.product;
             const variantId = item.variant ? (item.variant._id || item.variant) : null;
@@ -467,9 +480,8 @@ export const placeOrder = async (req, res) => {
         }
 
         if (couponCode) {
-            await couponService.applyCoupon(couponCode);
+            await couponService.applyCoupon(couponCode, userId);
         }
-
 
         cart.items = [];
         cart.totalAmount = 0;
@@ -545,7 +557,7 @@ export const verifyPayment = async (req, res) => {
 
 
         if (order.coupon && order.coupon.code) {
-            await couponService.applyCoupon(order.coupon.code);
+            await couponService.applyCoupon(order.coupon.code, order.user);
         }
 
 
