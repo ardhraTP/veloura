@@ -905,19 +905,18 @@
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Step 1: Reset main profile image circle to default icon
+                   
                     const circle = document.getElementById('profileImageCircle');
                     if (circle) {
                         circle.innerHTML = '<i class="far fa-user" style="font-size:48px;color:#a09d98;"></i>';
                     }
 
-                    // Step 2: Reset sidebar profile avatar to default icon
+
                     const sidebarAvatar = document.getElementById('sidebarProfileAvatar');
                     if (sidebarAvatar) {
                         sidebarAvatar.innerHTML = '<i class="fas fa-user"></i>';
                     }
 
-                    // Step 3: Clear file input and file name display
                     const fileInput = document.getElementById('profileImageInput');
                     if (fileInput) {
                         fileInput.value = '';
@@ -929,19 +928,16 @@
                         filenameEl.classList.remove('visible');
                     }
 
-                    // Step 4: Hide the remove button
                     const removeBtn = document.getElementById('removeImageBtn');
                     if (removeBtn) {
                         removeBtn.style.display = 'none';
                     }
 
-                    // Step 5: Set hidden input value to true to send delete signal to server
                     const deleteInput = document.getElementById('deleteProfileImage');
                     if (deleteInput) {
                         deleteInput.value = 'true';
                     }
 
-                    // Step 6: Submit form to save image removal permanently in database
                     const profileForm = document.getElementById('profileForm');
                     if (profileForm) {
                         profileForm.submit();

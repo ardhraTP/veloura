@@ -99,7 +99,6 @@
     <%- include('../partials/footer') %>
 
     <script>
-        // Helper function to display field-wise error
         function showFieldError(inputId, errorId, message) {
             const inputEl = document.getElementById(inputId);
             const errorEl = document.getElementById(errorId);
@@ -110,7 +109,6 @@
             }
         }
 
-        // Helper function to clear field-wise error
         function clearFieldError(inputId, errorId) {
             const inputEl = document.getElementById(inputId);
             const errorEl = document.getElementById(errorId);
@@ -121,7 +119,6 @@
             }
         }
 
-        // Define form fields and error IDs
         const formFields = [
             { inputId: 'name', errorId: 'nameError' },
             { inputId: 'email', errorId: 'emailError' },
@@ -129,7 +126,6 @@
             { inputId: 'message', errorId: 'messageError' }
         ];
 
-        // Clear ALL errors across all fields as soon as the user starts typing in ANY field
         formFields.forEach(field => {
             const element = document.getElementById(field.inputId);
             if (element) {
@@ -139,11 +135,9 @@
             }
         });
 
-        // Form submission with field-wise validation
         document.getElementById('contactForm').addEventListener('submit', async function(event) {
             event.preventDefault();
 
-            // Clear any previous error states
             formFields.forEach(f => clearFieldError(f.inputId, f.errorId));
 
             const name = document.getElementById('name').value.trim();
@@ -154,7 +148,6 @@
 
             let isValid = true;
 
-            // Validate Name
             if (!name) {
                 showFieldError('name', 'nameError', 'Please enter your name.');
                 isValid = false;
@@ -163,7 +156,6 @@
                 isValid = false;
             }
 
-            // Validate Email
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!email) {
                 showFieldError('email', 'emailError', 'Please enter your email address.');
@@ -173,7 +165,6 @@
                 isValid = false;
             }
 
-            // Validate Phone
             const phoneRegex = /^[0-9]{10}$/;
             if (!phone) {
                 showFieldError('phone', 'phoneError', 'Please enter your phone number.');
@@ -183,7 +174,6 @@
                 isValid = false;
             }
 
-            // Validate Message
             if (!message) {
                 showFieldError('message', 'messageError', 'Please enter your message.');
                 isValid = false;
@@ -192,12 +182,10 @@
                 isValid = false;
             }
 
-            // Stop if any field is invalid
             if (!isValid) {
                 return;
             }
 
-            // Disable button during network request
             sendBtn.disabled = true;
             sendBtn.textContent = 'SENDING...';
 
@@ -222,7 +210,6 @@
                         confirmButtonColor: '#5c1e28'
                     });
 
-                    // Reset form and errors
                     document.getElementById('contactForm').reset();
                     formFields.forEach(f => clearFieldError(f.inputId, f.errorId));
                 } else {

@@ -1110,13 +1110,10 @@
             let currentShipping = baseShippingFee;
             let activeCoupon = '';
 
-            // Available coupons from database
             const availableCoupons = <%- JSON.stringify(locals.activeCoupons || []) %>;
 
-            // Track the selected delivery address ID
             let selectedAddressId = '<%= addresses.find(a => a.isDefault)?._id || (addresses[0]?._id || "") %>';
 
-            // Select address card handler
             function selectAddress(element, addressId) {
                 document.querySelectorAll('.address-card').forEach(card => {
                     card.classList.remove('selected');
@@ -1132,7 +1129,6 @@
                 }
             }
 
-            // Set address as default via AJAX PUT
             function makeAddressDefault(addressId) {
                 Swal.fire({
                     title: 'Updating...',
@@ -1202,7 +1198,6 @@
                 }
             }
 
-            // Coupon code list toggle dropdown helper
             function toggleCouponsDropdown() {
                 const dropdown = document.getElementById('couponsDropdown');
                 const chevron = document.getElementById('couponsChevron');
@@ -1215,19 +1210,15 @@
                 }
             }
 
-            // Click coupon item from dropdown list
             function applyCouponCode(code) {
                 document.getElementById('couponCode').value = code;
                 applyCoupon();
             }
 
-            // Recalculate totals dynamically on the client side
             function recalculateCheckoutTotals() {
-                // 1. Calculate base values
                 baseTax = Math.round(baseSubtotal * 0.05);
                 baseShippingFee = baseSubtotal > 1000 ? 0 : 50;
 
-                // 2. Adjust coupon discount / shipping based on activeCoupon
                 let newDiscount = 0;
                 let newShipping = baseShippingFee;
 
@@ -1244,7 +1235,6 @@
                                 newDiscount = coupon.discountValue;
                             }
                         } else {
-                            // Coupon condition no longer satisfied, reset it
                             newDiscount = 0;
                             activeCoupon = '';
                             document.getElementById('couponCode').value = '';
@@ -1258,7 +1248,6 @@
                             });
                         }
                     } else {
-                        // Fallback if applied from backend but not in list
                         newDiscount = currentDiscount;
                     }
                 } else {
@@ -1268,10 +1257,8 @@
                 currentDiscount = newDiscount;
                 currentShipping = newShipping;
 
-                // 3. Calculate final total
                 const finalTotal = baseSubtotal + currentShipping + baseTax - currentDiscount;
 
-                // 4. Update the DOM elements
                 document.getElementById('subtotalVal').textContent = `₹${baseSubtotal.toFixed(2)}`;
                 
                 const taxEl = document.getElementById('taxVal');
@@ -1285,7 +1272,6 @@
                 document.getElementById('finalTotalVal').textContent = `₹${Math.max(0, finalTotal).toFixed(2)}`;
             }
 
-            // Calculate and apply coupon values dynamically on the client side
             function applyCoupon() {
                 const code = document.getElementById('couponCode').value.trim().toUpperCase();
                 if (!code) {
@@ -1381,19 +1367,16 @@
                             .then(res => res.json())
                             .then(data => {
                                 if (data.success) {
-                                    // If cart is empty now, redirect back to cart page
                                     if (!data.cart || !data.cart.items || data.cart.items.length === 0) {
                                         window.location.href = '/cart';
                                         return;
                                     }
 
-                                    // Remove the element from the DOM
                                     const productCard = document.getElementById('card_' + variantId);
                                     if (productCard) {
                                         productCard.remove();
                                     }
 
-                                    // Update baseSubtotal and recalculate totals
                                     baseSubtotal = data.cart.totalAmount;
                                     recalculateCheckoutTotals();
 
@@ -1416,9 +1399,7 @@
                 });
             }
 
-            // Place order submit function with Razorpay integration
             async function placeOrder() {
-                // Validate address selection
                 if (!selectedAddressId) {
                     Swal.fire({
                         icon: 'warning',
@@ -1432,7 +1413,6 @@
                 const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
                 const finalAmount = parseFloat(document.getElementById('finalTotalVal').textContent.replace('₹', ''));
 
-                // Validate wallet balance if Wallet payment is selected
                 if (paymentMethod === 'Wallet') {
                     const walletBalance = <%= user && user.walletBalance ? user.walletBalance : 0 %>;
                     if (walletBalance < finalAmount) {
@@ -1446,7 +1426,6 @@
                     }
                 }
 
-                // Show confirmation dialog
                 const paymentText = paymentMethod === 'COD' ? 'Cash on Delivery' : 
                                    paymentMethod === 'Wallet' ? 'Wallet Payment' : 'Online Payment';
                 
@@ -1463,7 +1442,6 @@
 
                 if (!result.isConfirmed) return;
 
-                // Handle Online Payment with Razorpay
                 if (paymentMethod === 'Online') {
                     try {
                         Swal.fire({
@@ -1475,7 +1453,6 @@
                             }
                         });
 
-                        // Create Razorpay order
                         const orderResponse = await fetch('/checkout/create-order', {
                             method: 'POST',
                             headers: {
@@ -1507,7 +1484,6 @@
 
                         Swal.close();
 
-                        // Initialize Razorpay payment
                         const options = {
                             key: orderData.razorpayKeyId,
                             amount: orderData.amount,
@@ -1524,7 +1500,6 @@
                                 color: '#5c1e28'
                             },
                             handler: async function (response) {
-                                // Payment successful - verify payment
                                 Swal.fire({
                                     title: 'Verifying Payment...',
                                     text: 'Please wait',
@@ -1564,7 +1539,6 @@
                             },
                             modal: {
                                 ondismiss: function() {
-                                    // User closed the payment modal
                                     window.location.href = `/order/payment-failed?orderId=${orderData.orderId}`;
                                 }
                             }
@@ -1643,7 +1617,6 @@
                 }
             }
 
-            // Modal action functions
             let currentEditAddressId = null;
 
             function clearAllFieldErrors() {
@@ -1713,7 +1686,6 @@
                 document.getElementById('modalError').style.display = 'none';
                 clearAllFieldErrors();
 
-                // Pre-populate fields
                 document.getElementById('fullName').value = card.getAttribute('data-fullname');
                 document.getElementById('phone').value = card.getAttribute('data-phone');
                 document.getElementById('pincode').value = card.getAttribute('data-pincode');
@@ -1732,11 +1704,9 @@
                 const form = event.target;
                 const formData = new FormData(form);
 
-                // Convert FormData to JSON
                 const data = {};
                 formData.forEach((value, key) => { data[key] = value.trim() });
 
-                // Custom validation checks matching add-address rules
                 clearAllFieldErrors();
                 let isValid = true;
 
@@ -1745,7 +1715,6 @@
                     isValid = false;
                 }
                 
-                // Phone validation
                 if (!data.phone) {
                     showFieldError('phone', 'Please enter your phone number.');
                     isValid = false;
@@ -1757,7 +1726,6 @@
                     isValid = false;
                 }
 
-                // Pincode validation
                 if (!data.pincode) {
                     showFieldError('pincode', 'Please enter your pincode.');
                     isValid = false;
@@ -1766,7 +1734,6 @@
                     isValid = false;
                 }
 
-                // Address validation (minimum 10 characters, no numbers, no random repeats, no max limit)
                 if (!data.address) {
                     showFieldError('address', 'Please enter your address.');
                     isValid = false;
@@ -1818,7 +1785,6 @@
                                 window.location.reload();
                             });
                         } else {
-                            // If not redirected, parse HTML response to find errors
                             const html = await response.text();
                             const doc = new DOMParser().parseFromString(html, 'text/html');
                             const errorElement = doc.querySelector('.error-message') || doc.querySelector('.alert') || doc.querySelector('.text-danger');

@@ -443,7 +443,6 @@
         function resendOTP(event) {
             event.preventDefault();
             
-            // Hide previous static error/success boxes on the page
             document.querySelectorAll('.error-message, .success-message').forEach(el => el.style.display = 'none');
 
             const resendLink = document.getElementById('resendLink');
@@ -476,27 +475,23 @@
                         stopOnFocus: true
                     }).showToast();
 
-                    // 1. Restore time remaining HTML element FIRST
                     const timeRemainingElement = document.getElementById('timeRemaining');
                     if (timeRemainingElement) {
                         timeRemainingElement.innerHTML = 'Time remaining: <span class="timer" id="timeLeft">5:00</span>';
                     }
                     
-                    // 2. Clear old OTP timer and start fresh 5-minute countdown
                     if (otpTimerInterval) clearInterval(otpTimerInterval);
                     const newOTPEndTime = Date.now() + (5 * 60 * 1000);
                     setStoredEmailOTPEndTime(newOTPEndTime);
                     otpTimeLeft = 5 * 60;
                     startOTPTimer();
 
-                    // 3. Clear old resend timer and start fresh 60-second countdown
                     if (resendTimerInterval) clearInterval(resendTimerInterval);
                     const newResendEndTime = Date.now() + (60 * 1000);
                     setStoredEmailResendEndTime(newResendEndTime);
                     resendTimeLeft = 60;
                     startResendTimer();
 
-                    // 4. Re-enable form inputs & verify button
                     const verifyBtn = document.getElementById('verifyBtn');
                     if (verifyBtn) verifyBtn.disabled = false;
 
