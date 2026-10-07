@@ -100,7 +100,7 @@ export const addCoupon = async (req, res) => {
                 return res.redirect('/admin/coupons');
             }
         } else {
-            if (isNaN(parsedDiscount) || parsedDiscount <= 0) {
+            if (isNaN(parsedDiscount) ||  parsedDiscount <= 0) {
                 req.session.error = 'Fixed discount amount must be a positive number greater than 0.';
                 req.session.couponFormData = formData;
                 return res.redirect('/admin/coupons');
