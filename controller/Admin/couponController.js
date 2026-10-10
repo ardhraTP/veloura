@@ -129,6 +129,12 @@ export const addCoupon = async (req, res) => {
             return res.redirect('/admin/coupons');
         }
 
+        if (validDiscountType === 'FIXED' && parsedMinOrder <= parsedDiscount) {
+            req.session.error = 'Minimum order amount must be greater than the fixed discount amount.';
+            req.session.couponFormData = formData;
+            return res.redirect('/admin/coupons');
+        }
+
         const parsedMaxDiscount = maxDiscountAmount ? parseFloat(maxDiscountAmount) : null;
         if(parsedMaxDiscount !== null && parsedMaxDiscount < 0){
             req.session.error = 'Maximum discount amount cannot be negative.';

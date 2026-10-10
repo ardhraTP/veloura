@@ -1270,9 +1270,15 @@
                 if (isNaN(minOrder) || minOrder < 0) {
                     showErr('addMinOrderAmount', 'addMinOrderAmountError', true, 'Minimum purchase amount cannot be negative.');
                     isValid = false;
+                } else if (discountType === 'FIXED' && minOrder <= discount) {
+                    showErr('addMinOrderAmount', 'addMinOrderAmountError', true, 'Minimum order amount must be greater than the fixed discount amount.');
+                    isValid = false;
                 } else {
                     showErr('addMinOrderAmount', 'addMinOrderAmountError', false);
                 }
+            } else if (discountType === 'FIXED') {
+                showErr('addMinOrderAmount', 'addMinOrderAmountError', true, 'Minimum order amount must be greater than the fixed discount amount.');
+                isValid = false;
             }
 
             if (isValid) {
